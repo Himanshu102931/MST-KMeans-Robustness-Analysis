@@ -63,6 +63,11 @@ def test_directory_and_file_layout():
             f"Expected package initialization file missing at {init_file}"
         )
 
+    # Verify Phase M2 algorithm implementations exist
+    for algo_file in ["kmeans.py", "mst.py"]:
+        algo_path = APP_DIR / "clustering_lab" / "algorithms" / algo_file
+        assert algo_path.is_file(), f"Expected algorithm module missing at {algo_path}"
+
 
 def test_minimal_streamlit_app_smoke():
     """Smoke test: execute minimal Streamlit app using official AppTest harness."""

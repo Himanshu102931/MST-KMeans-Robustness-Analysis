@@ -37,28 +37,35 @@ The existing Vanilla JavaScript web application located at the repository root (
 
 ```
 python_app/
-├── app.py                      # Main Streamlit dashboard entry point (smoke/foundation)
+├── app.py                      # Main Streamlit dashboard entry point (foundation stage)
 ├── requirements.txt            # Production application dependencies (Python 3.12)
 ├── requirements-dev.txt        # QA and development testing dependencies (-r requirements.txt + pytest)
 ├── README.md                   # This documentation guide
+├── docs/
+│   └── ALGORITHM_SPECIFICATION.md # Formal mathematical definitions, complexities, and biases
 ├── clustering_lab/             # Core scientific Python research package
 │   ├── __init__.py             # Package metadata and version definition
 │   ├── algorithms/             # Clustering algorithm implementations
-│   │   └── __init__.py         # (Prim's MST, Lloyd's K-Means — scheduled for Phase M2)
-│   ├── data/                   # Synthetic dataset generation & noise injection
-│   │   └── __init__.py         # (Blobs, Circles, Moons, Density, Noise)
-│   ├── experiments/            # Automated noise sweeps & parameter sweep runners
-│   │   └── __init__.py         # (Monte Carlo stochastic trial workflows)
-│   ├── evaluation/             # Quantitative validation metrics
-│   │   └── __init__.py         # (ARI, NMI, Silhouette Coefficient, Runtime)
-│   ├── visualization/          # Static and interactive charting utilities
-│   │   └── __init__.py         # (Plotly scatter, MST edge overlays, decay curves)
+│   │   ├── __init__.py         # Package exports (KMeans, MSTClustering)
+│   │   ├── kmeans.py           # Lloyd's K-Means with K-Means++ and deterministic tie-breaking
+│   │   └── mst.py              # Dense Prim's MST with single-linkage cut and DSU
+│   ├── data/                   # Synthetic dataset generation & noise injection (Phase M3)
+│   │   └── __init__.py
+│   ├── experiments/            # Automated noise sweeps & parameter sweep runners (Phase M3)
+│   │   └── __init__.py
+│   ├── evaluation/             # Quantitative validation metrics (Phase M3)
+│   │   └── __init__.py
+│   ├── visualization/          # Static and interactive charting utilities (Phase M4)
+│   │   └── __init__.py
 │   └── utils/                  # Mathematical helpers and seed management
-│       └── __init__.py         # (Distance matrix calculations, validation schemas)
+│       └── __init__.py
 └── tests/                      # Automated test suite (pytest)
     ├── __init__.py
     ├── test_environment.py     # Runtime Python version & dependency import assertions
-    └── test_project_structure.py # Package layout, internal imports & Streamlit AppTest smoke
+    ├── test_project_structure.py # Package layout, internal imports & Streamlit AppTest smoke
+    ├── test_kmeans.py          # Mathematical, boundary, and convergence tests for K-Means
+    ├── test_mst.py             # Graph invariants, 3-4-5 triangle, cuts, and DSU tests for MST
+    └── test_reference_validation.py # Reference validation against SciPy and scikit-learn
 ```
 
 ---
@@ -94,8 +101,8 @@ Because native C-extensions (NumPy/SciPy DLLs) may face execution restrictions i
   - Pull requests targeting `main` or `feature/python-streamlit-migration`
   - Manual trigger via `workflow_dispatch`
 - **Execution Pipeline:**
-  1. Checks out repository (`actions/checkout@v4`).
-  2. Sets up Python 3.12 (`actions/setup-python@v5`) with pip caching.
+  1. Checks out repository (`actions/checkout@v5`).
+  2. Sets up Python 3.12 (`actions/setup-python@v7`) with pip caching.
   3. Upgrades pip and installs `requirements-dev.txt`.
   4. Runs explicit inline import check across all scientific packages.
   5. Executes `pytest python_app/tests -v` with `PYTHONPATH=python_app`.
@@ -117,18 +124,24 @@ Upon completion of the algorithm migration and experimental dashboards:
 
 ---
 
-## 7. Current Implementation Status (Phase M1 Scope)
+## 7. Implementation Status
 
 - **Completed in Phase M1:**
   - Python 3.12 project architecture established.
   - Package namespaces created (`clustering_lab.*`).
   - Production and development requirement specifications defined.
   - Minimal foundation Streamlit application (`app.py`) deployed with project metadata and research goals.
-  - Automated test suite created (`test_environment.py`, `test_project_structure.py`).
-  - GitHub Actions CI workflow implemented (`.github/workflows/python-ci.yml`).
-- **Deferred to Phase M2+:**
-  - Prim's MST clustering algorithm implementation.
-  - Lloyd's K-Means clustering algorithm implementation.
-  - Synthetic dataset generators (Blobs, Circles, Moons, Density).
-  - Noise injection pipelines and Monte Carlo sweep experiments.
-  - Interactive visualization widgets and metric comparison dashboards.
+  - Automated foundation tests (`test_environment.py`, `test_project_structure.py`).
+  - GitHub Actions CI workflow implemented.
+- **Completed in Phase M2:**
+  - Pure NumPy implementation of Lloyd's K-Means with K-Means++ initialization (`kmeans.py`).
+  - Pure NumPy dense Prim's MST clustering with deterministic cuts and DSU (`mst.py`).
+  - Mathematical unit test suite for K-Means (`test_kmeans.py`).
+  - Graph-theoretic unit test suite for MST (`test_mst.py`).
+  - Reference validation suite against SciPy and scikit-learn (`test_reference_validation.py`).
+  - Formal algorithm specifications documentation (`docs/ALGORITHM_SPECIFICATION.md`).
+  - GitHub Actions upgraded to Node 24 actions (`checkout@v5`, `setup-python@v7`).
+- **Scheduled for Subsequent Phases:**
+  - Phase M3: Synthetic dataset generators (Blobs, Circles, Moons, Density) and noise injection pipelines.
+  - Phase M4: Robustness experiment engine and Monte Carlo noise sweep runners.
+  - Phase M5: Interactive Streamlit UI and visualization dashboard.
