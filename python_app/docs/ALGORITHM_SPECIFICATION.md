@@ -64,9 +64,8 @@ After initialization, Lloyd's algorithm alternates between two steps until conve
 ### 2.4 Convergence & Empty Cluster Handling
 - **Convergence Criterion:** The algorithm terminates when the maximum Euclidean displacement across all centroids falls below a predefined tolerance $\varepsilon$:
   $$\max_{c} \|\mu_c^{(t)} - \mu_c^{(t-1)}\|_2 < \varepsilon$$
-  or when the iteration count reaches `max_iter`.
 - **Empty Cluster Strategy:** If a cluster becomes empty ($|C_c| = 0$), the empty centroid is reseeded at the sample $x_i$ that currently has the maximum squared distance to its assigned centroid.
-- **Mathematical Limits on Degenerate Data:** If a dataset contains fewer than $k$ distinct coordinate values ($U < k$), it is mathematically impossible to construct $k$ distinct non-empty clusters. In this regime, redundant centroids will naturally overlap with existing sample coordinates.
+- **Mathematical Limits on Degenerate Data:** If a dataset contains fewer than $k$ distinct coordinate values ($U < k$), it is mathematically impossible to construct $k$ non-empty clusters with pairwise distinct centroid coordinates. While point assignments may still yield non-empty subsets depending on tie-breaking and empty-cluster reseeding, at least $k - U$ centroids must inevitably share identical spatial coordinates with existing observations, preventing the geometric formation of $k$ distinct cluster centers.
 
 ---
 
@@ -96,7 +95,7 @@ Prim's algorithm grows a single tree $T$ starting from an arbitrary root (vertex
 4. Repeat for $N - 1$ steps.
 
 ### 3.3 The Cut Property and Single-Linkage Equivalence
-The **Cut Property** states: for any cut $(S, V \setminus S)$ in graph $G$, the minimum-weight edge crossing the cut belongs to the MST.
+The **Cut Property** states: for any cut $(S, V \setminus S)$ in graph $G$, if an edge crossing the cut has strictly smaller weight than all other crossing edges, that edge belongs to the unique MST of $G$. In the presence of equal-weight ties, at least one minimum-weight crossing edge belongs to some MST of $G$, and a deterministic tie-breaking rule selects a consistent, canonical spanning tree.
 
 To partition $X$ into $k$ clusters:
 1. Sort all $N - 1$ tree edges in descending order of weight:
@@ -109,7 +108,7 @@ To partition $X$ into $k$ clusters:
 4. Connected components are recovered using **Disjoint Set Union (Union-Find)** with path compression and rank optimization.
 
 > **Equivalence to Single-Linkage Hierarchical Clustering:**
-> Removing the $(k - 1)$ longest edges of an MST produces partitions mathematically identical to cutting a single-linkage dendrogram at the $(k - 1)$-th largest merge height.
+> When all pairwise edge weights are distinct, removing the $(k - 1)$ longest edges of an MST produces partitions mathematically identical to cutting a single-linkage dendrogram at the $(k - 1)$-th largest merge height. In the presence of tied edge weights, multiple valid dendrograms and spanning trees may exist; our deterministic edge-ordering and tie-breaking rules guarantee a unique, reproducible partition equivalent to a canonical single-linkage cut.
 
 ---
 
@@ -133,13 +132,13 @@ To partition $X$ into $k$ clusters:
   - Computationally efficient for large $N$ when $k \ll N$.
   - Highly robust to minor background noise when clusters are well-separated compact Gaussians.
 - **Limitations:**
-  - Completely fails on non-globular manifolds (e.g., concentric rings, interlocking moons) because it enforces linear Voronoi decision boundaries.
+  - Prone to systematic mispartitioning on non-globular or entangled manifolds (such as concentric circles and interlocking moons) because it inherently partitions data via linear Voronoi decision boundaries.
   - Sensitive to extreme outliers, which pull centroids away from true cluster cores.
 
 ### 5.2 Euclidean MST Clustering
 - **Inductive Bias:** Assumes clusters are connected submanifolds separated by low-density regions.
 - **Strengths:**
-  - Arbitrary cluster geometry: perfectly traces concentric circles, spirals, and interlocking moons without requiring convexity.
+  - Non-convex cluster geometry: capable of capturing non-convex manifolds (such as concentric circles and interlocking moons) under favorable separation and low noise, without requiring convex cluster assumptions.
   - Global graph optimality via the minimum spanning tree cut property.
 - **Limitations:**
   - **Chaining Effect:** Highly sensitive to noise bridges. A single spurious noise point positioned between two distinct clusters can cause the MST to link them with a short edge, failing to cut the true inter-cluster boundary.

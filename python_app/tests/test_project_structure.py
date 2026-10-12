@@ -68,6 +68,11 @@ def test_directory_and_file_layout():
         algo_path = APP_DIR / "clustering_lab" / "algorithms" / algo_file
         assert algo_path.is_file(), f"Expected algorithm module missing at {algo_path}"
 
+    # Verify Phase M3 data layer modules exist
+    for data_file in ["dataset.py", "noise.py", "synthetic.py", "csv_loader.py", "config.py"]:
+        data_path = APP_DIR / "clustering_lab" / "data" / data_file
+        assert data_path.is_file(), f"Expected data module missing at {data_path}"
+
 
 def test_minimal_streamlit_app_smoke():
     """Smoke test: execute minimal Streamlit app using official AppTest harness."""

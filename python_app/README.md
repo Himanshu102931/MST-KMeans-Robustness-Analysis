@@ -42,20 +42,26 @@ python_app/
 ├── requirements-dev.txt        # QA and development testing dependencies (-r requirements.txt + pytest)
 ├── README.md                   # This documentation guide
 ├── docs/
-│   └── ALGORITHM_SPECIFICATION.md # Formal mathematical definitions, complexities, and biases
+│   ├── ALGORITHM_SPECIFICATION.md # Formal mathematical definitions, complexities, and biases
+│   └── DATASET_AND_REPRODUCIBILITY_SPECIFICATION.md # Dataset topologies, noise decoupling & CSV specs
 ├── clustering_lab/             # Core scientific Python research package
 │   ├── __init__.py             # Package metadata and version definition
 │   ├── algorithms/             # Clustering algorithm implementations
 │   │   ├── __init__.py         # Package exports (KMeans, MSTClustering)
 │   │   ├── kmeans.py           # Lloyd's K-Means with K-Means++ and deterministic tie-breaking
 │   │   └── mst.py              # Dense Prim's MST with single-linkage cut and DSU
-│   ├── data/                   # Synthetic dataset generation & noise injection (Phase M3)
+│   ├── data/                   # Synthetic dataset generation, contamination & CSV loader
+│   │   ├── __init__.py         # Data layer public API exports
+│   │   ├── dataset.py          # Standardized immutable Dataset container and validation
+│   │   ├── noise.py            # Decoupled Gaussian jitter and uniform outlier pipeline
+│   │   ├── synthetic.py        # Blobs, Moons, and Circles synthetic generators
+│   │   ├── csv_loader.py       # Secure, UI-independent CSV parser with categorical encoding
+│   │   └── config.py           # Versioned JSON experiment configuration schema (1.0.0)
+│   ├── experiments/            # Automated noise sweeps & parameter sweep runners (Phase M4)
 │   │   └── __init__.py
-│   ├── experiments/            # Automated noise sweeps & parameter sweep runners (Phase M3)
+│   ├── evaluation/             # Quantitative validation metrics (Phase M4)
 │   │   └── __init__.py
-│   ├── evaluation/             # Quantitative validation metrics (Phase M3)
-│   │   └── __init__.py
-│   ├── visualization/          # Static and interactive charting utilities (Phase M4)
+│   ├── visualization/          # Static and interactive charting utilities (Phase M5)
 │   │   └── __init__.py
 │   └── utils/                  # Mathematical helpers and seed management
 │       └── __init__.py
@@ -65,7 +71,9 @@ python_app/
     ├── test_project_structure.py # Package layout, internal imports & Streamlit AppTest smoke
     ├── test_kmeans.py          # Mathematical, boundary, and convergence tests for K-Means
     ├── test_mst.py             # Graph invariants, 3-4-5 triangle, cuts, and DSU tests for MST
-    └── test_reference_validation.py # Reference validation against SciPy and scikit-learn
+    ├── test_reference_validation.py # Reference validation against SciPy and scikit-learn
+    ├── test_data.py            # Synthetic generators, shapes, noise/outliers, and invariants
+    └── test_data_io.py         # CSV importing, validation bounds, and JSON config round-trip
 ```
 
 ---
@@ -141,7 +149,15 @@ Upon completion of the algorithm migration and experimental dashboards:
   - Reference validation suite against SciPy and scikit-learn (`test_reference_validation.py`).
   - Formal algorithm specifications documentation (`docs/ALGORITHM_SPECIFICATION.md`).
   - GitHub Actions upgraded to Node 24 actions (`checkout@v5`, `setup-python@v7`).
+- **Completed in Phase M3:**
+  - Standardized immutable `Dataset` container with boundary validation (`dataset.py`).
+  - Decoupled Gaussian noise and uniform outlier contamination pipeline (`noise.py`).
+  - Synthetic generators: Gaussian Blobs, Two Moons, and Concentric Circles (`synthetic.py`).
+  - Secure, UI-independent CSV dataset parser with categorical label encoding (`csv_loader.py`).
+  - Versioned JSON experiment configuration schema `1.0.0` with round-trip fidelity (`config.py`).
+  - Dataset and reproducibility specification (`docs/DATASET_AND_REPRODUCIBILITY_SPECIFICATION.md`).
+  - Refined mathematical definitions in `ALGORITHM_SPECIFICATION.md`.
+  - Comprehensive unit test suites (`test_data.py`, `test_data_io.py`).
 - **Scheduled for Subsequent Phases:**
-  - Phase M3: Synthetic dataset generators (Blobs, Circles, Moons, Density) and noise injection pipelines.
-  - Phase M4: Robustness experiment engine and Monte Carlo noise sweep runners.
+  - Phase M4: Robustness experiment engine, Monte Carlo sweep runners, and quantitative evaluation metrics (ARI, NMI, Silhouette).
   - Phase M5: Interactive Streamlit UI and visualization dashboard.
