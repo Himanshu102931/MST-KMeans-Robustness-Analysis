@@ -1,0 +1,49 @@
+dataset_family,experiment_group,parameter_name,parameter_value,algorithm,sample_count_inliers,num_seeds,baseline_inlier_ari_mean,inlier_ari_mean,inlier_ari_std,inlier_ari_median,inlier_ari_min,inlier_ari_max,ari_degradation_mean,ari_degradation_std,runtime_ms_mean,runtime_ms_std
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.00,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.633,0.777
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.00,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,1.900,1.217
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.05,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.000,0.000
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.05,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.900,0.529
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.10,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.133,0.058
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.10,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.633,0.252
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.20,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.067,0.115
+blobs,Noise Sensitivity,Gaussian Noise (sigma),0.20,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.567,0.231
+blobs,Outlier Robustness,Outlier Fraction,0%,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.633,0.777
+blobs,Outlier Robustness,Outlier Fraction,0%,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,1.900,1.217
+blobs,Outlier Robustness,Outlier Fraction,5%,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.033,0.058
+blobs,Outlier Robustness,Outlier Fraction,5%,MST-Clustering,300,3,1.000000,0.713189,0.248385,0.569784,0.569784,1.000000,0.286811,0.248385,0.533,0.252
+blobs,Outlier Robustness,Outlier Fraction,10%,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.067,0.058
+blobs,Outlier Robustness,Outlier Fraction,10%,MST-Clustering,300,3,1.000000,0.713189,0.248385,0.569784,0.569784,1.000000,0.286811,0.248385,0.467,0.115
+blobs,Outlier Robustness,Outlier Fraction,20%,K-Means,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.067,0.058
+blobs,Outlier Robustness,Outlier Fraction,20%,MST-Clustering,300,3,1.000000,0.379856,0.328965,0.569784,0.000000,0.569784,0.620144,0.328965,0.733,0.306
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.00,K-Means,300,3,0.194139,0.194139,0.058770,0.221443,0.126684,0.234289,0.000000,0.000000,0.233,0.208
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.00,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.733,0.321
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.05,K-Means,300,3,0.194139,0.211666,0.056393,0.240850,0.146662,0.247486,0.000000,0.000000,0.133,0.058
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.05,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.833,0.451
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.10,K-Means,300,3,0.194139,0.223714,0.053379,0.247492,0.162577,0.261072,0.000000,0.000000,0.033,0.058
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.10,MST-Clustering,300,3,1.000000,0.666696,0.577299,1.000000,0.000089,1.000000,0.333304,0.577299,0.567,0.153
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.20,K-Means,300,3,0.194139,0.221021,0.047173,0.221446,0.173636,0.267980,0.000000,0.000000,0.100,0.100
+moons,Noise Sensitivity,Gaussian Noise (sigma),0.20,MST-Clustering,300,3,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.700,0.265
+moons,Outlier Robustness,Outlier Fraction,0%,K-Means,300,3,0.194139,0.194139,0.058770,0.221443,0.126684,0.234289,0.000000,0.000000,0.233,0.208
+moons,Outlier Robustness,Outlier Fraction,0%,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.733,0.321
+moons,Outlier Robustness,Outlier Fraction,5%,K-Means,300,3,0.194139,0.191985,0.056643,0.221443,0.126684,0.227829,0.002153,0.003730,0.133,0.058
+moons,Outlier Robustness,Outlier Fraction,5%,MST-Clustering,300,3,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.633,0.208
+moons,Outlier Robustness,Outlier Fraction,10%,K-Means,300,3,0.194139,0.186172,0.055741,0.215155,0.121911,0.221450,0.007967,0.004287,0.133,0.115
+moons,Outlier Robustness,Outlier Fraction,10%,MST-Clustering,300,3,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.700,0.400
+moons,Outlier Robustness,Outlier Fraction,20%,K-Means,300,3,0.194139,0.176410,0.052063,0.196845,0.117230,0.215155,0.017729,0.017147,0.133,0.058
+moons,Outlier Robustness,Outlier Fraction,20%,MST-Clustering,300,3,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.967,0.503
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.00,K-Means,300,3,-0.001881,-0.001881,0.001249,-0.002241,-0.002911,-0.000492,0.000000,0.000000,0.200,0.000
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.00,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,1.033,0.493
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.05,K-Means,300,3,-0.001881,-0.001866,0.000604,-0.002187,-0.002241,-0.001169,0.000226,0.000391,0.167,0.153
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.05,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,0.833,0.208
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.10,K-Means,300,3,-0.001881,0.000195,0.003730,-0.000499,-0.003139,0.004224,0.000078,0.000130,0.200,0.100
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.10,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,1.233,0.208
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.20,K-Means,300,3,-0.001881,-0.003048,0.000200,-0.002954,-0.003277,-0.002911,0.001166,0.001132,0.067,0.115
+circles,Noise Sensitivity,Gaussian Noise (sigma),0.20,MST-Clustering,300,3,1.000000,0.093480,0.081304,0.132707,0.000000,0.147733,0.906520,0.081304,0.833,0.586
+circles,Outlier Robustness,Outlier Fraction,0%,K-Means,300,3,-0.001881,-0.001881,0.001249,-0.002241,-0.002911,-0.000492,0.000000,0.000000,0.200,0.000
+circles,Outlier Robustness,Outlier Fraction,0%,MST-Clustering,300,3,1.000000,1.000000,0.000000,1.000000,1.000000,1.000000,0.000000,0.000000,1.033,0.493
+circles,Outlier Robustness,Outlier Fraction,5%,K-Means,300,3,-0.001881,-0.001704,0.000552,-0.001735,-0.002241,-0.001137,0.000414,0.000718,0.233,0.058
+circles,Outlier Robustness,Outlier Fraction,5%,MST-Clustering,300,3,1.000000,0.333333,0.577350,0.000000,0.000000,1.000000,0.666667,0.577350,0.667,0.058
+circles,Outlier Robustness,Outlier Fraction,10%,K-Means,300,3,-0.001881,-0.000805,0.001293,-0.000442,-0.002241,0.000268,0.000000,0.000000,0.167,0.115
+circles,Outlier Robustness,Outlier Fraction,10%,MST-Clustering,300,3,1.000000,0.333333,0.577350,0.000000,0.000000,1.000000,0.666667,0.577350,1.067,0.416
+circles,Outlier Robustness,Outlier Fraction,20%,K-Means,300,3,-0.001881,0.000289,0.003312,0.001109,-0.003356,0.003114,0.000372,0.000644,0.100,0.000
+circles,Outlier Robustness,Outlier Fraction,20%,MST-Clustering,300,3,1.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.800,0.265

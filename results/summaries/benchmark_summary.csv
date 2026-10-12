@@ -1,0 +1,9 @@
+sample_size_n,algorithm,repetitions,runtime_mean_ms,runtime_median_ms,runtime_std_ms,runtime_min_ms,runtime_max_ms,speedup_ratio_vs_mst,hardware_logical_cores,browser_platform
+100,K-Means,5,0.1000,0.1000,0.1225,0.0000,0.3000,2.00,16,Win32
+100,MST Prim Dense,5,0.1400,0.2000,0.0894,0.0000,0.2000,1.00,16,Win32
+200,K-Means,5,0.1600,0.2000,0.0548,0.1000,0.2000,1.50,16,Win32
+200,MST Prim Dense,5,0.3800,0.3000,0.1924,0.2000,0.7000,1.00,16,Win32
+400,K-Means,5,0.1400,0.1000,0.1140,0.0000,0.3000,10.00,16,Win32
+400,MST Prim Dense,5,0.9400,1.0000,0.2408,0.6000,1.2000,1.00,16,Win32
+600,K-Means,5,0.1400,0.1000,0.0548,0.1000,0.2000,17.00,16,Win32
+600,MST Prim Dense,5,1.7000,1.7000,0.2828,1.3000,2.1000,1.00,16,Win32

@@ -125,9 +125,8 @@
             await yieldToEventLoop();
           }
 
-          const kmStats = computeStatistics(kmTimes);
-          const mstStats = computeStatistics(mstTimes);
-          const ratio = kmStats.median > 0 ? (mstStats.median / kmStats.median) : 1;
+          kmStats.trials = kmTimes;
+          mstStats.trials = mstTimes;
 
           results.push({
             n,
@@ -141,10 +140,20 @@
           });
         }
 
+        const measurements = { kmeans: {}, mst: {} };
+        results.forEach(r => {
+          measurements.kmeans[r.n] = r.kmeans;
+          measurements.mst[r.n] = r.mst;
+        });
+
         this.lastResults = {
           config,
+          datasetType,
+          sampleSizes,
+          repetitions,
           environment: getEnvironmentInfo(),
           results,
+          measurements,
           timestamp: new Date().toISOString()
         };
 

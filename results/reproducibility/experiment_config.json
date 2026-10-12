@@ -1,0 +1,101 @@
+{
+  "project": {
+    "title": "MST vs K-Means Robustness Analysis",
+    "leadStudent": "Himanshu Gupta",
+    "allocationNumber": 19,
+    "projectPartner": "Parth Yadav",
+    "institution": "Manav Rachna International Institute of Research and Studies",
+    "course": "Pattern Matching Lab (BCS-DS-777)",
+    "checkpoint": "caca5cd",
+    "branch": "main"
+  },
+  "experimentalProtocol": {
+    "datasetFamilies": [
+      {
+        "name": "Gaussian Blobs",
+        "k": 3,
+        "inliers": 300,
+        "geometry": "Convex / Isotropic Hyper-Spherical"
+      },
+      {
+        "name": "Two Moons",
+        "k": 2,
+        "inliers": 300,
+        "geometry": "Non-Linear Interlocking Manifolds"
+      },
+      {
+        "name": "Concentric Circles",
+        "k": 2,
+        "inliers": 300,
+        "geometry": "Non-Linear Concentric Rings"
+      }
+    ],
+    "controlledPerturbations": {
+      "noiseSensitivity": {
+        "parameter": "gaussian_noise_sigma",
+        "levels": [
+          0.00,
+          0.05,
+          0.10,
+          0.20
+        ],
+        "fixedOutlierFraction": 0.00
+      },
+      "outlierRobustness": {
+        "parameter": "outlier_fraction",
+        "levels": [
+          0.00,
+          0.05,
+          0.10,
+          0.20
+        ],
+        "absoluteOutlierCounts": [
+          0,
+          15,
+          30,
+          60
+        ],
+        "fixedGaussianNoise": 0.00
+      }
+    },
+    "randomSeeds": [
+      11,
+      22,
+      33
+    ],
+    "sampleCountPerCondition": 300,
+    "benchmarking": {
+      "sampleSizes": [
+        100,
+        200,
+        400,
+        600
+      ],
+      "repetitionsPerSize": 5,
+      "dataset": "blobs",
+      "k": 3
+    }
+  },
+  "algorithms": {
+    "kmeans": {
+      "initialization": "K-Means++ (D^2 probability sampling)",
+      "heuristic": "Lloyd Iteration (Voronoi Partitioning)",
+      "maxIterations": 100,
+      "convergenceTolerance": 0.00001,
+      "emptyClusterStrategy": "Farthest point reseed"
+    },
+    "mstClustering": {
+      "spanningTreeAlgorithm": "Prim's Dense Euclidean Minimum Spanning Tree",
+      "timeComplexity": "O(N^2)",
+      "spaceComplexity": "O(N)",
+      "partitioningStrategy": "Removal of (K - 1) longest Euclidean edges",
+      "componentExtraction": "Disjoint Set Union (Union-Find with path compression)",
+      "tieBreaking": "Deterministic by point and edge index"
+    }
+  },
+  "evaluationMetric": {
+    "primaryMetric": "Adjusted Rand Index (ARI) Hubert & Arabie (1985)",
+    "inlierEvaluation": "ARI computed exclusively over ground-truth inliers to prevent artificial cluster inflation from uniform outliers",
+    "baselineDegradationDelta": "Delta ARI = max(0, Baseline ARI - Perturbed ARI)"
+  }
+}

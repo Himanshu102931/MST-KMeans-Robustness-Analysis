@@ -1,0 +1,1811 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MST vs K-Means Robustness Analysis - Academic Report</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 18mm 15mm 20mm 15mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+    body {
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #ffffff;
+      margin: 0 auto;
+      max-width: 820px;
+      padding: 20px;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      color: #0f172a;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    h1 {
+      font-size: 20pt;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 6px;
+      margin-top: 30pt;
+      margin-bottom: 14pt;
+    }
+    h2 {
+      font-size: 15pt;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-top: 22pt;
+      margin-bottom: 10pt;
+    }
+    h3 {
+      font-size: 12.5pt;
+      margin-top: 16pt;
+      margin-bottom: 8pt;
+      color: #1e3a8a;
+    }
+    h4 {
+      font-size: 11pt;
+      margin-top: 12pt;
+      margin-bottom: 6pt;
+    }
+    p {
+      margin-top: 0;
+      margin-bottom: 8pt;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+    .page-break-before {
+      page-break-before: always;
+      break-before: page;
+    }
+    .page-break-after {
+      page-break-after: always;
+      break-after: page;
+    }
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 10pt;
+      padding-left: 24pt;
+    }
+    li {
+      margin-bottom: 3pt;
+    }
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 14pt 0;
+      page-break-inside: avoid;
+    }
+    table.report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      line-height: 1.35;
+      border: 1px solid #cbd5e1;
+    }
+    table.report-table th, table.report-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6pt 8pt;
+      text-align: left;
+    }
+    table.report-table th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-weight: 700;
+    }
+    table.report-table tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    /* Figures */
+    .figure-container {
+      text-align: center;
+      margin: 16pt 0;
+      page-break-inside: avoid;
+    }
+    img.report-figure {
+      max-width: 95%;
+      height: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    p.figure-caption {
+      font-size: 9.5pt;
+      font-style: italic;
+      color: #475569;
+      margin-top: 6pt;
+      text-align: center;
+    }
+    /* Code */
+    pre.code-block {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      padding: 8pt 10pt;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8.5pt;
+      line-height: 1.4;
+      overflow-x: auto;
+      margin: 10pt 0;
+      page-break-inside: avoid;
+    }
+    code.inline-code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9pt;
+      background: #f1f5f9;
+      padding: 1pt 3pt;
+      border-radius: 2px;
+      border: 1px solid #e2e8f0;
+    }
+    blockquote.report-quote {
+      border-left: 3px solid #3b82f6;
+      background: #eff6ff;
+      padding: 6pt 10pt;
+      margin: 10pt 0;
+      font-style: italic;
+    }
+    hr.report-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 16pt 0;
+    }
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+      }
+      .page-break-before {
+        page-break-before: always !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<h1 class='heading-1 page-break-before'>MST vs K-Means Robustness Analysis</h1>
+<h2 class='heading-2'>A Comparative Quantitative Investigation of Graph-Theoretic Spanning Forest Clustering and Centroid Voronoi Partitioning Under Controlled Topological and Stochastic Perturbations</h2>
+
+<hr class='report-divider'/>
+
+<h3 class='heading-3'>Academic Mini-Project Final Report</h3>
+
+<p><strong>Course</strong>: Pattern Matching Lab (<code class="inline-code">BCS-DS-777</code>)  </p>
+<p><strong>Department</strong>: Department of Computer Science and Engineering  </p>
+<p><strong>Faculty</strong>: Faculty of Engineering and Technology (FET)  </p>
+<p><strong>Institution</strong>: Manav Rachna International Institute of Research and Studies (MRIIRS), Faridabad, Haryana, India  </p>
+<p><strong>Academic Session</strong>: 2026â€“2027  </p>
+
+<p><strong>Submitted by</strong>:</p>
+<ul>
+<li><strong>Himanshu Gupta</strong> â€” Roll No. / Allocation No.: <strong>19</strong></li>
+<li><strong>Parth Yadav</strong> â€” Project Partner</li>
+</ul>
+
+<p><strong>Under the Mentorship of</strong>:</p>
+<ul>
+<li><strong>[Faculty Mentor / Course Instructor Name]</strong>  </li>
+</ul>
+<p>  Department of Computer Science & Engineering, MRIIRS  </p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>Certificate of Originality</h2>
+
+<p>This is to certify that the project report entitled <strong>"MST vs K-Means Robustness Analysis"</strong> submitted by <strong>Himanshu Gupta (Allocation No. 19)</strong> and <strong>Parth Yadav</strong> in partial fulfillment of the academic requirements for the course <strong>Pattern Matching Lab (BCS-DS-777)</strong> during the 7th Semester of the Bachelor of Technology (B.Tech.) degree at <strong>Manav Rachna International Institute of Research and Studies (MRIIRS)</strong>, Faridabad, is an authentic record of independent scientific work carried out under institutional guidance.</p>
+
+<p>The matter embodied in this report has not been submitted by the candidates to any other University or Institution for the award of any degree, diploma, or academic certificate.</p>
+
+<p><br><br></p>
+<p>_________________________________  </p>
+<p><strong>[Faculty Guide / Course Instructor]</strong>  </p>
+<p>Department of Computer Science & Engineering  </p>
+<p>Faculty of Engineering and Technology  </p>
+<p>MRIIRS, Faridabad, India  </p>
+
+<p><br><br></p>
+<p>_________________________________  </p>
+<p><strong>Head of Department (CSE)</strong>  </p>
+<p>Department of Computer Science & Engineering  </p>
+<p>Faculty of Engineering and Technology  </p>
+<p>MRIIRS, Faridabad, India  </p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>Student Declaration</h2>
+
+<p>We hereby declare that the project entitled <strong>"MST vs K-Means Robustness Analysis: A Comparative Quantitative Investigation of Graph-Theoretic Spanning Forest Clustering and Centroid Voronoi Partitioning Under Controlled Topological and Stochastic Perturbations"</strong> is our own original work completed under the academic course <strong>Pattern Matching Lab (BCS-DS-777)</strong>.</p>
+
+<p>We confirm that:</p>
+<ol>
+<li>The mathematical derivations, software implementation, experimental protocols, and numerical evaluations presented herein were conducted natively without plagiarized code or fabricated data.</li>
+<li>The empirical evidence was measured using deterministic, reproducible client-side algorithms executing within an open, auditable web runtime environment.</li>
+<li>Proper citations and acknowledgments have been provided for all published academic literature, algorithms, and benchmark definitions consulted during this research.</li>
+</ol>
+
+<p><br><br></p>
+<p>Date: October 12, 2026  </p>
+<p>Place: Faridabad, Haryana, India  </p>
+
+<p><br><br></p>
+<p>_________________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _________________________________  </p>
+<p><strong>Himanshu Gupta</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>Parth Yadav</strong>  </p>
+<p>Allocation Number: 19 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; B.Tech Computer Science and Engineering  </p>
+<p>B.Tech Computer Science and Engineering &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MRIIRS, Faridabad  </p>
+<p>MRIIRS, Faridabad  </p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>Acknowledgement</h2>
+
+<p>We express our sincere gratitude and indebtedness to our esteemed course instructor and faculty mentor, <strong>[Faculty Mentor Name]</strong>, Department of Computer Science and Engineering, for invaluable guidance, patient critiques, and rigorous academic standards throughout the formulation, development, and experimental validation of this mini-project.</p>
+
+<p>We are deeply grateful to the <strong>Department of Computer Science & Engineering</strong> and the leadership of the <strong>Faculty of Engineering and Technology (FET), Manav Rachna International Institute of Research and Studies (MRIIRS)</strong> for providing the computational laboratory infrastructure, academic resources, and scientific atmosphere essential for pursuing pattern recognition research.</p>
+
+<p>Finally, we extend our heartfelt appreciation to our peers, families, and academic reviewers whose continuous encouragement and constructive feedback made this scientific investigation possible.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>Abstract</h2>
+
+<p>Unsupervised clustering algorithms are foundational to pattern matching, data mining, and exploratory multivariate analysis. However, real-world data distributions rarely conform to idealistic assumptions of spatial convexity and zero noise. This research presents a quantitative, controlled comparative robustness investigation between two contrasting clustering paradigms: centroid-based Voronoi partitioning via <strong>Lloyd's K-Means with K-Means++ initialization</strong> and graph-theoretic single-linkage partitioning via <strong>Prim's Euclidean Minimum Spanning Tree (MST)</strong>. </p>
+
+<p>To conduct this analysis without external runtime dependencies, an auditable, browser-native scientific testing engine was engineered using vanilla ECMAScript 2022, HTML5 Canvas, and modern CSS3. Controlled experiments evaluated $N=300$ inlier observations across three distinct two-dimensional geometric manifold families: convex <strong>Gaussian Blobs ($K=3$)</strong>, non-linear interlocking <strong>Two Moons ($K=2$)</strong>, and concentric ring <strong>Concentric Circles ($K=2$)</strong>. The algorithms were subjected to systematic perturbations comprising Box-Muller additive Gaussian noise ($\sigma \in \{0.00, 0.05, 0.10, 0.20\}$) and ambient uniform outlier contamination ($\eta \in \{0\%, 5\%, 10\%, 20\%\}$) across fixed pseudo-random seeds ($11, 22, 33$). Clustering quality was evaluated strictly over ground-truth inliers using the chance-adjusted <strong>Adjusted Rand Index (ARI)</strong> (Hubert & Arabie, 1985).</p>
+
+<p>Empirical findings from 144 controlled paired trials demonstrate that while MST clustering achieves perfect topological recovery on clean non-convex manifolds ($\text{ARI} = 1.0000$ vs. K-Means $\text{ARI} = 0.1941$ on Moons and $\text{ARI} = -0.0019$ on Circles), it suffers from severe single-linkage vulnerability under outliers: adding just $5\%$ uniform outliers triggers an abrupt collapse on Two Moons to $\text{ARI} = 0.0000$ due to longest-edge cuts isolating distant outlier pendants rather than separating the manifolds. Conversely, K-Means exhibits resilience on compact Gaussian Blobs ($\text{ARI} = 1.0000$ across all tested noise and outlier levels), but is mathematically incapable of separating non-convex manifolds. Micro-benchmarks across $N \in [100, 600]$ confirm the $O(N^2)$ quadratic bottleneck of dense Prim's MST ($1.70\text{ ms}$ at $N=600$) compared to the sub-millisecond linear iteration of K-Means ($0.14\text{ ms}$, producing a $12.14\times$ mean speedup and $17.00\times$ median speedup). This report establishes precise topological boundary criteria governing the selection of graph versus centroid clustering in noisy empirical environments.</p>
+
+<p><strong>Keywords</strong>: Pattern Recognition, Unsupervised Clustering, K-Means, Minimum Spanning Tree, Robustness Analysis, Adjusted Rand Index, Prim's Algorithm, Manifold Learning, Outlier Contamination.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>Table of Contents</h2>
+
+<ul>
+<li><strong>Front Matter</strong></li>
+<li>Certificate of Originality</li>
+<li>Student Declaration</li>
+<li>Acknowledgement</li>
+<li>Abstract</li>
+<li>Table of Contents</li>
+<li>List of Figures</li>
+<li>List of Tables</li>
+<li><strong>Chapter 1 â€” Introduction</strong></li>
+<li>1.1 Unsupervised Pattern Recognition & Clustering</li>
+<li>1.2 The Paradigm Contrast: Centroid Partitioning vs. Graph Connectivity</li>
+<li>1.3 Motivation for Quantitative Robustness Evaluation</li>
+<li>1.4 Real-World Significance & Practical Applications</li>
+<li>1.5 Organization of the Report</li>
+<li><strong>Chapter 2 â€” Problem Statement and Objectives</strong></li>
+<li>2.1 Official Allocated Research Objective</li>
+<li>2.2 Formulation of the Research Problem</li>
+<li>2.3 Core Research Questions</li>
+<li>2.4 Scope and Delimitations</li>
+<li>2.5 Measurable Learning & Research Objectives</li>
+<li>2.6 Expected Academic Outcomes</li>
+<li><strong>Chapter 3 â€” Literature Review</strong></li>
+<li>3.1 Historical Development of K-Means Clustering (MacQueen, Lloyd)</li>
+<li>3.2 Seeding Vulnerability & The K-Means++ Breakthrough (Arthur & Vassilvitskii)</li>
+<li>3.3 Graph-Theoretic Clustering & Minimum Spanning Trees (Prim, Zahn)</li>
+<li>3.4 Single-Linkage Chaining & Topological Manifold Discovery</li>
+<li>3.5 Partition Agreement Metrics & Adjusted Rand Index (Hubert & Arabie, Rand)</li>
+<li>3.6 Related Works in Noise and Outlier Sensitivity</li>
+<li><strong>Chapter 4 â€” Mathematical Foundations</strong></li>
+<li>4.1 Metric Space & Euclidean Distance</li>
+<li>4.2 Lloyd's K-Means Optimization Formulation</li>
+<li>4.3 Centroid Update Derivation via Gradient of Inertia</li>
+<li>4.4 Minimum Spanning Tree Properties & The Cut Lemma</li>
+<li>4.5 Prim's Greedy Construction Dynamics</li>
+<li>4.6 Spanning Forest Partitioning & Disjoint Set Union</li>
+<li>4.7 Hubert & Arabie Adjusted Rand Index (ARI) Derivation</li>
+<li>4.8 Statistical Aggregation: Mean & Sample Standard Deviation</li>
+<li>4.9 Baseline Degradation Metric ($\Delta\text{ARI}$)</li>
+<li>4.10 Asymptotic Computational Complexity Analysis</li>
+<li><strong>Chapter 5 â€” Proposed System and Architecture</strong></li>
+<li>5.1 Architecture Overview & Technology Stack</li>
+<li>5.2 Deterministic Pseudo-Random Number Generation (LCG)</li>
+<li>5.3 Synthetic Manifold Generation Pipeline</li>
+<li>5.4 Clustering Execution Engines</li>
+<li>5.5 Quantitative Evaluation Engine</li>
+<li>5.6 Automated Robustness Experiment Runner</li>
+<li>5.7 Micro-Benchmarking Engine & Browser Monotonic Timing</li>
+<li>5.8 Interactive Algorithm Explorer & Educational Visualizer</li>
+<li>5.9 Scientific Export Architecture</li>
+<li><strong>Chapter 6 â€” Implementation Methodology</strong></li>
+<li>6.1 Lloyd's K-Means Algorithm with K-Means++ Seeding</li>
+<li>6.2 Prim's Dense Minimum Spanning Tree Construction</li>
+<li>6.3 Spanning Tree Cutting & Disjoint Component Extraction</li>
+<li>6.4 Synthetic Perturbation Implementation (Box-Muller & Rejection Outliers)</li>
+<li>6.5 Algorithmic Pseudocode</li>
+<li><strong>Chapter 7 â€” Experimental Design</strong></li>
+<li>7.1 Dataset Geometries & Topological Properties</li>
+<li>7.2 Controlled Perturbation Regimes</li>
+<li>7.3 Reproducibility & Paired Seed Protocol</li>
+<li>7.4 Inlier-Restricted Evaluation Justification</li>
+<li>7.5 Benchmarking Protocol & Warm-Up Iterations</li>
+<li><strong>Chapter 8 â€” Results and Analysis</strong></li>
+<li>8.1 Qualitative Clustering Comparisons on Clean Manifolds</li>
+<li>8.2 Experiment A: Gaussian Noise Sensitivity Analysis</li>
+<li>8.3 Experiment B: Ambient Outlier Robustness Analysis</li>
+<li>8.4 Quantitative Baseline Degradation Analysis ($\Delta\text{ARI}$)</li>
+<li>8.5 Computational Runtime & Scalability Analysis</li>
+<li>8.6 Seed Dispersion & Statistical Variance</li>
+<li><strong>Chapter 9 â€” Discussion</strong></li>
+<li>9.1 The Convexity Advantage of K-Means on Spherical Clusters</li>
+<li>9.2 The Structural Failure of Centroids on Non-Convex Geometry</li>
+<li>9.3 The Single-Linkage Chaining Advantage of MST</li>
+<li>9.4 The Catastrophic Pendant Edge Vulnerability of MST</li>
+<li>9.5 Asymptotic Runtime vs. Empirical Wall-Clock Observations</li>
+<li>9.6 Threats to Validity & Methodological Limitations</li>
+<li><strong>Chapter 10 â€” Conclusion and Future Scope</strong></li>
+<li>10.1 Concluding Summary of Empirical Findings</li>
+<li>10.2 Algorithmic Selection Heuristic for Practitioners</li>
+<li>10.3 Future Research Extensions</li>
+<li><strong>References</strong></li>
+<li><strong>Appendices</strong></li>
+<li>Appendix A: Complete Core Algorithmic Implementations</li>
+<li>Appendix B: Laboratory Reproduction Guide</li>
+<li>Appendix C: Automated Test Suite Verification Report</li>
+<li>Appendix D: Repository Architecture and Evidence Inventory</li>
+</ul>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h2 class='heading-2 page-break-before'>List of Figures</h2>
+
+<ul>
+<li><strong>Figure 8.1</strong>: Qualitative Clustering Comparison on Clean Gaussian Blobs ($K=3, N=300$).</li>
+<li><strong>Figure 8.2</strong>: Qualitative Clustering Comparison on Clean Two Moons ($K=2, N=300$).</li>
+<li><strong>Figure 8.3</strong>: Qualitative Clustering Comparison on Clean Concentric Circles ($K=2, N=300$).</li>
+<li><strong>Figure 8.4</strong>: Empirical Inlier ARI vs. Additive Gaussian Noise ($\sigma \in [0.00, 0.20]$).</li>
+<li><strong>Figure 8.5</strong>: Empirical Inlier ARI vs. Ambient Outlier Contamination ($\eta \in [0\%, 20\%]$).</li>
+<li><strong>Figure 8.6</strong>: Baseline ARI Performance Degradation ($\Delta\text{ARI}$) Across Evaluated Perturbations.</li>
+<li><strong>Figure 8.7</strong>: Empirical Wall-Clock Runtime Scaling Across Sample Sizes $N \in [100, 600]$.</li>
+</ul>
+
+<hr class='report-divider'/>
+
+<h2 class='heading-2 page-break-before'>List of Tables</h2>
+
+<ul>
+<li><strong>Table 2.1</strong>: Five Measurable Learning and Research Objectives.</li>
+<li><strong>Table 4.1</strong>: Contingency Table Cross-Classification of Predicted vs. Ground-Truth Partitions.</li>
+<li><strong>Table 4.2</strong>: Theoretical Asymptotic Time and Auxiliary Space Complexity Bounds.</li>
+<li><strong>Table 7.1</strong>: Controlled Experimental Parameter Configurations.</li>
+<li><strong>Table 8.1</strong>: Experimental Clustering Quality on Clean Baseline Geometries ($\sigma = 0.00, \eta = 0\%$).</li>
+<li><strong>Table 8.2</strong>: Noise Sensitivity Results on Gaussian Blobs ($K=3, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.3</strong>: Noise Sensitivity Results on Two Moons ($K=2, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.4</strong>: Noise Sensitivity Results on Concentric Circles ($K=2, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.5</strong>: Outlier Robustness Results on Gaussian Blobs ($K=3, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.6</strong>: Outlier Robustness Results on Two Moons ($K=2, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.7</strong>: Outlier Robustness Results on Concentric Circles ($K=2, N_{\text{inliers}}=300$).</li>
+<li><strong>Table 8.8</strong>: Micro-Benchmark Execution Ratios and Wall-Clock Statistics on Gaussian Blobs ($K=3$).</li>
+<li><strong>Table 9.1</strong>: Systematic Paradigm Comparison Matrix Across Robustness Dimensions.</li>
+</ul>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 1 â€” Introduction</h1>
+
+<h2 class='heading-2'>1.1 Unsupervised Pattern Recognition & Clustering</h2>
+<p>Pattern recognition is the scientific discipline concerned with the automated discovery of regularities, structural groupings, and statistical dependencies within empirical data. Within machine learning and multivariate analysis, learning tasks are broadly divided into supervised learningâ€”where explicit class labels guide model trainingâ€”and unsupervised learning, where models must uncover intrinsic structure from unannotated observations $\mathcal{X} = \{x_1, x_2, \dots, x_N\} \subset \mathbb{R}^D$.</p>
+
+<p>Clustering forms the algorithmic backbone of unsupervised pattern recognition. The mathematical objective of clustering is to partition an unlabelled dataset into discrete, meaningful subsets called clusters such that observations allocated to the same cluster share high mutual similarity (internal cohesion), while observations assigned to distinct clusters exhibit substantial dissimilarity (external separation). Clustering plays an essential role across diverse scientific domains including computational biology (gene expression profiling), image segmentation, astronomical cataloging, document classification, customer segmentation, and spatial anomaly detection.</p>
+
+<h2 class='heading-2'>1.2 The Paradigm Contrast: Centroid Partitioning vs. Graph Connectivity</h2>
+<p>Despite sharing the common objective of data partitioning, clustering algorithms diverge profoundly in their underlying mathematical formulations and structural assumptions:</p>
+
+<ol>
+<li><strong>Centroid-Based Partitioning (K-Means)</strong>: Formulated originally by MacQueen (1967) and Lloyd (1982), K-Means frames clustering as a numerical optimization problem. It models each cluster using a central prototype or centroid $\mu_k \in \mathbb{R}^D$ and partitions the feature space into convex Voronoi cells by assigning every point to its nearest centroid under Euclidean distance. This inductive bias presumes that clusters are geometrically convex, spherical, compact, and linearly separable.</li>
+<li><strong>Graph-Theoretic Spanning Forest Partitioning (MST)</strong>: Formulated by Zahn (1971) based on Prim's (1957) minimum spanning tree algorithm, graph-based clustering views data points as vertices $V$ in a fully connected edge-weighted graph $G=(V, E)$, where edge weights represent pairwise Euclidean distances. By computing the Minimum Spanning Tree (MST) and removing the $(K-1)$ edges with the highest weights, the tree is severed into $K$ disconnected subtrees. This approach operates via single-linkage connectivity: points belong to the same cluster if they are connected through an unbroken sequence of short pairwise edges, regardless of spatial convexity.</li>
+</ol>
+
+<h2 class='heading-2'>1.3 Motivation for Quantitative Robustness Evaluation</h2>
+<p>In textbook machine learning scenarios, clustering algorithms are typically demonstrated on clean, well-isolated, spherical distributions. In empirical scientific applications, however, measured data is rarely pristine:</p>
+<ul>
+<li><strong>Non-Linear Geometry</strong>: Physical, biological, and sensor datasets often lie on complex non-linear manifolds, such as curved trajectories, spiral arms, or concentric rings.</li>
+<li><strong>Stochastic Measurement Noise</strong>: Physical sensors introduce additive Gaussian thermal or measurement noise, blurring boundaries between adjacent clusters.</li>
+<li><strong>Ambient Outliers and Anomalies</strong>: Data collection pipelines are inevitably contaminated by erroneous sensor readings, background noise, or uncalibrated measurements scattered uniformly across the feature space.</li>
+</ul>
+
+<p>While theoretical qualitative intuitions suggest that graph-based algorithms recover complex topologies while centroid algorithms resist noise, rigorous empirical studies directly quantifying their comparative degradation under controlled, identical conditions are surprisingly sparse in undergraduate computing curricula. This project addresses this gap through an auditable, controlled scientific investigation.</p>
+
+<h2 class='heading-2'>1.4 Real-World Significance & Practical Applications</h2>
+<p>Understanding the robustness boundaries between centroid and graph clustering is of paramount practical significance in computational engineering:</p>
+<ul>
+<li><strong>Biomedical Flow Cytometry</strong>: Cell populations often form curving developmental manifolds. An algorithm that erroneously cuts through a curved trajectory with a straight Voronoi hyperplane misclassifies transitional cell states.</li>
+<li><strong>Geographical Information Systems (GIS)</strong>: Natural spatial phenomena (e.g., rivers, fault lines, traffic corridors) are non-convex and linear. K-Means fails to trace these contiguous structures, whereas graph clustering can trace continuous paths.</li>
+<li><strong>Autonomous Sensor Networks</strong>: Low-cost IoT sensors produce high outlier rates. Deploying an algorithm hyper-vulnerable to outlier bridging can cause catastrophic failure in automated anomaly monitoring systems.</li>
+</ul>
+
+<h2 class='heading-2'>1.5 Organization of the Report</h2>
+<p>This report is structured into ten comprehensive chapters:</p>
+<ul>
+<li><strong>Chapter 2</strong> details the official allocated objective, research questions, scope, and five measurable learning objectives.</li>
+<li><strong>Chapter 3</strong> surveys foundational literature on K-Means, K-Means++, Prim's MST, Zahn's clustering, and the Adjusted Rand Index.</li>
+<li><strong>Chapter 4</strong> presents rigorous mathematical derivations of all optimization functions, algorithms, and evaluation metrics.</li>
+<li><strong>Chapter 5</strong> describes the modular architecture of the browser-native scientific testing engine.</li>
+<li><strong>Chapter 6</strong> details the software implementation methodology, data generation equations, and pseudocode.</li>
+<li><strong>Chapter 7</strong> specifies the experimental design, perturbation levels, and paired evaluation protocol.</li>
+<li><strong>Chapter 8</strong> presents the verified empirical results, summary tables, benchmark scalability, and scientific charts.</li>
+<li><strong>Chapter 9</strong> provides an in-depth scientific discussion of failure modes, algorithmic trade-offs, and threats to validity.</li>
+<li><strong>Chapter 10</strong> concludes the investigation and outlines actionable directions for future research.</li>
+</ul>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 2 â€” Problem Statement and Objectives</h1>
+
+<h2 class='heading-2'>2.1 Official Allocated Research Objective</h2>
+<p>The official academic objective assigned for <strong>Allocation Number 19</strong> in the <strong>Pattern Matching Lab (<code class="inline-code">BCS-DS-777</code>)</strong> is:</p>
+<blockquote class='report-quote'><em>"Compare MST-based clustering and K-Means under noise, outliers, and non-linear data distributions using quantitative robustness measures."</em></blockquote>
+
+<h2 class='heading-2'>2.2 Formulation of the Research Problem</h2>
+<p>Existing clustering comparisons often suffer from significant methodological shortcomings:</p>
+<ol>
+<li><strong>Confounded Perturbation Variables</strong>: Noise and outliers are frequently injected simultaneously, making it impossible to isolate whether performance degradation stems from Gaussian coordinate dispersion or ambient outlier edge bridging.</li>
+<li><strong>Artificial Outlier Inclusion in Metrics</strong>: Traditional evaluations often treat ambient uniform outliers as a validated natural cluster or allow them to distort contingency matrices, inflating or distorting cluster recovery scores.</li>
+<li><strong>Black-Box Library Reliance</strong>: Student implementations frequently rely on high-level Python libraries (<code class="inline-code">scikit-learn</code>, <code class="inline-code">scipy</code>) that obscure low-level distance evaluations, empty cluster reseeding logic, tie-breaking heuristics, and convergence thresholds.</li>
+<li><strong>Unverifiable Runtimes</strong>: Benchmarking is often conducted without warming up virtual machines, failing to distinguish asymptotic growth from system jitter and timer quantization.</li>
+</ol>
+
+<p>The research problem addressed in this project is to construct a transparent, client-side, dependency-free experimental testbed that directly measures and compares the exact performance degradation and computational scaling of Lloyd's K-Means and Prim's MST clustering under strictly controlled geometric and stochastic perturbations.</p>
+
+<h2 class='heading-2'>2.3 Core Research Questions</h2>
+<ol>
+<li><strong>RQ1 (Geometric Disentanglement)</strong>: To what extent does single-linkage MST clustering outperform Lloyd's K-Means on non-convex manifolds (Two Moons and Concentric Circles) under clean baseline conditions?</li>
+<li><strong>RQ2 (Noise Resilience)</strong>: At what quantitative threshold of isotropic Gaussian noise ($\sigma \in [0.00, 0.20]$) does coordinate dispersion bridge the inter-cluster gap, degrading MST and K-Means cluster partitions?</li>
+<li><strong>RQ3 (Outlier Vulnerability)</strong>: How severely does ambient uniform outlier contamination ($\eta \in [0\%, 20\%]$) degrade inlier clustering quality, and does single-linkage edge cutting suffer from catastrophic cut misallocation?</li>
+<li><strong>RQ4 (Computational Scalability)</strong>: How do empirical execution times in a browser-native V8 JavaScript engine scale for dense Prim's MST ($O(N^2)$) versus Lloyd's K-Means ($O(I \cdot K \cdot N)$) across sample sizes $N \in [100, 600]$?</li>
+</ol>
+
+<h2 class='heading-2'>2.4 Scope and Delimitations</h2>
+<ul>
+<li><strong>Scope</strong>: Two-dimensional Euclidean feature space ($D=2$); synthetic parametric distributions with known ground-truth labels; sample sizes $N \in [100, 600]$; cluster counts $K \in \{2, 3\}$; client-side execution using modern web standards (HTML5/Canvas/Vanilla JS).</li>
+<li><strong>Delimitations</strong>: The investigation does not evaluate high-dimensional spaces ($D \gg 2$); it does not include density-based algorithms (DBSCAN) or spectral clustering; it excludes external runtime environments (Python, Node.js, backend databases).</li>
+</ul>
+
+<h2 class='heading-2'>2.5 Measurable Learning & Research Objectives</h2>
+
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Objective Identifier</th>
+<th>Description of Objective</th>
+<th>Quantitative Success Metric</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>LO-1: Algorithmic Implementation</strong></td>
+<td>Implement Lloyd's K-Means (with K-Means++ seeding) and Prim's dense Euclidean MST natively in vanilla JavaScript.</td>
+<td>100% test pass rate across 64 automated unit tests verifying mathematical correctness.</td>
+</tr>
+<tr>
+<td><strong>LO-2: Controlled Data Engine</strong></td>
+<td>Construct a deterministic synthetic data generator producing Gaussian Blobs, Two Moons, and Concentric Circles with independent noise and outlier controls.</td>
+<td>Exact coordinate reproducibility across identical PRNG seeds ($\mathcal{S} \in \{11, 22, 33\}$).</td>
+</tr>
+<tr>
+<td><strong>LO-3: Robustness Evaluation</strong></td>
+<td>Measure Inlier Adjusted Rand Index (ARI) and baseline degradation ($\Delta\text{ARI}$) across 144 controlled paired experimental trials.</td>
+<td>Complete generation of valid, uncorrupted empirical trial records in standard CSV format.</td>
+</tr>
+<tr>
+<td><strong>LO-4: Performance Benchmarking</strong></td>
+<td>Quantify wall-clock clustering execution time separately from rendering across $N \in [100, 600]$ using monotonic microsecond timers.</td>
+<td>Minimum of 5 timed repetitions per size following warm-up; reporting of mean, median, SD, and speedup ratios.</td>
+</tr>
+<tr>
+<td><strong>LO-5: Interactive Visualization</strong></td>
+<td>Design an accessible, interactive scientific dashboard and step-by-step algorithm explorer for academic presentation.</td>
+<td>Verified rendering of high-resolution 2D coordinate scatters, spanning trees, and metric charts.</td>
+</tr>
+</tbody></table></div>
+
+<h2 class='heading-2'>2.6 Expected Academic Outcomes</h2>
+<ol>
+<li>A fully functional, auditable, browser-native experimental laboratory running on GitHub Pages without backend requirements.</li>
+<li>A comprehensive empirical dataset comprising 144 robustness trials and 40 benchmark trials recorded without fabrication.</li>
+<li>Formal mathematical characterizations explaining the vulnerability of single-linkage MST cuts to outlier pendants and the geometric failure of K-Means centroids on non-convex manifolds.</li>
+<li>A complete academic report and presentation-ready evidence package suitable for undergraduate evaluation in Pattern Matching Lab (<code class="inline-code">BCS-DS-777</code>).</li>
+</ol>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 3 â€” Literature Review</h1>
+
+<h2 class='heading-2'>3.1 Historical Development of K-Means Clustering (MacQueen, Lloyd)</h2>
+<p>The concept of partitioning a continuous multivariate space into $K$ discrete regions originated independently across multiple scientific disciplines. Hugo Steinhaus (1956) initially proposed the concept of dividing points into groups by minimizing distances to central prototypes. Stuart P. Lloyd (1957, published 1982) formalized the method for pulse-code modulation (PCM) in signal processing at Bell Laboratories as an optimal vector quantization technique. Simultaneously, James MacQueen (1967) introduced the term <em>"K-Means"</em> in his seminal paper on multivariate classification observations.</p>
+
+<p>Lloyd's formulation alternates between two deterministic steps:</p>
+<ol>
+<li><strong>Assignment Step</strong>: Assigning each observation to the nearest cluster centroid under Euclidean distance, forming a Voronoi diagram.</li>
+<li><strong>Update Step</strong>: Recomputing each centroid as the arithmetic mean of all observations allocated to that cluster.</li>
+</ol>
+
+<p>While Lloyd's heuristic is guaranteed to converge monotonically to a local minimum of the within-cluster sum of squares (WCSS), it is fundamentally sensitive to initial centroid placement and does not guarantee convergence to the global optimum.</p>
+
+<h2 class='heading-2'>3.2 Seeding Vulnerability & The K-Means++ Breakthrough (Arthur & Vassilvitskii)</h2>
+<p>For decades, practical implementations initialized centroids by randomly sampling $K$ points uniformly from the dataset (Forgy initialization). However, uniform random seeding frequently selects initial centroids that are clustered closely together within a single natural cluster, leading to poor local minima and slow convergence.</p>
+
+<p>David Arthur and Sergei Vassilvitskii (2007) resolved this limitation by proposing <strong>K-Means++</strong>. Their randomized seeding algorithm selects the first centroid uniformly at random, but chooses subsequent centroids with probability proportional to the squared Euclidean distance ($D(x)^2$) from the point to its closest already-chosen centroid:</p>
+
+<p>$$P(x) = \frac{D(x)^2}{\sum_{x' \in \mathcal{X}} D(x')^2}$$</p>
+
+<p>Arthur and Vassilvitskii proved mathematically that K-Means++ achieves an expected approximation ratio of $O(\log K)$ relative to the optimal clustering solution, drastically reducing runtime iterations and stabilizing convergence across random trials.</p>
+
+<h2 class='heading-2'>3.3 Graph-Theoretic Clustering & Minimum Spanning Trees (Prim, Zahn)</h2>
+<p>In parallel with centroid optimization, graph-theoretic clustering emerged as a powerful alternative rooted in discrete mathematics and combinatorial optimization. A spanning tree of an undirected connected graph $G=(V, E)$ is an acyclic subgraph connecting all vertices. A <strong>Minimum Spanning Tree (MST)</strong> is a spanning tree whose total sum of edge weights is minimal:</p>
+
+<p>$$w(T) = \sum_{e \in T} w(e)$$</p>
+
+<p>Robert C. Prim (1957) and Joseph B. Kruskal (1956) published greedy algorithms for constructing the MST. Prim's algorithm maintains a growing tree vertex set $S \subset V$, greedily adding the minimum-weight edge crossing the cut $(S, V \setminus S)$ until all vertices are spanned. For complete graphs where $|E| = \Theta(V^2)$, Prim's algorithm using a dense priority array achieves optimal $\Theta(V^2)$ time complexity.</p>
+
+<p>C. T. Zahn (1971) published a landmark paper introducing graph-theoretical clustering for detecting <em>"gestalt"</em> clusters. Zahn recognized that the edges of an MST capture the intrinsic topological proximity of a point distribution. By deleting the $(K-1)$ edges with the highest weights from the computed MST, the graph disconnects into $K$ connected components, forming natural cluster partitions.</p>
+
+<h2 class='heading-2'>3.4 Single-Linkage Chaining & Topological Manifold Discovery</h2>
+<p>MST-based clustering is mathematically equivalent to single-linkage agglomerative hierarchical clustering terminated at $K$ components. Under single-linkage clustering, the distance between two clusters $A$ and $B$ is defined as the minimum pairwise distance between their constituent elements:</p>
+
+<p>$$d_{\text{single}}(A, B) = \min_{u \in A, v \in B} \| u - v \|$$</p>
+
+<p>This property endows MST clustering with the ability to discover arbitrary non-linear, non-convex topological manifolds (such as interlocking spirals or concentric rings). As long as points within a cluster are connected by a contiguous chain of small pairwise distances, and the gap between distinct clusters exceeds the intra-cluster step size, MST clustering cleanly recovers the true manifold topology.</p>
+
+<p>However, single-linkage clustering is notoriously susceptible to the <strong>chaining effect</strong>: a small number of noise observations scattered between two natural clusters can act as intermediate bridges, linking disparate clusters into a single giant component.</p>
+
+<h2 class='heading-2'>3.5 Partition Agreement Metrics & Adjusted Rand Index (Hubert & Arabie, Rand)</h2>
+<p>Evaluating the quality of an unsupervised clustering partition against ground-truth class labels requires an objective concordance metric that is invariant to arbitrary label permutations. </p>
+
+<p>William M. Rand (1971) introduced the <strong>Rand Index (RI)</strong>, which considers all $\binom{N}{2}$ pairs of observations and measures the fraction of pairs that are either grouped together or placed in separate clusters in both partitions:</p>
+
+<p>$$\text{RI} = \frac{a + d}{a + b + c + d}$$</p>
+
+<p>where $a$ is the number of pairs placed together in both partitions, $d$ is the number of pairs placed in separate clusters in both, and $b, c$ represent discordant pairs.</p>
+
+<p>The major theoretical limitation of the raw Rand Index is that its expected value for two completely random clusterings does not equal zero; instead, it increases substantially as the number of clusters increases. Lawrence Hubert and Phipps Arabie (1985) solved this by formulating the <strong>Adjusted Rand Index (ARI)</strong>, which applies a generalized correction for chance:</p>
+
+<p>$$\text{ARI} = \frac{\text{Index} - \mathbb{E}[\text{Index}]}{\max(\text{Index}) - \mathbb{E}[\text{Index}]}$$</p>
+
+<p>Under the hypergeometric model of randomness, the ARI yields an expected value of $0.0$ for random cluster assignments, bounded between $-1.0$ (complete disagreement) and $+1.0$ (perfect concordance).</p>
+
+<h2 class='heading-2'>3.6 Related Works in Noise and Outlier Sensitivity</h2>
+<p>Anil K. Jain (2010), in his 50-year retrospective on K-Means, highlighted that real-world cluster analysis is predominantly hindered by noise, outliers, and cluster overlap. While density-based algorithms like DBSCAN (Ester et al., 1996) incorporate explicit noise identification mechanisms by categorizing points as core, border, or noise, classical K-Means and standard MST clustering force every input observation into a cluster. In this report, we specifically evaluate how this forced-assignment constraint behaves under controlled contamination regimes.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 4 â€” Mathematical Foundations</h1>
+
+<h2 class='heading-2'>4.1 Metric Space & Euclidean Distance</h2>
+<p>Let the observation space be the two-dimensional real coordinate space $\mathcal{X} = \mathbb{R}^2$ equipped with the standard $L_2$ Euclidean metric. For any two feature vectors $x_i = (x_{i1}, x_{i2})^T$ and $x_j = (x_{j1}, x_{j2})^T$, the Euclidean distance is defined as:</p>
+
+<p>$$d(x_i, x_j) = \| x_i - x_j \|_2 = \sqrt{\sum_{d=1}^2 (x_{id} - x_{jd})^2} = \sqrt{(x_{i1} - x_{j1})^2 + (x_{i2} - x_{j2})^2}$$</p>
+
+<p>In computation, where monotonic distance comparisons suffice without computing square roots (such as centroid allocation or nearest neighbor queries), the squared Euclidean distance is employed to minimize computational overhead:</p>
+
+<p>$$d^2(x_i, x_j) = \| x_i - x_j \|_2^2 = (x_{i1} - x_{j1})^2 + (x_{i2} - x_{j2})^2$$</p>
+
+<h2 class='heading-2'>4.2 Lloyd's K-Means Optimization Formulation</h2>
+<p>Given a finite dataset $\mathcal{X} = \{x_1, x_2, \dots, x_N\} \subset \mathbb{R}^2$ and a user-specified integer $K \ge 2$, K-Means seeks a partition of $\mathcal{X}$ into $K$ disjoint subsets $\mathcal{C} = \{C_1, C_2, \dots, C_K\}$ such that:</p>
+
+<p>$$\bigcup_{k=1}^K C_k = \mathcal{X} \quad \text{and} \quad C_j \cap C_k = \emptyset \quad \forall j \neq k$$</p>
+
+<p>The objective function to be minimized is the Within-Cluster Sum of Squares (WCSS), commonly referred to as the clustering <strong>Inertia</strong> $\mathcal{J}$:</p>
+
+<p>$$\mathcal{J}(\mathcal{C}, \mu) = \sum_{k=1}^K \sum_{x_i \in C_k} \| x_i - \mu_k \|^2$$</p>
+
+<p>where $\mu_k \in \mathbb{R}^2$ denotes the mean vector or centroid of cluster $C_k$.</p>
+
+<h2 class='heading-2'>4.3 Centroid Update Derivation via Gradient of Inertia</h2>
+<p>To derive the optimal centroid $\mu_k$ that minimizes the inertia $\mathcal{J}$ for a fixed cluster assignment $C_k$, we compute the partial gradient of $\mathcal{J}$ with respect to $\mu_k$:</p>
+
+<p>$$\nabla_{\mu_k} \mathcal{J} = \frac{\partial}{\partial \mu_k} \sum_{x_i \in C_k} (x_i - \mu_k)^T (x_i - \mu_k) = -2 \sum_{x_i \in C_k} (x_i - \mu_k)$$</p>
+
+<p>Setting the gradient to zero to find the stationary point:</p>
+
+<p>$$-2 \sum_{x_i \in C_k} (x_i - \mu_k) = 0 \implies \sum_{x_i \in C_k} x_i = \sum_{x_i \in C_k} \mu_k = |C_k| \mu_k$$</p>
+
+<p>Solving for $\mu_k$ yields the arithmetic mean:</p>
+
+<p>$$\mu_k^<em> = \frac{1}{|C_k|} \sum_{x_i \in C_k} x_i$$</p>
+
+<p>Because the Hessian matrix $\nabla_{\mu_k}^2 \mathcal{J} = 2 |C_k| I_{2 \times 2}$ is strictly positive definite for $|C_k| > 0$, $\mu_k^</em>$ is the unique global minimizer of WCSS for the subset $C_k$.</p>
+
+<h2 class='heading-2'>4.4 Minimum Spanning Tree Properties & The Cut Lemma</h2>
+<p>Let $G = (V, E)$ be a complete undirected graph where $V = \{x_1, x_2, \dots, x_N\}$ and edge weights $w(e) = \| u - v \|$ represent pairwise Euclidean distances. A spanning tree $T = (V, E_T)$ contains exactly $|V| - 1 = N - 1$ edges with no cycles.</p>
+
+<p>The correctness of greedy MST construction rests upon the fundamental <strong>Cut Lemma</strong>:</p>
+<blockquote class='report-quote'><em>Cut Property</em>: Let $S \subset V$ be any non-empty proper subset of vertices, defining a cut $(S, V \setminus S)$. If an edge $e = (u, v) \in E$ is the strictly minimum-weight edge crossing the cut (i.e., $u \in S, v \in V \setminus S$), then $e$ must belong to every Minimum Spanning Tree of $G$.</blockquote>
+
+<h2 class='heading-2'>4.5 Prim's Greedy Construction Dynamics</h2>
+<p>Prim's algorithm exploits the Cut Property iteratively:</p>
+<ol>
+<li>Initialize a visited vertex set $S = \{v_0\}$ with an arbitrary start vertex $v_0 \in V$, and an unvisited set $U = V \setminus S$.</li>
+<li>Maintain a key array $\kappa[v]$ storing the minimum Euclidean distance from each unvisited vertex $v \in U$ to any vertex currently in $S$:</li>
+</ol>
+<p>   $$\kappa[v] = \min_{u \in S} \| u - v \|$$</p>
+<ol>
+<li>At each step, select vertex $v^<em> = \arg\min_{v \in U} \kappa[v]$, add edge $(v^</em>, \pi[v^<em>])$ to the tree $E_T$, move $v^</em>$ from $U$ to $S$, and update keys:</li>
+</ol>
+<p>   $$\kappa[w] = \min(\kappa[w], \| v^<em> - w \|) \quad \forall w \in U$$</p>
+<ol>
+<li>Repeat until $S = V$. The resulting tree $T = (V, E_T)$ has minimal total edge weight.</li>
+</ol>
+
+<h2 class='heading-2'>4.6 Spanning Forest Partitioning & Disjoint Set Union</h2>
+<p>Once the full tree $T = (V, E_T)$ of $N-1$ edges is constructed, Zahn's clustering proceeds as follows:</p>
+<ol>
+<li>Sort all $N-1$ edges in descending order of Euclidean length:</li>
+</ol>
+<p>   $$e_{(1)} \ge e_{(2)} \ge \dots \ge e_{(N-1)}$$</p>
+<ol>
+<li>Select the top $(K - 1)$ edges $\{e_{(1)}, \dots, e_{(K-1)}\}$ and delete them from $T$.</li>
+<li>The remaining edge set $E' = E_T \setminus \{e_{(1)}, \dots, e_{(K-1)}\}$ contains exactly:</li>
+</ol>
+<p>   $$|E'| = (N - 1) - (K - 1) = N - K \text{ edges}$$</p>
+<ol>
+<li>An acyclic graph with $N$ vertices and $N - K$ edges consists of exactly $K$ connected components.</li>
+<li>Connected components are extracted using a <strong>Disjoint Set Union (Union-Find)</strong> data structure initialized with $N$ singleton sets. For each remaining edge $(u, v) \in E'$, execute $\text{Union}(u, v)$ with path compression and rank optimization. The resulting $K$ disjoint root representatives define the final cluster labels.</li>
+</ol>
+
+<h2 class='heading-2'>4.7 Hubert & Arabie Adjusted Rand Index (ARI) Derivation</h2>
+<p>Let $\mathcal{U} = \{U_1, U_2, \dots, U_R\}$ denote the ground-truth partition and $\mathcal{V} = \{V_1, V_2, \dots, V_C\}$ denote the algorithm's predicted partition over $n$ evaluation points. Their overlap is summarized in a contingency matrix:</p>
+
+<h3 class='heading-3'>Table 4.1: Contingency Table Cross-Classification of Predicted vs. Ground-Truth Partitions</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Partition $\mathcal{U} \setminus \mathcal{V}$</th>
+<th>$V_1$</th>
+<th>$V_2$</th>
+<th>$\dots$</th>
+<th>$V_C$</th>
+<th>Row Sum</th>
+</tr></thead><tbody>
+<tr>
+<td>$U_1$</td>
+<td>$n_{11}$</td>
+<td>$n_{12}$</td>
+<td>$\dots$</td>
+<td>$n_{1C}$</td>
+<td>$a_1$</td>
+</tr>
+<tr>
+<td>$U_2$</td>
+<td>$n_{21}$</td>
+<td>$n_{22}$</td>
+<td>$\dots$</td>
+<td>$n_{2C}$</td>
+<td>$a_2$</td>
+</tr>
+<tr>
+<td>$\vdots$</td>
+<td>$\vdots$</td>
+<td>$\vdots$</td>
+<td>$\ddots$</td>
+<td>$\vdots$</td>
+<td>$\vdots$</td>
+</tr>
+<tr>
+<td>$U_R$</td>
+<td>$n_{R1}$</td>
+<td>$n_{R2}$</td>
+<td>$\dots$</td>
+<td>$n_{RC}$</td>
+<td>$a_R$</td>
+</tr>
+<tr>
+<td><strong>Col Sum</strong></td>
+<td>$b_1$</td>
+<td>$b_2$</td>
+<td>$\dots$</td>
+<td>$b_C$</td>
+<td>$n = \sum n_{ij}$</td>
+</tr>
+</tbody></table></div>
+
+<p>The combinatorial components of the Adjusted Rand Index are:</p>
+<ul>
+<li><strong>Total Pairs</strong>: $\binom{n}{2} = \frac{n(n-1)}{2}$</li>
+<li><strong>Concordant Pairs in Contingency Cells</strong>:</li>
+</ul>
+<p>  $$\text{Index} = \sum_{i=1}^R \sum_{j=1}^C \binom{n_{ij}}{2}$$</p>
+<ul>
+<li><strong>Expected Concordance Under Hypergeometric Randomness</strong>:</li>
+</ul>
+<p>  $$\mathbb{E}[\text{Index}] = \frac{\left[ \sum_{i=1}^R \binom{a_i}{2} \right] \left[ \sum_{j=1}^C \binom{b_j}{2} \right]}{\binom{n}{2}}$$</p>
+<ul>
+<li><strong>Maximum Concordance Index</strong>:</li>
+</ul>
+<p>  $$\max(\text{Index}) = \frac{1}{2} \left[ \sum_{i=1}^R \binom{a_i}{2} + \sum_{j=1}^C \binom{b_j}{2} \right]$$</p>
+
+<p>The chance-corrected <strong>Adjusted Rand Index (ARI)</strong> (Hubert & Arabie, 1985) is formulated as:</p>
+
+<p>$$\text{ARI} = \frac{\sum_{i=1}^R \sum_{j=1}^C \binom{n_{ij}}{2} - \frac{\left[ \sum_{i=1}^R \binom{a_i}{2} \right] \left[ \sum_{j=1}^C \binom{b_j}{2} \right]}{\binom{n}{2}}}{\frac{1}{2} \left[ \sum_{i=1}^R \binom{a_i}{2} + \sum_{j=1}^C \binom{b_j}{2} \right] - \frac{\left[ \sum_{i=1}^R \binom{a_i}{2} \right] \left[ \sum_{j=1}^C \binom{b_j}{2} \right]}{\binom{n}{2}}}$$</p>
+
+<h2 class='heading-2'>4.8 Statistical Aggregation: Mean & Sample Standard Deviation</h2>
+<p>For an experimental metric $X$ evaluated across $M$ distinct random seeds ($M = 3$ in our protocol, seeds $\mathcal{S} \in \{11, 22, 33\}$):</p>
+<ul>
+<li><strong>Arithmetic Mean</strong>:</li>
+</ul>
+<p>  $$\bar{X} = \frac{1}{M} \sum_{m=1}^M X_m$$</p>
+<ul>
+<li><strong>Sample Standard Deviation</strong> (with Bessel's correction for unbiased estimation):</li>
+</ul>
+<p>  $$s_X = \sqrt{\frac{1}{M - 1} \sum_{m=1}^M (X_m - \bar{X})^2}$$</p>
+
+<h2 class='heading-2'>4.9 Baseline Degradation Metric ($\Delta\text{ARI}$)</h2>
+<p>To isolate perturbation sensitivity from initial geometric incompatibility, performance degradation is measured relative to the clean paired baseline evaluated on the identical seed:</p>
+
+<p>$$\Delta \text{ARI} = \max\left(0.0, \; \text{ARI}_{\text{baseline}} - \text{ARI}_{\text{perturbed}}\right)$$</p>
+
+<p></em>Mathematical Clarification<em>: The metric is intentionally clamped at zero ($\max(0.0, \dots)$) to function as a one-sided measure of <strong>performance loss</strong>. If stochastic noise shifts an already invalid clustering slightly upward (e.g., from $-0.0029$ to $+0.0002$), this random fluctuation is treated as zero degradation rather than algorithmic improvement.</p>
+
+<h2 class='heading-2'>4.10 Asymptotic Computational Complexity Analysis</h2>
+
+<h3 class='heading-3'>Table 4.2: Theoretical Asymptotic Time and Auxiliary Space Complexity Bounds</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Algorithmic Phase</th>
+<th>Lloyd's K-Means Algorithm</th>
+<th>Prim's Euclidean MST Clustering</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Initialization Phase</strong></td>
+<td>$O(K \cdot N)$ (K-Means++ $D^2$ sampling)</td>
+<td>$O(N)$ (Key/Parent array allocation)</td>
+</tr>
+<tr>
+<td><strong>Core Optimization / Spanning</strong></td>
+<td>$O(I \cdot K \cdot N)$ ($I$ Lloyd iterations)</td>
+<td>$\Theta(N^2)$ (Complete graph Prim spanning)</td>
+</tr>
+<tr>
+<td><strong>Partitioning / Extraction</strong></td>
+<td>$O(N)$ (Voronoi nearest centroid labels)</td>
+<td>$O(N \log N)$ (Edge sort) $+ O(N \cdot \alpha(N))$ (Union-Find)</td>
+</tr>
+<tr>
+<td><strong>Total Asymptotic Time</strong></td>
+<td>$\mathbf{O(I \cdot K \cdot N)}$</td>
+<td>$\mathbf{\Theta(N^2)}$</td>
+</tr>
+<tr>
+<td><strong>Auxiliary Working Space</strong></td>
+<td>$\mathbf{O(N + K)}$</td>
+<td>$\mathbf{O(N)}$</td>
+</tr>
+</tbody></table></div>
+
+<p></em>Theoretical Complexity Note<em>: In dense Euclidean spaces where all pairwise distances exist, Prim's algorithm requires evaluating all $\frac{N(N-1)}{2} = \Theta(N^2)$ edge weights. Lloyd's algorithm evaluates $K \cdot N$ distances per iteration, typically converging in $I \ll N$ iterations ($I \le 10$ for well-separated clusters), yielding superior linear scalability with respect to sample size $N$.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 5 â€” Proposed System and Architecture</h1>
+
+<h2 class='heading-2'>5.1 Architecture Overview & Technology Stack</h2>
+<p>To ensure maximum scientific transparency, complete auditability, and immediate reproducibility without third-party installation barriers, the experimental system was designed as a <strong>browser-native scientific application</strong>. The architecture strictly adheres to standard web technologies:</p>
+<ul>
+<li><strong>HTML5</strong>: Semantic document structuring, multi-canvas rendering layouts, and accessible telemetry presentation.</li>
+<li><strong>Vanilla ECMAScript 2022 (JavaScript)</strong>: Pure algorithmic execution without compilation steps, external bundlers (Webpack, Vite), or computational libraries (NumPy, SciPy, TensorFlow.js).</li>
+<li><strong>CSS3</strong>: Modern, responsive dashboard design utilizing CSS custom properties, grid layouts, and high-contrast scientific palettes.</li>
+<li><strong>HTML5 2D Canvas API</strong>: High-DPI mathematical rendering for coordinate scatter plots, spanning tree overlays, and multi-series line charts.</li>
+</ul>
+
+<p><!--CODEBLOCK_0--></p>
+
+<h2 class='heading-2'>5.2 Deterministic Pseudo-Random Number Generation (LCG)</h2>
+<p>Standard browser implementations of <code class="inline-code">Math.random()</code> are non-deterministic, preventing exact experimental replication across runs. To guarantee strict scientific reproducibility, all stochastic operations are driven by an internal <strong>Linear Congruential Generator (LCG)</strong> implemented in <code class="inline-code">js/data/prng.js</code>. The generator implements the classic recurrence:</p>
+
+<p>$$X_{n+1} = (a X_n + c) \pmod m$$</p>
+
+<p>with parameters $a = 1664525$, $c = 1013904223$, and $m = 2^{32}$. Floating-point uniform variates in $[0, 1)$ are produced by $U = X / 2^{32}$.</p>
+
+<h2 class='heading-2'>5.3 Synthetic Manifold Generation Pipeline</h2>
+<p>Implemented in <code class="inline-code">js/data/datasets.js</code>, the generation pipeline constructs coordinates dynamically based on user parameters:</p>
+<ol>
+<li><strong>Gaussian Blobs</strong>: Centers are placed equidistant on a 2D plane; points are generated with bivariate normal offsets.</li>
+<li><strong>Two Moons</strong>: Upper and lower semicircular arcs parameterized by angle $\theta \in [0, \pi]$.</li>
+<li><strong>Concentric Circles</strong>: Concentric rings parameterized by radius $r_1, r_2$ and angle $\theta \in [0, 2\pi)$.</li>
+</ol>
+
+<h2 class='heading-2'>5.4 Clustering Execution Engines</h2>
+<ul>
+<li><strong><code class="inline-code">js/algorithms/kmeans.js</code></strong>: Houses the <code class="inline-code">KMeans</code> class encapsulating K-Means++ initialization, iterative Lloyd updates, convergence checking ($\epsilon = 10^{-5}$), and empty cluster fallback reseeding.</li>
+<li><strong><code class="inline-code">js/algorithms/mst.js</code></strong>: Houses the <code class="inline-code">MSTClustering</code> class encapsulating dense Prim's MST construction, edge sorting, cut removal, and Disjoint Set Union label assignment.</li>
+</ul>
+
+<h2 class='heading-2'>5.5 Quantitative Evaluation Engine</h2>
+<p>Located in <code class="inline-code">js/metrics/evaluation.js</code>, this module implements:</p>
+<ul>
+<li>Contingency table generation from predicted and ground-truth label arrays.</li>
+<li>Hubert & Arabie Adjusted Rand Index calculation.</li>
+<li>Inlier subset extraction: filters indices to ignore synthetic outlier observations during contingency construction.</li>
+</ul>
+
+<h2 class='heading-2'>5.6 Automated Robustness Experiment Runner</h2>
+<p>Implemented in <code class="inline-code">js/experiments/robustness.js</code>, this module automates paired parameter sweeps:</p>
+<ul>
+<li>Iterates through geometries, noise levels, outlier fractions, and seeds.</li>
+<li>For each condition, generates coordinates, executes both algorithms, records runtimes via <code class="inline-code">performance.now()</code>, evaluates ARI, and computes degradation relative to the matching clean baseline.</li>
+</ul>
+
+<h2 class='heading-2'>5.7 Micro-Benchmarking Engine & Browser Monotonic Timing</h2>
+<p>Implemented in <code class="inline-code">js/experiments/benchmarks.js</code>, this engine evaluates computational runtimes across sample sizes $N \in \{100, 200, 400, 600\}$. To ensure accurate timing:</p>
+<ul>
+<li>Executes un-timed warm-up iterations to trigger V8 JIT optimization.</li>
+<li>Times clustering algorithms in isolation, excluding coordinate generation and DOM rendering.</li>
+<li>Uses the high-resolution monotonic timer <code class="inline-code">window.performance.now()</code>.</li>
+</ul>
+
+<h2 class='heading-2'>5.8 Interactive Algorithm Explorer & Educational Visualizer</h2>
+<p>To serve pedagogical purposes, an interactive visualizer demonstrates Prim's algorithm and K-Means step-by-step:</p>
+<ul>
+<li><strong>Prim's Animation</strong>: Highlights the frontier vertex, the cut edge being selected, and the growing tree structure.</li>
+<li><strong>K-Means Animation</strong>: Visualizes Voronoi boundary shifts and centroid migration trajectories across successive iterations.</li>
+</ul>
+
+<h2 class='heading-2'>5.9 Scientific Export Architecture</h2>
+<p>Located in <code class="inline-code">js/export/export_manager.js</code>, this component generates downloadable CSV records, JSON reproducibility metadata, and converts HTML5 canvases into high-resolution PNG image downloads via data URIs.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 6 â€” Implementation Methodology</h1>
+
+<h2 class='heading-2'>6.1 Lloyd's K-Means Algorithm with K-Means++ Seeding</h2>
+<p>The K-Means engine is implemented with the following operational constraints:</p>
+<ul>
+<li><strong>Seeding</strong>: The first centroid $\mu_1$ is selected uniformly at random from $\mathcal{X}$. Subsequent centroids $\mu_2, \dots, \mu_K$ are sampled with probability proportional to $D(x)^2 = \min_{j < k} \|x - \mu_j\|^2$.</li>
+<li><strong>Convergence</strong>: The algorithm terminates when the maximum centroid coordinate displacement between iterations satisfies:</li>
+</ul>
+<p>  $$\max_{k=1}^K \|\mu_k^{(t)} - \mu_k^{(t-1)}\| < \epsilon = 10^{-5}$$</p>
+<p>  or when maximum iterations $I_{\max} = 100$ are reached.</p>
+<ul>
+<li><strong>Empty Cluster Reseeding</strong>: If a cluster loses all member points during an assignment step ($|C_k| = 0$), the centroid $\mu_k$ is immediately reseeded to the data point currently having the largest squared distance from any active centroid.</li>
+</ul>
+
+<h2 class='heading-2'>6.2 Prim's Dense Minimum Spanning Tree Construction</h2>
+<p>Prim's algorithm is implemented using a dense priority array optimal for complete Euclidean graphs:</p>
+<ul>
+<li>Array <code class="inline-code">inTree</code> of boolean flags ($N$ elements).</li>
+<li>Array <code class="inline-code">minDist</code> initialized to $\infty$ ($N$ elements).</li>
+<li>Array <code class="inline-code">parent</code> initialized to $-1$ ($N$ elements).</li>
+<li>A start vertex (index $0$) is marked <code class="inline-code">inTree[0] = true</code>. For all remaining vertices $v$, <code class="inline-code">minDist[v]</code> is initialized to $\|x_0 - x_v\|$.</li>
+<li>In each of the remaining $N-1$ steps, the unvisited vertex $u$ with minimum <code class="inline-code">minDist[u]</code> is identified via a linear scan ($O(N)$), added to <code class="inline-code">inTree</code>, and used to relax the distance keys of all remaining unvisited vertices.</li>
+<li>Total distance evaluations: $\frac{N(N-1)}{2}$.</li>
+</ul>
+
+<h2 class='heading-2'>6.3 Spanning Tree Cutting & Disjoint Component Extraction</h2>
+<p>Upon termination of Prim's algorithm:</p>
+<ol>
+<li>The $N-1$ tree edges are stored as tuples <code class="inline-code">(u, v, weight)</code>.</li>
+<li>The edge array is sorted in descending order of <code class="inline-code">weight</code>.</li>
+<li>The top $(K-1)$ edges are removed.</li>
+<li>A Union-Find data structure with path compression and rank optimization is initialized for $N$ vertices.</li>
+<li>The remaining $N-K$ edges are merged via <code class="inline-code">union(u, v)</code>.</li>
+<li>Unique cluster IDs $\{0, 1, \dots, K-1\}$ are assigned based on component root representatives.</li>
+</ol>
+
+<h2 class='heading-2'>6.4 Synthetic Perturbation Implementation</h2>
+<ul>
+<li><strong>Additive Gaussian Noise</strong>: Added to clean inlier coordinates using the Box-Muller transform:</li>
+</ul>
+<p>  $$Z_0 = \sqrt{-2 \ln U_1} \cos(2\pi U_2), \quad Z_1 = \sqrt{-2 \ln U_1} \sin(2\pi U_2)$$</p>
+<p>  $$x_{\text{noisy}} = x_{\text{clean}} + \sigma \cdot Z_0, \quad y_{\text{noisy}} = y_{\text{clean}} + \sigma \cdot Z_1$$</p>
+<ul>
+<li><strong>Ambient Outlier Sampling</strong>: Generated uniformly across a bounding box expanded by a margin $\Delta = 0.5$ around inlier bounds:</li>
+</ul>
+<p>  $$x_{\text{outlier}} \sim \mathcal{U}[x_{\min} - \Delta, x_{\max} + \Delta], \quad y_{\text{outlier}} \sim \mathcal{U}[y_{\min} - \Delta, y_{\max} + \Delta]$$</p>
+
+<h2 class='heading-2'>6.5 Algorithmic Pseudocode</h2>
+
+<p><!--CODEBLOCK_0--></p>
+
+<p><!--CODEBLOCK_0--></p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 7 â€” Experimental Design</h1>
+
+<h2 class='heading-2'>7.1 Dataset Geometries & Topological Properties</h2>
+<p>All experimental runs were conducted across three synthetic dataset families with $N_{\text{inliers}} = 300$ baseline observations:</p>
+<ol>
+<li><strong>Gaussian Blobs ($K=3$, Convex)</strong>: Three spherical bivariate normal distributions ($\sigma_{\text{cluster}} = 0.6$) centered at $(-2.5, -2.5)$, $(2.5, 2.5)$, and $(2.5, -2.5)$. Balanced: $100$ points/cluster.</li>
+<li><strong>Two Moons ($K=2$, Non-Convex Interlocking Manifolds)</strong>: Two interleaving semicircular arcs of radius $r = 1.0$, offset horizontally and vertically. Balanced: $150$ points/crescent.</li>
+<li><strong>Concentric Circles ($K=2$, Non-Convex Nested Rings)</strong>: An inner circular ring ($r_1 = 0.5$) and outer ring ($r_2 = 1.0$) centered at origin $(0, 0)$. Balanced: $150$ points/ring.</li>
+</ol>
+
+<h2 class='heading-2'>7.2 Controlled Perturbation Regimes</h2>
+<p>To prevent confounding interactions between Gaussian noise and ambient outliers, two separate controlled sweeps were conducted:</p>
+
+<h3 class='heading-3'>Table 7.1: Controlled Experimental Parameter Configurations</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Experiment Identifier</th>
+<th>Investigated Variable</th>
+<th>Tested Parameter Levels</th>
+<th>Fixed Control Variables</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Experiment A</strong></td>
+<td>Gaussian Noise Sensitivity</td>
+<td>$\sigma \in \{0.00, 0.05, 0.10, 0.20\}$</td>
+<td>Outlier Fraction $\eta = 0.00$ ($0$ outliers)</td>
+</tr>
+<tr>
+<td><strong>Experiment B</strong></td>
+<td>Outlier Contamination Robustness</td>
+<td>$\eta \in \{0\%, 5\%, 10\%, 20\%\}$ ($0, 15, 30, 60$ pts)</td>
+<td>Gaussian Noise $\sigma = 0.00$</td>
+</tr>
+<tr>
+<td><strong>Experiment C</strong></td>
+<td>Clean Baseline Manifold Recovery</td>
+<td>Matching baseline condition</td>
+<td>$\sigma = 0.00, \eta = 0.00$</td>
+</tr>
+</tbody></table></div>
+
+<h2 class='heading-2'>7.3 Reproducibility & Paired Seed Protocol</h2>
+<p>Every experimental condition was evaluated across <strong>three fixed PRNG seeds</strong>: $\mathcal{S} \in \{11, 22, 33\}$. For every seed and perturbation setting:</p>
+<ul>
+<li>The exact same coordinate array was supplied to both K-Means and MST.</li>
+<li>Paired comparisons ensure that observed performance differences reflect intrinsic algorithmic mechanics rather than sample variance.</li>
+</ul>
+
+<h2 class='heading-2'>7.4 Inlier-Restricted Evaluation Justification</h2>
+<p>When uniform outliers are added, the Adjusted Rand Index is computed <strong>strictly over the $N_{\text{inliers}} = 300$ ground-truth points</strong>. In real-world data mining, ambient background noise does not constitute a valid natural cluster. Incorporating uniform outliers into the contingency table would artificially reward algorithms that allocate outliers into an arbitrary $K$-th cluster or distort true cluster boundaries.</p>
+
+<h2 class='heading-2'>7.5 Benchmarking Protocol & Warm-Up Iterations</h2>
+<p>Performance benchmarks were conducted on Gaussian Blobs ($K=3$) across sample sizes $N \in \{100, 200, 400, 600\}$:</p>
+<ul>
+<li>5 timed repetitions per algorithm and sample size.</li>
+<li>Preceded by 3 un-timed warm-up iterations to trigger V8 Just-In-Time (JIT) optimization.</li>
+<li>Timed strictly via <code class="inline-code">performance.now()</code>, excluding dataset generation and canvas rendering.</li>
+</ul>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 8 â€” Results and Analysis</h1>
+
+<h2 class='heading-2'>8.1 Qualitative Clustering Comparisons on Clean Manifolds</h2>
+<p>Under clean baseline conditions ($\sigma = 0.00, \eta = 0\%$), the two algorithms exhibit stark contrasts in manifold recovery:</p>
+
+<h3 class='heading-3'>Table 8.1: Experimental Clustering Quality on Clean Baseline Geometries ($\sigma = 0.00, \eta = 0\%$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Dataset Family</th>
+<th>Requested $K$</th>
+<th>K-Means Baseline Inlier ARI</th>
+<th>MST Baseline Inlier ARI</th>
+<th>Observed Topological Outcome</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Gaussian Blobs</strong></td>
+<td>$3$</td>
+<td><strong>$1.0000 \pm 0.0000$</strong></td>
+<td><strong>$1.0000 \pm 0.0000$</strong></td>
+<td>Both algorithms achieve perfect separation.</td>
+</tr>
+<tr>
+<td><strong>Two Moons</strong></td>
+<td>$2$</td>
+<td><strong>$0.1941 \pm 0.0588$</strong></td>
+<td><strong>$1.0000 \pm 0.0000$</strong></td>
+<td>MST traces crescents; K-Means cuts across arcs.</td>
+</tr>
+<tr>
+<td><strong>Concentric Circles</strong></td>
+<td>$2$</td>
+<td><strong>$-0.0019 \pm 0.0012$</strong></td>
+<td><strong>$1.0000 \pm 0.0000$</strong></td>
+<td>MST separates rings; K-Means splits into half-circles.</td>
+</tr>
+</tbody></table></div>
+
+<div class='figure-container'><img src='../../results/figures/blobs_comparison.png' alt='Figure 8.1: Qualitative Comparison on Clean Gaussian Blobs' class='report-figure'/><p class='figure-caption'>Figure 8.1: Qualitative Comparison on Clean Gaussian Blobs</p></div>
+<p></em>Figure 8.1: Qualitative Clustering Comparison on Clean Gaussian Blobs ($K=3, N=300$). Both K-Means (center) and MST (right) achieve perfect partition agreement ($\text{ARI} = 1.0000$) with ground truth (left).<em></p>
+
+<div class='figure-container'><img src='../../results/figures/moons_comparison.png' alt='Figure 8.2: Qualitative Comparison on Clean Two Moons' class='report-figure'/><p class='figure-caption'>Figure 8.2: Qualitative Comparison on Clean Two Moons</p></div>
+<p></em>Figure 8.2: Qualitative Clustering Comparison on Clean Two Moons ($K=2, N=300$). MST traces the non-linear interlocking crescents perfectly ($\text{ARI} = 1.0000$), whereas K-Means slices across both crescents with a linear Voronoi boundary ($\text{ARI} = 0.1941$).<em></p>
+
+<div class='figure-container'><img src='../../results/figures/circles_comparison.png' alt='Figure 8.3: Qualitative Comparison on Clean Concentric Circles' class='report-figure'/><p class='figure-caption'>Figure 8.3: Qualitative Comparison on Clean Concentric Circles</p></div>
+<p></em>Figure 8.3: Qualitative Clustering Comparison on Clean Concentric Circles ($K=2, N=300$). MST cleanly separates inner and outer rings ($\text{ARI} = 1.0000$). K-Means bisects the concentric structures into semicircular halves ($\text{ARI} = -0.0019$).<em></p>
+
+<h2 class='heading-2'>8.2 Experiment A: Gaussian Noise Sensitivity Analysis</h2>
+<p>Table 8.2 through 8.4 summarize the impact of increasing Gaussian noise ($\sigma \in [0.00, 0.20]$):</p>
+
+<h3 class='heading-3'>Table 8.2: Noise Sensitivity Results on Gaussian Blobs ($K=3, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Noise Level ($\sigma$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.633 \pm 0.777$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$1.900 \pm 1.217$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.000 \pm 0.000$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.900 \pm 0.529$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.133 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.633 \pm 0.252$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.067 \pm 0.115$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.567 \pm 0.231$</td>
+</tr>
+</tbody></table></div>
+
+<h3 class='heading-3'>Table 8.3: Noise Sensitivity Results on Two Moons ($K=2, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Noise Level ($\sigma$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>K-Means</td>
+<td>$0.1941 \pm 0.0588$</td>
+<td>$0.2214$</td>
+<td>$[0.1267, 0.2343]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.233 \pm 0.208$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.733 \pm 0.321$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>K-Means</td>
+<td>$0.2117 \pm 0.0564$</td>
+<td>$0.2409$</td>
+<td>$[0.1467, 0.2475]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.133 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.833 \pm 0.451$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>K-Means</td>
+<td>$0.2237 \pm 0.0534$</td>
+<td>$0.2475$</td>
+<td>$[0.1626, 0.2611]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.033 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>MST</td>
+<td>$0.6667 \pm 0.5773$</td>
+<td>$1.0000$</td>
+<td>$[0.0001, 1.0000]$</td>
+<td>$0.3333 \pm 0.5773$</td>
+<td>$0.567 \pm 0.153$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>K-Means</td>
+<td>$0.2210 \pm 0.0472$</td>
+<td>$0.2214$</td>
+<td>$[0.1736, 0.2680]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.100 \pm 0.100$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>MST</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 0.0000]$</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$0.700 \pm 0.265$</td>
+</tr>
+</tbody></table></div>
+
+<h3 class='heading-3'>Table 8.4: Noise Sensitivity Results on Concentric Circles ($K=2, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Noise Level ($\sigma$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>K-Means</td>
+<td>$-0.0019 \pm 0.0012$</td>
+<td>$-0.0022$</td>
+<td>$[-0.0029, -0.0005]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.200 \pm 0.000$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.00$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$1.033 \pm 0.493$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>K-Means</td>
+<td>$-0.0019 \pm 0.0006$</td>
+<td>$-0.0022$</td>
+<td>$[-0.0022, -0.0012]$</td>
+<td>$0.0002 \pm 0.0004$</td>
+<td>$0.167 \pm 0.153$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.05$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.833 \pm 0.208$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>K-Means</td>
+<td>$+0.0002 \pm 0.0037$</td>
+<td>$-0.0005$</td>
+<td>$[-0.0031, +0.0042]$</td>
+<td>$0.0001 \pm 0.0001$</td>
+<td>$0.200 \pm 0.100$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.10$</td>
+<td>MST</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$1.233 \pm 0.208$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>K-Means</td>
+<td>$-0.0030 \pm 0.0002$</td>
+<td>$-0.0030$</td>
+<td>$[-0.0033, -0.0029]$</td>
+<td>$0.0012 \pm 0.0011$</td>
+<td>$0.067 \pm 0.115$</td>
+</tr>
+<tr>
+<td>$\sigma = 0.20$</td>
+<td>MST</td>
+<td>$0.0935 \pm 0.0813$</td>
+<td>$0.1327$</td>
+<td>$[0.0000, 0.1477]$</td>
+<td>$0.9065 \pm 0.0813$</td>
+<td>$0.833 \pm 0.586$</td>
+</tr>
+</tbody></table></div>
+
+<div class='figure-container'><img src='../../results/figures/ari_vs_noise.png' alt='Figure 8.4: Inlier ARI vs. Additive Gaussian Noise' class='report-figure'/><p class='figure-caption'>Figure 8.4: Inlier ARI vs. Additive Gaussian Noise</p></div>
+<p></em>Figure 8.4: Empirical Inlier ARI vs. Additive Gaussian Noise ($\sigma \in [0.00, 0.20]$). K-Means exhibits flat horizontal resilience on Blobs, while MST collapses sharply on Moons ($\sigma \ge 0.10$) and Circles ($\sigma = 0.20$).<em></p>
+
+<h2 class='heading-2'>8.3 Experiment B: Ambient Outlier Robustness Analysis</h2>
+<p>Tables 8.5 through 8.7 summarize the impact of uniform ambient outlier contamination ($\eta \in [0\%, 20\%]$):</p>
+
+<h3 class='heading-3'>Table 8.5: Outlier Robustness Results on Gaussian Blobs ($K=3, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Outlier Level ($\eta$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.033 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>MST</td>
+<td>$0.7132 \pm 0.2484$</td>
+<td>$0.5698$</td>
+<td>$[0.5698, 1.0000]$</td>
+<td>$0.2868 \pm 0.2484$</td>
+<td>$0.533 \pm 0.252$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.067 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>MST</td>
+<td>$0.7132 \pm 0.2484$</td>
+<td>$0.5698$</td>
+<td>$[0.5698, 1.0000]$</td>
+<td>$0.2868 \pm 0.2484$</td>
+<td>$0.467 \pm 0.115$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>K-Means</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$1.0000$</td>
+<td>$[1.0000, 1.0000]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.067 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>MST</td>
+<td>$0.3799 \pm 0.3290$</td>
+<td>$0.5698$</td>
+<td>$[0.0000, 0.5698]$</td>
+<td>$0.6201 \pm 0.3290$</td>
+<td>$0.733 \pm 0.306$</td>
+</tr>
+</tbody></table></div>
+
+<h3 class='heading-3'>Table 8.6: Outlier Robustness Results on Two Moons ($K=2, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Outlier Level ($\eta$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>K-Means</td>
+<td>$0.1920 \pm 0.0566$</td>
+<td>$0.2214$</td>
+<td>$[0.1267, 0.2278]$</td>
+<td>$0.0022 \pm 0.0037$</td>
+<td>$0.133 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>MST</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 0.0000]$</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$0.633 \pm 0.208$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>K-Means</td>
+<td>$0.1862 \pm 0.0557$</td>
+<td>$0.2152$</td>
+<td>$[0.1219, 0.2215]$</td>
+<td>$0.0080 \pm 0.0043$</td>
+<td>$0.133 \pm 0.115$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>MST</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 0.0000]$</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$0.700 \pm 0.400$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>K-Means</td>
+<td>$0.1764 \pm 0.0521$</td>
+<td>$0.1968$</td>
+<td>$[0.1172, 0.2152]$</td>
+<td>$0.0177 \pm 0.0171$</td>
+<td>$0.133 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>MST</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 0.0000]$</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$0.967 \pm 0.503$</td>
+</tr>
+</tbody></table></div>
+
+<h3 class='heading-3'>Table 8.7: Outlier Robustness Results on Concentric Circles ($K=2, N_{\text{inliers}}=300$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Outlier Level ($\eta$)</th>
+<th>Algorithm</th>
+<th>Inlier ARI (Mean $\pm$ SD)</th>
+<th>Median ARI</th>
+<th>[Min, Max] ARI</th>
+<th>ARI Degradation ($\Delta\text{ARI}$)</th>
+<th>Mean Runtime (ms)</th>
+</tr></thead><tbody>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>K-Means</td>
+<td>$-0.0017 \pm 0.0006$</td>
+<td>$-0.0017$</td>
+<td>$[-0.0022, -0.0011]$</td>
+<td>$0.0004 \pm 0.0007$</td>
+<td>$0.233 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 5\%$ ($15$ pts)</td>
+<td>MST</td>
+<td>$0.3333 \pm 0.5774$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 1.0000]$</td>
+<td>$0.6667 \pm 0.5774$</td>
+<td>$0.667 \pm 0.058$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>K-Means</td>
+<td>$-0.0008 \pm 0.0013$</td>
+<td>$-0.0004$</td>
+<td>$[-0.0022, +0.0003]$</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.167 \pm 0.115$</td>
+</tr>
+<tr>
+<td>$\eta = 10\%$ ($30$ pts)</td>
+<td>MST</td>
+<td>$0.3333 \pm 0.5774$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 1.0000]$</td>
+<td>$0.6667 \pm 0.5774$</td>
+<td>$1.067 \pm 0.416$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>K-Means</td>
+<td>$+0.0003 \pm 0.0033$</td>
+<td>$+0.0011$</td>
+<td>$[-0.0034, +0.0031]$</td>
+<td>$0.0004 \pm 0.0006$</td>
+<td>$0.100 \pm 0.000$</td>
+</tr>
+<tr>
+<td>$\eta = 20\%$ ($60$ pts)</td>
+<td>MST</td>
+<td>$0.0000 \pm 0.0000$</td>
+<td>$0.0000$</td>
+<td>$[0.0000, 0.0000]$</td>
+<td>$1.0000 \pm 0.0000$</td>
+<td>$0.800 \pm 0.265$</td>
+</tr>
+</tbody></table></div>
+
+<div class='figure-container'><img src='../../results/figures/ari_vs_outliers.png' alt='Figure 8.5: Inlier ARI vs. Ambient Outlier Contamination' class='report-figure'/><p class='figure-caption'>Figure 8.5: Inlier ARI vs. Ambient Outlier Contamination</p></div>
+<p></em>Figure 8.5: Empirical Inlier ARI vs. Ambient Outlier Contamination ($\eta \in [0\%, 20\%]$). In Two Moons, adding just $5\%$ outliers triggers a catastrophic drop in MST ARI to $0.0000$, whereas K-Means remains unaffected on Blobs ($1.0000$).<em></p>
+
+<h2 class='heading-2'>8.4 Quantitative Baseline Degradation Analysis ($\Delta\text{ARI}$)</h2>
+<p>Baseline degradation isolates the performance penalty induced by perturbations:</p>
+<ul>
+<li><strong>K-Means Degradation</strong>: On Gaussian Blobs, K-Means experienced exactly $\Delta\text{ARI} = 0.0000 \pm 0.0000$ across all tested noise levels ($\sigma \le 0.20$) and all outlier fractions ($\eta \le 20\%$). On Moons and Circles, where baseline ARI is already near zero, degradation remained bounded ($\Delta\text{ARI} \le 0.0177$).</li>
+<li><strong>MST Degradation</strong>: MST exhibited catastrophic degradation under outliers: $\Delta\text{ARI} = 1.0000$ on Two Moons ($5\%, 10\%, 20\%$), $\Delta\text{ARI} = 0.6667$ on Circles ($5\%, 10\%$) rising to $1.0000$ at $20\%$, and $\Delta\text{ARI} = 0.6201$ on Blobs at $20\%$. Under noise, degradation reached $1.0000$ on Moons and $0.9065$ on Circles at $\sigma = 0.20$.</li>
+</ul>
+
+<div class='figure-container'><img src='../../results/figures/ari_degradation.png' alt='Figure 8.6: Baseline ARI Performance Degradation' class='report-figure'/><p class='figure-caption'>Figure 8.6: Baseline ARI Performance Degradation</p></div>
+<p></em>Figure 8.6: Baseline ARI Performance Degradation ($\Delta\text{ARI}$) Across Evaluated Perturbations. Clustered bar chart showing the severe degradation of MST under outlier contamination compared to the stability of K-Means on Blobs.<em></p>
+
+<h2 class='heading-2'>8.5 Computational Runtime & Scalability Analysis</h2>
+<p>Micro-benchmarking on Gaussian Blobs ($K=3$) evaluated 5 repetitions across $N \in \{100, 200, 400, 600\}$:</p>
+
+<h3 class='heading-3'>Table 8.8: Micro-Benchmark Execution Ratios and Wall-Clock Statistics on Gaussian Blobs ($K=3$)</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Sample Size ($N$)</th>
+<th>Algorithm</th>
+<th>Mean Runtime (ms)</th>
+<th>Median Runtime (ms)</th>
+<th>Standard Deviation (ms)</th>
+<th>Min / Max Runtime (ms)</th>
+<th><strong>Ratio of Means</strong> ($\frac{\mu_{\text{MST}}}{\mu_{\text{KM}}}$)</th>
+<th><strong>Ratio of Medians</strong> ($\frac{M_{\text{MST}}}{M_{\text{KM}}}$)</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>100</strong></td>
+<td>K-Means</td>
+<td>$0.1000$</td>
+<td>$0.1000$</td>
+<td>$0.1225$</td>
+<td>$[0.0000, 0.3000]$</td>
+<td><strong>$1.40\times$</strong></td>
+<td><strong>$2.00\times$</strong></td>
+</tr>
+<tr>
+<td><strong>100</strong></td>
+<td>MST Prim</td>
+<td>$0.1400$</td>
+<td>$0.2000$</td>
+<td>$0.0894$</td>
+<td>$[0.0000, 0.2000]$</td>
+<td>$1.00\times$</td>
+<td>$1.00\times$</td>
+</tr>
+<tr>
+<td><strong>200</strong></td>
+<td>K-Means</td>
+<td>$0.1600$</td>
+<td>$0.2000$</td>
+<td>$0.0548$</td>
+<td>$[0.1000, 0.2000]$</td>
+<td><strong>$2.38\times$</strong></td>
+<td><strong>$1.50\times$</strong></td>
+</tr>
+<tr>
+<td><strong>200</strong></td>
+<td>MST Prim</td>
+<td>$0.3800$</td>
+<td>$0.3000$</td>
+<td>$0.1924$</td>
+<td>$[0.2000, 0.7000]$</td>
+<td>$1.00\times$</td>
+<td>$1.00\times$</td>
+</tr>
+<tr>
+<td><strong>400</strong></td>
+<td>K-Means</td>
+<td>$0.1400$</td>
+<td>$0.1000$</td>
+<td>$0.1140$</td>
+<td>$[0.0000, 0.3000]$</td>
+<td><strong>$6.71\times$</strong></td>
+<td><strong>$10.00\times$</strong></td>
+</tr>
+<tr>
+<td><strong>400</strong></td>
+<td>MST Prim</td>
+<td>$0.9400$</td>
+<td>$1.0000$</td>
+<td>$0.2408$</td>
+<td>$[0.6000, 1.2000]$</td>
+<td>$1.00\times$</td>
+<td>$1.00\times$</td>
+</tr>
+<tr>
+<td><strong>600</strong></td>
+<td>K-Means</td>
+<td>$0.1400$</td>
+<td>$0.1000$</td>
+<td>$0.0548$</td>
+<td>$[0.1000, 0.2000]$</td>
+<td><strong>$12.14\times$</strong></td>
+<td><strong>$17.00\times$</strong></td>
+</tr>
+<tr>
+<td><strong>600</strong></td>
+<td>MST Prim</td>
+<td>$1.7000$</td>
+<td>$1.7000$</td>
+<td>$0.2828$</td>
+<td>$[1.3000, 2.1000]$</td>
+<td>$1.00\times$</td>
+<td>$1.00\times$</td>
+</tr>
+</tbody></table></div>
+
+<p></em>Disambiguation Note<em>: Table 8.8 explicitly publishes both the <strong>Ratio of Means</strong> ($12.14\times$ at $N=600$) and the <strong>Ratio of Medians</strong> ($17.00\times$ at $N=600$). In <code class="inline-code">benchmark_summary.csv</code>, the reported speedup ratio utilized the median ratio to guard against operating system scheduling jitter.</p>
+
+<div class='figure-container'><img src='../../results/figures/runtime_scaling.png' alt='Figure 8.7: Empirical Wall-Clock Runtime Scaling' class='report-figure'/><p class='figure-caption'>Figure 8.7: Empirical Wall-Clock Runtime Scaling</p></div>
+<p></em>Figure 8.7: Empirical Wall-Clock Runtime Scaling Across Sample Sizes $N \in [100, 600]$. Prim's MST displays clear quadratic scaling ($O(N^2)$), rising to $1.70\text{ ms}$, while K-Means remains sub-millisecond ($0.14\text{ ms}$).<em></p>
+
+<h2 class='heading-2'>8.6 Seed Dispersion & Statistical Variance</h2>
+<p>Across the three random seeds ($\mathcal{S} \in \{11, 22, 33\}$), standard deviations were consistently zero for K-Means on Blobs ($s = 0.0000$), reflecting stable convergence on well-separated clusters. Conversely, on Two Moons at $\sigma = 0.10$, MST ARI exhibited substantial dispersion ($s = 0.5773$), with two seeds achieving $\text{ARI} = 1.0000$ and one seed collapsing to $\text{ARI} = 0.0001$. This reflects the discrete nature of spanning tree cuts: a single critical bridge either forms or does not form depending on exact stochastic coordinate placements.</p>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 9 â€” Discussion</h1>
+
+<h2 class='heading-2'>9.1 The Convexity Advantage of K-Means on Spherical Clusters</h2>
+<p>The empirical findings demonstrate why Lloyd's K-Means remains the industry standard for spherical, convex clusters:</p>
+<ol>
+<li><strong>Centroid Averaging Dampens Noise</strong>: The centroid update $\mu_k = \frac{1}{|C_k|} \sum x_i$ is an arithmetic mean. Under zero-mean Gaussian noise $\mathcal{N}(0, \sigma^2)$, the variance of the sample centroid is $\frac{\sigma^2}{|C_k|}$. For $N_k = 100$, centroid displacement variance is reduced by a factor of $100$, providing exceptional noise filtering.</li>
+<li><strong>Inertia Stability Under Uniform Outliers</strong>: Uniform outliers scattered across the bounding box exert roughly symmetric pulling forces in all directions. Because no single outlier dominates the cluster centroid, the Voronoi boundary remains stable, preserving $\text{ARI} = 1.0000$ across all tested levels on Blobs.</li>
+</ol>
+
+<h2 class='heading-2'>9.2 The Structural Failure of Centroids on Non-Convex Geometry</h2>
+<p>K-Means fails fundamentally on non-convex manifolds due to its mathematical formulation:</p>
+<ul>
+<li><strong>Linear Voronoi Bisectors</strong>: The boundary between any two clusters $C_j, C_k$ is the hyperplane $\{x : \|x - \mu_j\| = \|x - \mu_k\|\}$. Hyperplanes cannot bend around crescent arcs.</li>
+<li><strong>Coinciding Centroids on Concentric Rings</strong>: In Concentric Circles, both the inner ring and outer ring are centered at $(0, 0)$. Any Voronoi partition divides the plane into half-spaces passing near the origin, slicing both rings in half ($\text{ARI} = -0.0019$).</li>
+</ul>
+
+<h2 class='heading-2'>9.3 The Single-Linkage Chaining Advantage of MST</h2>
+<p>Under clean conditions, MST clustering succeeds because it does not rely on spatial centrality:</p>
+<ul>
+<li>Points along the continuous manifold of a crescent or ring are connected by small pairwise edge lengths ($\sim \frac{2\pi r}{N} \approx 0.02$).</li>
+<li>The radial or Euclidean gap separating distinct manifolds is substantially wider ($\approx 0.5$).</li>
+<li>Consequently, the longest $(K-1)$ edges in the Minimum Spanning Tree invariably lie in the inter-manifold gap. Removing these edges cleanly disentangles the topologies ($\text{ARI} = 1.0000$).</li>
+</ul>
+
+<h2 class='heading-2'>9.4 The Catastrophic Pendant Edge Vulnerability of MST</h2>
+<p>The most critical empirical finding of this research is the catastrophic failure of MST clustering under uniform outliers:</p>
+<ol>
+<li><strong>Pendant Edge Formation</strong>: Uniform outliers land in sparse background regions far from inlier clusters. The edge connecting an isolated outlier to its nearest neighbor in the spanning tree has a very large Euclidean distance.</li>
+<li><strong>Cut Misallocation</strong>: To create $K$ clusters, the algorithm removes the $(K-1)$ longest edges. Because edges connecting isolated outliers are longer than the genuine bottleneck edge between the true clusters, <strong>the cuts are consumed by severing isolated outliers into singleton clusters</strong>.</li>
+<li><strong>Inlier Lumping</strong>: All $N_{\text{inliers}} = 300$ ground-truth points remain trapped in a single giant component. When evaluated over inliers, all points share identical cluster labels, resulting in $\text{ARI} = 0.0000$.</li>
+</ol>
+
+<h3 class='heading-3'>Table 9.1: Systematic Paradigm Comparison Matrix Across Robustness Dimensions</h3>
+<div class='table-container'><table class='report-table'>
+<thead><tr>
+<th>Evaluation Dimension</th>
+<th>Lloyd's K-Means Algorithm</th>
+<th>Prim's MST-Based Clustering</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Geometric Inductive Bias</strong></td>
+<td>Convex, spherical Voronoi cells</td>
+<td>Arbitrary single-linkage manifolds</td>
+</tr>
+<tr>
+<td><strong>Non-Convex Recovery (Clean)</strong></td>
+<td><strong>Critical Failure</strong> ($\text{ARI} \le 0.1941$)</td>
+<td><strong>Superior</strong> ($\text{ARI} = 1.0000$)</td>
+</tr>
+<tr>
+<td><strong>Gaussian Noise Resilience</strong></td>
+<td><strong>High</strong> ($\Delta\text{ARI} = 0.0000$ on Blobs)</td>
+<td><strong>Moderate</strong> (Collapses when gaps bridge)</td>
+</tr>
+<tr>
+<td><strong>Outlier Contamination Resilience</strong></td>
+<td><strong>High on Convex Data</strong> ($\Delta\text{ARI} = 0.0000$)</td>
+<td><strong>Catastrophic Failure</strong> ($\Delta\text{ARI} \to 1.0000$)</td>
+</tr>
+<tr>
+<td><strong>Time Complexity</strong></td>
+<td>$O(I \cdot K \cdot N)$ (Fast, linear scaling)</td>
+<td>$\Theta(N^2)$ (Quadratic scaling bottleneck)</td>
+</tr>
+<tr>
+<td><strong>Auxiliary Memory</strong></td>
+<td>$O(N + K)$ (Minimal overhead)</td>
+<td>$O(N)$ (Parent/distance key arrays)</td>
+</tr>
+</tbody></table></div>
+
+<h2 class='heading-2'>9.5 Asymptotic Runtime vs. Empirical Wall-Clock Observations</h2>
+<p>While theoretical analysis predicts $\Theta(N^2)$ for Prim's dense algorithm and $O(I \cdot K \cdot N)$ for K-Means, our benchmark measurements illuminate practical engineering realities:</p>
+<ul>
+<li>At small sample sizes ($N=100$), both algorithms execute in under $0.2\text{ ms}$, rendering asymptotic differences imperceptible.</li>
+<li>At $N=600$, the quadratic growth of Prim's algorithm manifests clearly ($1.70\text{ ms}$ vs. $0.14\text{ ms}$ for K-Means), producing a $12.14\times$ mean speedup and $17.00\times$ median speedup.</li>
+<li>On massive datasets ($N > 10^5$), dense Prim's MST would require tens of gigabytes of distance evaluations, whereas K-Means processes millions of points efficiently.</li>
+</ul>
+
+<h2 class='heading-2'>9.6 Threats to Validity & Methodological Limitations</h2>
+<ol>
+<li><strong>Exploratory Seed Sample ($M=3$)</strong>: Using three seeds guarantees paired coordinate identity, but provides an exploratory estimate of variance rather than narrow confidence bounds.</li>
+<li><strong>Two-Dimensional Feature Spaces ($D=2$)</strong>: 2D data enables direct visualization, but does not exhibit the high-dimensional distance concentration that degrades Euclidean metrics.</li>
+<li><strong>Browser Timer Quantization</strong>: Modern web browsers coarsen <code class="inline-code">performance.now()</code> by $5\text{--}100\,\mu\text{s}$ to mitigate side-channel timing attacks (Spectre). Micro-operations completing under $\sim 40\,\mu\text{s}$ legitimately record as $0.0000\text{ ms}$.</li>
+</ol>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Chapter 10 â€” Conclusion and Future Scope</h1>
+
+<h2 class='heading-2'>10.1 Concluding Summary of Empirical Findings</h2>
+<p>This project successfully achieved its allocated objective, providing a quantitative robustness comparison between MST-based clustering and K-Means:</p>
+<ol>
+<li><strong>K-Means</strong> demonstrates remarkable robustness on compact, convex Gaussian Blobs across all tested noise ($\sigma \le 0.20$) and outlier levels ($\eta \le 20\%$), but fails structurally on non-convex manifolds ($\text{ARI} \le 0.1941$).</li>
+<li><strong>MST Clustering</strong> achieves perfect topological recovery on clean non-convex manifolds ($\text{ARI} = 1.0000$), but is hyper-vulnerable to uniform outliers, collapsing to $\text{ARI} = 0.0000$ under just $5\%$ contamination on Two Moons due to pendant edge cut misallocation.</li>
+<li><strong>Computational Scalability</strong> confirms the quadratic $\Theta(N^2)$ bottleneck of dense Prim's MST compared to the linear scalability of Lloyd's K-Means.</li>
+</ol>
+
+<h2 class='heading-2'>10.2 Algorithmic Selection Heuristic for Practitioners</h2>
+<p>Based on our empirical evidence, we propose the following decision rule:</p>
+<ul>
+<li>If the domain exhibits <strong>compact, spherical clusters and high ambient noise/outliers</strong>, select <strong>K-Means</strong>.</li>
+<li>If the domain exhibits <strong>clean, continuous non-linear manifolds with minimal outlier contamination</strong>, select <strong>MST-based clustering</strong>.</li>
+<li>If data contains <strong>both non-convex geometry AND substantial outlier contamination</strong>, neither classical algorithm is suitable; density-based methods (DBSCAN) or outlier-trimmed MST variants must be employed.</li>
+</ul>
+
+<h2 class='heading-2'>10.3 Future Research Extensions</h2>
+<p>To build upon this foundation, future research should explore:</p>
+<ol>
+<li><strong>Outlier-Trimmed MST Variants</strong>: Implementing local density filtering (e.g., removing the top $5\%$ of vertices with highest average $k$-NN distance prior to spanning tree construction).</li>
+<li><strong>Sparse Nearest-Neighbor Graphs</strong>: Utilizing Delaunay triangulations in 2D or $k$-NN mutual graphs to reduce MST construction from $O(N^2)$ to $O(N \log N)$.</li>
+<li><strong>Density-Based Comparisons</strong>: Benchmarking against DBSCAN and HDBSCAN across identical paired perturbation protocols.</li>
+<li><strong>Higher-Dimensional Synthetic Benchmarks</strong>: Evaluating robustness across dimensions $D \in [2, 100]$ to study metric concentration effects.</li>
+</ol>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>References</h1>
+
+<ol>
+<li>J. MacQueen, "Some methods for classification and analysis of multivariate observations," in </em>Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability<em>, vol. 1, 1967, pp. 281â€“297.</li>
+<li>S. P. Lloyd, "Least squares quantization in PCM," </em>IEEE Transactions on Information Theory<em>, vol. 28, no. 2, pp. 129â€“137, Mar. 1982.</li>
+<li>D. Arthur and S. Vassilvitskii, "k-means++: The advantages of careful seeding," in </em>Proceedings of the Eighteenth Annual ACM-SIAM Symposium on Discrete Algorithms (SODA)<em>, 2007, pp. 1027â€“1035.</li>
+<li>R. C. Prim, "Shortest connection networks and some generalizations," </em>Bell System Technical Journal<em>, vol. 36, no. 6, pp. 1389â€“1401, Nov. 1957.</li>
+<li>J. B. Kruskal, "On the shortest spanning subtree of a graph and the traveling salesman problem," </em>Proceedings of the American Mathematical Society<em>, vol. 7, no. 1, pp. 48â€“50, 1956.</li>
+<li>C. T. Zahn, "Graph-theoretical methods for detecting and describing gestalt clusters," </em>IEEE Transactions on Computers<em>, vol. C-20, no. 1, pp. 68â€“86, Jan. 1971.</li>
+<li>W. M. Rand, "Objective criteria for the evaluation of clustering methods," </em>Journal of the American Statistical Association<em>, vol. 66, no. 336, pp. 846â€“850, Dec. 1971.</li>
+<li>L. Hubert and P. Arabie, "Comparing partitions," </em>Journal of Classification<em>, vol. 2, no. 1, pp. 193â€“218, Dec. 1985.</li>
+<li>A. K. Jain, "Data clustering: 50 years beyond K-means," </em>Pattern Recognition Letters<em>, vol. 31, no. 8, pp. 651â€“666, Jun. 2010.</li>
+<li>M. Ester, H.-P. Kriegel, J. Sander, and X. Xu, "A density-based algorithm for discovering clusters in large spatial databases with noise," in </em>Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD)*, 1996, pp. 226â€“231.</li>
+</ol>
+
+<hr class='report-divider'/>
+
+<div style="page-break-after: always;"></div>
+
+<h1 class='heading-1 page-break-before'>Appendices</h1>
+
+<h2 class='heading-2'>Appendix A: Core Algorithmic Source Code References</h2>
+<p>The complete, validated algorithmic implementations are preserved directly in the project repository:</p>
+<ul>
+<li>K-Means Engine: <code class="inline-code">js/algorithms/kmeans.js</code></li>
+<li>MST Clustering Engine: <code class="inline-code">js/algorithms/mst.js</code></li>
+<li>Evaluation & ARI Metric: <code class="inline-code">js/metrics/evaluation.js</code></li>
+<li>Synthetic Datasets: <code class="inline-code">js/data/datasets.js</code></li>
+<li>Deterministic PRNG: <code class="inline-code">js/data/prng.js</code></li>
+</ul>
+
+<h2 class='heading-2'>Appendix B: Laboratory Reproduction Guide</h2>
+<p>To reproduce all experimental results:</p>
+<ol>
+<li>Clone the repository: <code class="inline-code">git clone https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis.git</code></li>
+<li>Open <code class="inline-code">index.html</code> directly in any modern desktop web browser (Chrome, Edge, Brave, Firefox).</li>
+<li>Navigate to <strong>Robustness Analysis</strong> and click <strong>Run Robustness Experiment</strong>.</li>
+<li>Navigate to <strong>Performance Benchmarks</strong> and click <strong>Run Benchmark</strong>.</li>
+<li>To execute the automated artifact generation harness, open <code class="inline-code">tests/export_artifacts.html</code>.</li>
+</ol>
+
+<h2 class='heading-2'>Appendix C: Automated Test Suite Verification Report</h2>
+<p>The project includes a comprehensive browser-native test harness (<code class="inline-code">tests/test_runner.html</code>):</p>
+<ul>
+<li><strong>Total Automated Tests</strong>: 64</li>
+<li><strong>Passed Tests</strong>: 64 (100% Pass Rate)</li>
+<li><strong>Failed Tests</strong>: 0</li>
+<li><strong>Execution Duration</strong>: 42.40 ms</li>
+<li><strong>Console Errors</strong>: 0</li>
+</ul>
+
+<h2 class='heading-2'>Appendix D: Repository Architecture and Evidence Inventory</h2>
+<p>The repository contains 15 verified evidence artifacts in the <code class="inline-code">results/</code> folder:</p>
+<ul>
+<li>2 Raw Data CSVs (<code class="inline-code">robustness_trials.csv</code>, <code class="inline-code">benchmark_trials.csv</code>)</li>
+<li>2 Summary CSVs (<code class="inline-code">robustness_summary.csv</code>, <code class="inline-code">benchmark_summary.csv</code>)</li>
+<li>2 Reproducibility JSONs (<code class="inline-code">experiment_config.json</code>, <code class="inline-code">environment_information.json</code>)</li>
+<li>7 Scientific Figure PNGs (<code class="inline-code">blobs_comparison.png</code>, <code class="inline-code">moons_comparison.png</code>, <code class="inline-code">circles_comparison.png</code>, <code class="inline-code">ari_vs_noise.png</code>, <code class="inline-code">ari_vs_outliers.png</code>, <code class="inline-code">ari_degradation.png</code>, <code class="inline-code">runtime_scaling.png</code>)</li>
+<li>2 Scientific Documentation Files (<code class="inline-code">EXPERIMENTAL_EVIDENCE_REPORT.md</code>, <code class="inline-code">EVIDENCE_MANIFEST.md</code>)</li>
+</ul>
+
+</body>
+</html>

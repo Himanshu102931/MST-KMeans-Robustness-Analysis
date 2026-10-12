@@ -1,0 +1,13 @@
+{
+  "softwareEnvironment": {
+    "runtime": "Client-Side JavaScript (Browser Native)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "logicalCPUThreads": 16,
+    "timerAPI": "window.performance.now()",
+    "timerResolutionDescription": "High-resolution monotonic timer with anti-fingerprinting quantization (~5 to 100 microseconds depending on browser security flags)",
+    "browserQuantizationNote": "Execution runtimes under ~0.05 ms may legitimately register as 0.000 ms due to browser timer coarsening, which is treated as a valid non-negative runtime."
+  },
+  "generationTimestamp": "2026-10-12T14:08:00.000Z",
+  "totalWallClockDurationMs": 526.4
+}

@@ -179,7 +179,8 @@
         noiseLevels = [0.00, 0.05, 0.10, 0.20],
         outlierFractions = [0.00, 0.05, 0.10, 0.20],
         seeds = [11, 22, 33],
-        sweepType = 'both'
+        sweepType = 'both',
+        fixedNoiseForOutliers = 0.00
       } = config;
 
       if (this.isCancelled) {
@@ -251,28 +252,36 @@
                 ...trial,
                 baseline,
                 kmDegradation: Math.max(0, kmDegradation),
-                mstDegradation: Math.max(0, mstDegradation)
+                mstDegradation: Math.max(0, mstDegradation),
+                kmeansDegradation: Math.max(0, kmDegradation),
+                sweepType: 'noise'
               });
               completedSteps++;
             }
           }
         }
 
-        // Step 3: Outlier Sweep (keeping noise fixed at baseline low noise 0.05)
-        const fixedNoiseForOutliers = 0.05;
+        // Step 3: Outlier Sweep (keeping noise fixed at controlled baseline level, default 0.00)
+        const fixedNoise = (config.fixedNoiseForOutliers !== undefined) ? config.fixedNoiseForOutliers : 0.00;
         if (doOutliers) {
           for (const outlierFraction of outlierFractions) {
             for (const seed of seeds) {
               if (this.isCancelled) throw new Error('Experiment cancelled by user');
               await notify(`Outlier sweep: ${(outlierFraction * 100).toFixed(0)}% outliers, seed = ${seed}...`);
 
-              const trial = runSingleTrial(datasetType, {
-                inlierCount,
-                k,
-                noise: fixedNoiseForOutliers,
-                outlierFraction,
-                seed
-              });
+              let trial;
+              // If zero outlier contamination and zero noise, reuse the clean baseline for exact numerical identity
+              if (outlierFraction === 0.0 && fixedNoise === 0.00 && baselinesBySeed.has(seed)) {
+                trial = baselinesBySeed.get(seed);
+              } else {
+                trial = runSingleTrial(datasetType, {
+                  inlierCount,
+                  k,
+                  noise: fixedNoise,
+                  outlierFraction,
+                  seed
+                });
+              }
 
               // Compare against the clean baseline (seed's baseline with 0 outliers)
               const baseline = baselinesBySeed.get(seed);
@@ -283,7 +292,9 @@
                 ...trial,
                 baseline,
                 kmDegradation: Math.max(0, kmDegradation),
-                mstDegradation: Math.max(0, mstDegradation)
+                mstDegradation: Math.max(0, mstDegradation),
+                kmeansDegradation: Math.max(0, kmDegradation),
+                sweepType: 'outliers'
               });
               completedSteps++;
             }
@@ -308,6 +319,10 @@
           rawOutlierTrials,
           aggregatedNoise,
           aggregatedOutliers,
+          // Aliases for export manager and backwards compatibility:
+          rawRuns: [...rawNoiseTrials, ...rawOutlierTrials],
+          noiseSweep: aggregatedNoise,
+          outlierSweep: aggregatedOutliers,
           timestamp: new Date().toISOString()
         };
 

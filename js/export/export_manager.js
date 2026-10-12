@@ -216,7 +216,8 @@
    * C. Export Robustness Experiment Raw Observations as CSV
    */
   function exportRobustnessRawCSV(results) {
-    if (!results || !results.rawRuns || !results.rawRuns.length) {
+    const rawRuns = results?.rawRuns || (results ? (results.rawNoiseTrials || []).concat(results.rawOutlierTrials || []) : null);
+    if (!rawRuns || !rawRuns.length) {
       throw new Error('No robustness experimental results available to export. Run Robustness Experiment first.');
     }
 
@@ -237,44 +238,49 @@
     ];
 
     const rows = [];
-    results.rawRuns.forEach(r => {
+    rawRuns.forEach(r => {
+      const kmDeg = (r.kmeansDegradation !== undefined && r.kmeansDegradation !== null)
+        ? r.kmeansDegradation
+        : ((r.kmDegradation !== undefined && r.kmDegradation !== null) ? r.kmDegradation : null);
+      const mstDeg = (r.mstDegradation !== undefined && r.mstDegradation !== null) ? r.mstDegradation : null;
+
       // K-Means entry
       rows.push([
-        results.datasetType,
+        results.datasetType || r.datasetType,
         r.seed,
         r.totalCount,
         r.k,
         r.noise.toFixed(4),
         r.outlierFraction.toFixed(4),
-        r.sweepType,
+        r.sweepType || 'general',
         'K-Means',
-        r.kmeans.inlierARI !== null ? r.kmeans.inlierARI.toFixed(6) : 'N/A',
-        r.baseline ? (r.baseline.kmeans.inlierARI !== null ? r.baseline.kmeans.inlierARI.toFixed(6) : 'N/A') : 'N/A',
-        r.kmeansDegradation !== null ? r.kmeansDegradation.toFixed(6) : 'N/A',
-        r.kmeans.runtimeMs.toFixed(3),
-        r.kmeans.predictedK
+        (r.kmeans && r.kmeans.inlierARI !== null) ? r.kmeans.inlierARI.toFixed(6) : 'N/A',
+        (r.baseline && r.baseline.kmeans && r.baseline.kmeans.inlierARI !== null) ? r.baseline.kmeans.inlierARI.toFixed(6) : 'N/A',
+        kmDeg !== null ? kmDeg.toFixed(6) : 'N/A',
+        (r.kmeans && r.kmeans.runtimeMs !== undefined) ? r.kmeans.runtimeMs.toFixed(3) : '0.000',
+        (r.kmeans && r.kmeans.predictedK !== undefined) ? r.kmeans.predictedK : r.k
       ]);
 
       // MST entry
       rows.push([
-        results.datasetType,
+        results.datasetType || r.datasetType,
         r.seed,
         r.totalCount,
         r.k,
         r.noise.toFixed(4),
         r.outlierFraction.toFixed(4),
-        r.sweepType,
+        r.sweepType || 'general',
         'MST-Clustering',
-        r.mst.inlierARI !== null ? r.mst.inlierARI.toFixed(6) : 'N/A',
-        r.baseline ? (r.baseline.mst.inlierARI !== null ? r.baseline.mst.inlierARI.toFixed(6) : 'N/A') : 'N/A',
-        r.mstDegradation !== null ? r.mstDegradation.toFixed(6) : 'N/A',
-        r.mst.runtimeMs.toFixed(3),
-        r.mst.predictedK
+        (r.mst && r.mst.inlierARI !== null) ? r.mst.inlierARI.toFixed(6) : 'N/A',
+        (r.baseline && r.baseline.mst && r.baseline.mst.inlierARI !== null) ? r.baseline.mst.inlierARI.toFixed(6) : 'N/A',
+        mstDeg !== null ? mstDeg.toFixed(6) : 'N/A',
+        (r.mst && r.mst.runtimeMs !== undefined) ? r.mst.runtimeMs.toFixed(3) : '0.000',
+        (r.mst && r.mst.predictedK !== undefined) ? r.mst.predictedK : r.k
       ]);
     });
 
     const csv = toCSV(headers, rows);
-    const filename = `mst_kmeans_robustness_raw_${results.datasetType}_runs${results.rawRuns.length}.csv`;
+    const filename = `mst_kmeans_robustness_raw_${results.datasetType || 'experiment'}_runs${rawRuns.length}.csv`;
     downloadText(csv, filename);
     return { filename, rowCount: rows.length };
   }
@@ -283,7 +289,9 @@
    * D. Export Aggregated Robustness Statistics as CSV
    */
   function exportRobustnessAggregatedCSV(results) {
-    if (!results || (!results.noiseSweep && !results.outlierSweep)) {
+    const noiseData = results?.noiseSweep || results?.aggregatedNoise;
+    const outlierData = results?.outlierSweep || results?.aggregatedOutliers;
+    if (!results || (!noiseData && !outlierData)) {
       throw new Error('No aggregated robustness results available to export. Run Robustness Experiment first.');
     }
 
@@ -300,71 +308,86 @@
     ];
 
     const rows = [];
+    const repCount = (results.seeds && results.seeds.length) || 3;
 
     // Noise sweep entries
-    if (results.noiseSweep) {
-      results.noiseSweep.forEach(item => {
+    if (noiseData && noiseData.length) {
+      noiseData.forEach(item => {
+        const val = item.noise !== undefined ? item.noise : (item.stepValue !== undefined ? item.stepValue : 0);
+        const kmARI = item.kmARI || (item.kmeans ? item.kmeans.inlierARI : { mean: 0, std: 0 });
+        const kmDeg = item.kmDegradation || (item.kmeans ? item.kmeans.degradation : { mean: 0, std: 0 });
+        const mstARI = item.mstARI || (item.mst ? item.mst.inlierARI : { mean: 0, std: 0 });
+        const mstDeg = item.mstDegradation || (item.mst ? item.mst.degradation : { mean: 0, std: 0 });
+        const nReps = item.sampleCount || repCount;
+
         // K-Means
         rows.push([
           'Noise Sweep (Outliers=0%)',
           'noise_sigma',
-          item.noise.toFixed(2),
+          val.toFixed(2),
           'K-Means',
-          results.seeds.length,
-          item.kmARI.mean.toFixed(6),
-          item.kmARI.std.toFixed(6),
-          item.kmDegradation.mean.toFixed(6),
-          item.kmDegradation.std.toFixed(6)
+          nReps,
+          kmARI.mean.toFixed(6),
+          kmARI.std.toFixed(6),
+          kmDeg.mean.toFixed(6),
+          kmDeg.std.toFixed(6)
         ]);
 
         // MST
         rows.push([
           'Noise Sweep (Outliers=0%)',
           'noise_sigma',
-          item.noise.toFixed(2),
+          val.toFixed(2),
           'MST-Clustering',
-          results.seeds.length,
-          item.mstARI.mean.toFixed(6),
-          item.mstARI.std.toFixed(6),
-          item.mstDegradation.mean.toFixed(6),
-          item.mstDegradation.std.toFixed(6)
+          nReps,
+          mstARI.mean.toFixed(6),
+          mstARI.std.toFixed(6),
+          mstDeg.mean.toFixed(6),
+          mstDeg.std.toFixed(6)
         ]);
       });
     }
 
     // Outlier sweep entries
-    if (results.outlierSweep) {
-      results.outlierSweep.forEach(item => {
+    if (outlierData && outlierData.length) {
+      outlierData.forEach(item => {
+        const val = item.fraction !== undefined ? item.fraction : (item.stepValue !== undefined ? item.stepValue : 0);
+        const kmARI = item.kmARI || (item.kmeans ? item.kmeans.inlierARI : { mean: 0, std: 0 });
+        const kmDeg = item.kmDegradation || (item.kmeans ? item.kmeans.degradation : { mean: 0, std: 0 });
+        const mstARI = item.mstARI || (item.mst ? item.mst.inlierARI : { mean: 0, std: 0 });
+        const mstDeg = item.mstDegradation || (item.mst ? item.mst.degradation : { mean: 0, std: 0 });
+        const nReps = item.sampleCount || repCount;
+
         // K-Means
         rows.push([
           'Outlier Contamination Sweep (Noise=0.00)',
           'outlier_fraction',
-          `${Math.round(item.fraction * 100)}%`,
+          `${Math.round(val * 100)}%`,
           'K-Means',
-          results.seeds.length,
-          item.kmARI.mean.toFixed(6),
-          item.kmARI.std.toFixed(6),
-          item.kmDegradation.mean.toFixed(6),
-          item.kmDegradation.std.toFixed(6)
+          nReps,
+          kmARI.mean.toFixed(6),
+          kmARI.std.toFixed(6),
+          kmDeg.mean.toFixed(6),
+          kmDeg.std.toFixed(6)
         ]);
 
         // MST
         rows.push([
           'Outlier Contamination Sweep (Noise=0.00)',
           'outlier_fraction',
-          `${Math.round(item.fraction * 100)}%`,
+          `${Math.round(val * 100)}%`,
           'MST-Clustering',
-          results.seeds.length,
-          item.mstARI.mean.toFixed(6),
-          item.mstARI.std.toFixed(6),
-          item.mstDegradation.mean.toFixed(6),
-          item.mstDegradation.std.toFixed(6)
+          nReps,
+          mstARI.mean.toFixed(6),
+          mstARI.std.toFixed(6),
+          mstDeg.mean.toFixed(6),
+          mstDeg.std.toFixed(6)
         ]);
       });
     }
 
     const csv = toCSV(headers, rows);
-    const filename = `mst_kmeans_robustness_aggregated_${results.datasetType}.csv`;
+    const filename = `mst_kmeans_robustness_aggregated_${results.datasetType || 'experiment'}.csv`;
     downloadText(csv, filename);
     return { filename, rowCount: rows.length };
   }
