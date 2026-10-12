@@ -80,6 +80,7 @@
 
     // Start with root at index 0
     minDist[0] = 0;
+    const edges = [];
 
     for (let step = 0; step < n; step++) {
       // Find unvisited vertex with smallest minDist
@@ -95,6 +96,17 @@
       if (u === -1) break; // Should not happen in connected complete graph
       inTree[u] = 1;
 
+      if (step > 0) {
+        const p = parent[u];
+        edges.push({
+          id: step - 1,
+          u: p,
+          v: u,
+          weight: minVal,
+          isCut: false
+        });
+      }
+
       // Relax distances to all unvisited neighbors
       const pu = points[u];
       for (let v = 0; v < n; v++) {
@@ -106,20 +118,6 @@
           }
         }
       }
-    }
-
-    // Assemble the N - 1 MST edges
-    const edges = [];
-    for (let i = 1; i < n; i++) {
-      const u = parent[i];
-      const v = i;
-      edges.push({
-        id: i - 1,
-        u,
-        v,
-        weight: euclideanDist(points[u], points[v]),
-        isCut: false
-      });
     }
 
     return edges;
@@ -170,8 +168,8 @@
     }
 
     // 2. Identify the K - 1 longest edges to cut
-    // Sort a shallow copy by weight descending
-    const sortedEdges = [...mstEdges].sort((a, b) => b.weight - a.weight);
+    // Sort a shallow copy by weight descending with deterministic secondary tie-break on edge id
+    const sortedEdges = [...mstEdges].sort((a, b) => (b.weight - a.weight) || (a.id - b.id));
     const cutCount = Math.max(0, Math.min(actualK - 1, mstEdges.length));
     const cutEdges = [];
 
@@ -203,9 +201,10 @@
       rootCounts.set(root, (rootCounts.get(root) || 0) + 1);
     }
 
-    // Sort roots by component size descending for stable, consistent coloring
+    // Sort roots by component size descending for stable, consistent coloring (tie-break on root index)
     const sortedRoots = Array.from(rootCounts.keys()).sort((a, b) => {
-      return rootCounts.get(b) - rootCounts.get(a);
+      const diff = rootCounts.get(b) - rootCounts.get(a);
+      return diff !== 0 ? diff : a - b;
     });
 
     const rootToCluster = new Map();
@@ -406,8 +405,8 @@
       explanation: `Minimum Spanning Tree Complete: Exactly ${n - 1} Euclidean edges connect all ${n} vertices with minimal total weight (${runningWeight.toFixed(3)}). Ready for K-cluster partitioning.`
     });
 
-    // 2. Identify the K - 1 longest edges to cut
-    const sortedEdges = [...treeEdges].sort((a, b) => b.weight - a.weight);
+    // 2. Identify the K - 1 longest edges to cut (deterministic tie-break on edge id)
+    const sortedEdges = [...treeEdges].sort((a, b) => (b.weight - a.weight) || (a.id - b.id));
     const cutCount = Math.max(0, Math.min(actualK - 1, treeEdges.length));
     const cutEdges = [];
     const cutSet = new Set();
@@ -456,7 +455,8 @@
     }
 
     const sortedRoots = Array.from(rootCounts.keys()).sort((a, b) => {
-      return rootCounts.get(b) - rootCounts.get(a);
+      const diff = rootCounts.get(b) - rootCounts.get(a);
+      return diff !== 0 ? diff : a - b;
     });
 
     const rootToCluster = new Map();

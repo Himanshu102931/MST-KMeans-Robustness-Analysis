@@ -22,9 +22,12 @@
     let str = String(value);
 
     // Defense against CSV / Spreadsheet formula injection (CVE-2014-3524 / CWE-1236)
-    // If cell begins with =, +, -, @, \t, or \r, prefix with a single quote
+    // If cell begins with =, +, -, @, \t, or \r, prefix with a single quote unless it is a valid finite number
     const unsafeChars = ['=', '+', '-', '@', '\t', '\r'];
-    if (typeof value === 'string' && unsafeChars.some(char => str.startsWith(char))) {
+    const trimmed = str.trim();
+    const isLegitNumber = trimmed !== '' && !isNaN(Number(trimmed)) && isFinite(Number(trimmed));
+
+    if (!isLegitNumber && unsafeChars.some(char => str.startsWith(char))) {
       str = "'" + str;
     }
 

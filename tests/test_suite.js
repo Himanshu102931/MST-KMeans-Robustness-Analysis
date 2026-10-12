@@ -358,11 +358,13 @@
         seed: 11
       });
       assert(
-        typeof trial.kmeans.inlierARI === 'number' && typeof trial.mst.inlierARI === 'number' &&
-        trial.kmeans.runtimeMs > 0 && trial.mst.runtimeMs > 0 &&
+        typeof trial.kmeans.inlierARI === 'number' && isFinite(trial.kmeans.inlierARI) &&
+        typeof trial.mst.inlierARI === 'number' && isFinite(trial.mst.inlierARI) &&
+        typeof trial.kmeans.runtimeMs === 'number' && isFinite(trial.kmeans.runtimeMs) && trial.kmeans.runtimeMs >= 0 &&
+        typeof trial.mst.runtimeMs === 'number' && isFinite(trial.mst.runtimeMs) && trial.mst.runtimeMs >= 0 &&
         trial.kmeans.predictedK === 2 && trial.mst.predictedK === 2,
         'Robustness: Paired Single Trial Input Identity & Metric Validity',
-        'Trial must record valid Inlier ARI and runtimes for both algorithms on identical points'
+        `Trial must record valid Inlier ARI and runtimes for both algorithms on identical points (KM runtime: ${trial.kmeans.runtimeMs}ms, MST runtime: ${trial.mst.runtimeMs}ms)`
       );
 
       // 8.4 Deterministic Repeated Experiments Across Seeds
@@ -405,7 +407,8 @@
       const largeMST = MST.runMSTClustering(largeData.points, 3);
       const tMST = performance.now() - t0;
       assert(
-        largeMST.mstEdges.length === 599 && largeMST.labels.length === 600 && tMST > 0,
+        largeMST.mstEdges.length === 599 && largeMST.labels.length === 600 &&
+        typeof tMST === 'number' && isFinite(tMST) && tMST >= 0,
         'Benchmarks: Large Sample Boundary Scaling (N = 600 Points)',
         `MST must form 599 edges on 600 points without memory or precision errors`
       );
@@ -517,13 +520,13 @@
         'Controller must navigate steps and restart reliably'
       );
 
-      // 9.11 CSV Formula Injection Defense Sanitization
-      const dangerousValues = ['=1+1', '+cmd|', '-123', '@SUM(A1:A5)', 'Normal Text'];
+      // 9.11 CSV Formula Injection Defense Sanitization & Numeric Preservation
+      const dangerousValues = ['=1+1', '+cmd|', '-cmd|calc', '@SUM(A1:A5)', 'Normal Text', '-123'];
       const sanitized = dangerousValues.map(v => ExportManager.sanitizeCSVCell(v));
       assert(
-        sanitized[0].startsWith("'=") && sanitized[1].startsWith("'+") && sanitized[2].startsWith("'-") && sanitized[3].startsWith("'@") && sanitized[4] === 'Normal Text',
-        'Export: CSV Formula Injection Defense Sanitization',
-        'Dangerous prefix characters must be prepended with a single quote'
+        sanitized[0].startsWith("'=") && sanitized[1].startsWith("'+") && sanitized[2].startsWith("'-") && sanitized[3].startsWith("'@") && sanitized[4] === 'Normal Text' && sanitized[5] === '-123',
+        'Export: CSV Formula Injection Defense Sanitization & Numeric Preservation',
+        'Dangerous formula prefixes must be prepended with a single quote while legitimate numbers are preserved'
       );
 
       // 9.12 RFC 4180 CSV Escaping for Commas and Quotes
@@ -582,6 +585,115 @@
         blobsRegress.points.length === 100 && ariRegress === 1.0,
         'Regression: Phase 1-3 Core Mechanics Invariant',
         'Core dataset generators and evaluation functions must remain intact'
+      );
+
+      // ---------------------------------------------------------
+      // 10. Phase 5 Comprehensive QA and Scientific Validation
+      // ---------------------------------------------------------
+
+      // 10.1 MST Analytical Reference: 3-4-5 Triangle
+      // P0(0,0), P1(3,0), P2(0,4) -> edges 3, 4, 5. MST must use edges 3 & 4 (total weight = 7.000).
+      // For K=2, cutting edge 4 leaves {P0, P1} and {P2}.
+      const trianglePoints = [{ x: 0, y: 0 }, { x: 3, y: 0 }, { x: 0, y: 4 }];
+      const mstTriangleK1 = MST.runMSTClustering(trianglePoints, 1);
+      const mstTriangleK2 = MST.runMSTClustering(trianglePoints, 2);
+      assertApprox(
+        mstTriangleK1.totalWeight,
+        7.0,
+        1e-6,
+        'Phase 5 QA: MST Analytical Reference Total Weight (3-4-5 Triangle = 7.0)'
+      );
+      assert(
+        mstTriangleK2.cutEdges.length === 1 && Math.abs(mstTriangleK2.cutEdges[0].weight - 4.0) < 1e-6 && mstTriangleK2.labels[0] === mstTriangleK2.labels[1] && mstTriangleK2.labels[0] !== mstTriangleK2.labels[2],
+        'Phase 5 QA: MST Analytical Partitioning (Longest Edge 4.0 Cut, 2 Components)',
+        'MST must remove the longest edge and produce expected connected components'
+      );
+
+      // 10.2 ARI Analytical Reference: Hubert & Arabie (1985) Ground Truth
+      // P1 = [0, 0, 1, 1], P2 = [0, 1, 0, 1] -> analytical ARI = -0.500000
+      const analyticalARI = Evaluation.adjustedRandIndex([0, 0, 1, 1], [0, 1, 0, 1]);
+      assertApprox(
+        analyticalARI,
+        -0.5,
+        1e-6,
+        'Phase 5 QA: Hubert & Arabie (1985) Analytical ARI Reference (-0.5000)'
+      );
+
+      // 10.3 ARI Permutation Invariance & Single Cluster Identity
+      const permutedARI = Evaluation.adjustedRandIndex([0, 0, 1, 1], [1, 1, 0, 0]);
+      const singleClusterARI = Evaluation.adjustedRandIndex([0, 0, 0, 0], [0, 0, 0, 0]);
+      assert(
+        Math.abs(permutedARI - 1.0) < 1e-6 && singleClusterARI === 1.0,
+        'Phase 5 QA: ARI Permutation Invariance and Single Cluster Boundary',
+        'ARI must be symmetric under cluster ID permutations and return 1.0 for identical single clusters'
+      );
+
+      // 10.4 CSV Negative Float Preservation vs Dangerous Command Injection
+      const negCoord = ExportManager.sanitizeCSVCell('-1.452310');
+      const posCoord = ExportManager.sanitizeCSVCell('+3.141592');
+      const cmdAttack = ExportManager.sanitizeCSVCell("-cmd|' /C calc'!A0");
+      assert(
+        negCoord === '-1.452310' && posCoord === '+3.141592' && cmdAttack.startsWith("'-"),
+        'Phase 5 QA: CSV Negative Number Preservation vs Command Injection',
+        'Legitimate negative numeric coordinates must never be corrupted with leading apostrophes'
+      );
+
+      // 10.5 K-Means Multi-Empty Cluster Numerical Stability
+      const pathologicalPoints = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 10, y: 10 }];
+      const kmPathological = KMeans.runKMeans(pathologicalPoints, 3, { seed: 1234 });
+      const noNaNs = kmPathological.centroids.every(c => !isNaN(c.x) && !isNaN(c.y));
+      assert(
+        noNaNs && kmPathological.labels.length === 4,
+        'Phase 5 QA: K-Means Multi-Empty Cluster Numerical Stability',
+        'Pathological repeated points must not cause NaN centroids or algorithm collapse'
+      );
+
+      // 10.6 MST Trace vs Production Equivalence
+      const qa10BlobsMST = Datasets.generateBlobs({ n: 30, k: 3, seed: 888 });
+      const qa10ProdMST = MST.runMSTClustering(qa10BlobsMST.points, 3);
+      const qa10TraceMST = MST.generateMSTTrace(qa10BlobsMST.points, 3);
+      const mstBitwiseMatch = qa10ProdMST.labels.every((l, idx) => l === qa10TraceMST.finalResult.labels[idx]);
+      assert(
+        mstBitwiseMatch && Math.abs(qa10ProdMST.totalWeight - qa10TraceMST.finalResult.totalWeight) < 1e-6,
+        'Phase 5 QA: MST Step-by-Step Explorer Production Equivalence',
+        'Explorer final state must strictly match production MST clustering output'
+      );
+
+      // 10.7 K-Means Trace vs Production Bitwise Equivalence
+      const qa10BlobsKM = Datasets.generateBlobs({ n: 35, k: 3, seed: 999 });
+      const qa10ProdKM = KMeans.runKMeans(qa10BlobsKM.points, 3, { seed: 555 });
+      const qa10TraceKM = KMeans.generateKMeansTrace(qa10BlobsKM.points, 3, { seed: 555 });
+      const kmBitwiseMatch = qa10ProdKM.labels.every((l, idx) => l === qa10TraceKM.finalResult.labels[idx]);
+      assert(
+        kmBitwiseMatch && Math.abs(qa10ProdKM.inertia - qa10TraceKM.finalResult.inertia) < 1e-6,
+        'Phase 5 QA: K-Means Step-by-Step Explorer Production Equivalence',
+        'Explorer final state must strictly match production K-Means clustering output'
+      );
+
+      // 10.8 GitHub Pages & Static Architecture Compliance
+      const requiredModules = ['PRNG', 'Datasets', 'KMeans', 'MST', 'Evaluation', 'Robustness', 'Benchmarks', 'Explorer', 'ExportManager'];
+      const allModulesPresent = requiredModules.every(mod => window.MSTKMeans && window.MSTKMeans[mod] !== undefined);
+      assert(
+        allModulesPresent,
+        'Phase 5 QA: Static Modular Architecture Compliance (0 Backend / 0 CDN)',
+        'All client-side modules must be cleanly bound to the MSTKMeans namespace'
+      );
+
+      // 10.9 High-Resolution Timer Non-Negative Runtime Contract & Quantization Robustness
+      // Fast operations (small N, few iterations) may complete in < 5 microseconds, quantizing to 0.0 ms.
+      // Asserts that runSingleTrial produces valid finite non-negative numbers (>= 0) across multiple geometries.
+      const fastTrialBlobs = Robustness.runSingleTrial('blobs', { inlierCount: 50, k: 3, noise: 0.05, outlierFraction: 0, seed: 101 });
+      const fastTrialCircles = Robustness.runSingleTrial('circles', { inlierCount: 60, k: 2, noise: 0.02, outlierFraction: 0, seed: 202 });
+      const validTimerContract = (
+        typeof fastTrialBlobs.kmeans.runtimeMs === 'number' && isFinite(fastTrialBlobs.kmeans.runtimeMs) && fastTrialBlobs.kmeans.runtimeMs >= 0 &&
+        typeof fastTrialBlobs.mst.runtimeMs === 'number' && isFinite(fastTrialBlobs.mst.runtimeMs) && fastTrialBlobs.mst.runtimeMs >= 0 &&
+        typeof fastTrialCircles.kmeans.runtimeMs === 'number' && isFinite(fastTrialCircles.kmeans.runtimeMs) && fastTrialCircles.kmeans.runtimeMs >= 0 &&
+        typeof fastTrialCircles.mst.runtimeMs === 'number' && isFinite(fastTrialCircles.mst.runtimeMs) && fastTrialCircles.mst.runtimeMs >= 0
+      );
+      assert(
+        validTimerContract && fastTrialBlobs.kmeans.inlierARI >= -1.0 && fastTrialCircles.mst.inlierARI >= -1.0,
+        'Phase 5 QA: Quantized Browser Timer Non-Negative Runtime Contract (>= 0 ms)',
+        'Measured runtimes must be finite non-negative numbers regardless of sub-millisecond timer quantization'
       );
     }
 

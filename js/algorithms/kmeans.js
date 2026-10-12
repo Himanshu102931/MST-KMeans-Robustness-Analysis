@@ -180,6 +180,7 @@
       }
 
       const nextCentroids = [];
+      const reseededIndices = new Set();
       let maxShift = 0;
 
       for (let c = 0; c < actualK; c++) {
@@ -191,9 +192,11 @@
           nextCentroids.push({ x: newX, y: newY });
         } else {
           // Handle empty cluster: reseed at the point farthest from its assigned centroid
+          // that hasn't already been selected for another empty cluster in this iteration
           let maxD = -1;
-          let farthestPointIdx = 0;
+          let farthestPointIdx = -1;
           for (let i = 0; i < n; i++) {
+            if (reseededIndices.has(i)) continue;
             const currentC = labels[i];
             const d = distSq(points[i], centroids[currentC]);
             if (d > maxD) {
@@ -201,6 +204,10 @@
               farthestPointIdx = i;
             }
           }
+          if (farthestPointIdx === -1) {
+            farthestPointIdx = c % n;
+          }
+          reseededIndices.add(farthestPointIdx);
           nextCentroids.push({
             x: points[farthestPointIdx].x,
             y: points[farthestPointIdx].y
@@ -376,6 +383,7 @@
 
       const prevCentroidsCopy = centroids.map(c => ({ x: c.x, y: c.y }));
       const nextCentroids = [];
+      const reseededIndices = new Set();
       let maxShift = 0;
 
       for (let c = 0; c < actualK; c++) {
@@ -386,10 +394,11 @@
           if (shift > maxShift) maxShift = shift;
           nextCentroids.push({ x: newX, y: newY });
         } else {
-          // Empty cluster handling: reseed at farthest point
+          // Empty cluster handling: reseed at farthest point not already selected
           let maxD = -1;
-          let farthestPointIdx = 0;
+          let farthestPointIdx = -1;
           for (let i = 0; i < n; i++) {
+            if (reseededIndices.has(i)) continue;
             const currentC = labels[i];
             const d = distSq(points[i], centroids[currentC]);
             if (d > maxD) {
@@ -397,6 +406,10 @@
               farthestPointIdx = i;
             }
           }
+          if (farthestPointIdx === -1) {
+            farthestPointIdx = c % n;
+          }
+          reseededIndices.add(farthestPointIdx);
           nextCentroids.push({
             x: points[farthestPointIdx].x,
             y: points[farthestPointIdx].y

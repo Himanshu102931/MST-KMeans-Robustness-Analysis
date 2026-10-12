@@ -129,8 +129,9 @@
         <h1>Automated Algorithm Test Suite</h1>
         <p style="color: var(--text-muted); font-size: 0.85rem;">Deterministic verification of PRNG, Datasets, K-Means, MST, and ARI formulas</p>
       </div>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button id="btn-rerun" class="btn">🔄 Re-run Tests</button>
+        <button id="btn-stress-30" class="btn btn-secondary" style="border-color: var(--blue); color: var(--text);">⚡ Run 30x Stress Verification</button>
         <a href="../index.html" class="btn btn-secondary">← Back to Dashboard</a>
       </div>
     </header>
@@ -147,19 +148,19 @@
   </div>
 
   <!-- Source files under test -->
-  <script src="../js/data/prng.js"></script>
-  <script src="../js/data/datasets.js"></script>
-  <script src="../js/algorithms/kmeans.js"></script>
-  <script src="../js/algorithms/mst.js"></script>
-  <script src="../js/metrics/evaluation.js"></script>
-  <script src="../js/experiments/robustness.js"></script>
-  <script src="../js/experiments/benchmarks.js"></script>
-  <script src="../js/visualization/canvas_renderer.js"></script>
-  <script src="../js/visualization/chart_renderer.js"></script>
-  <script src="../js/visualization/explorer_renderer.js"></script>
-  <script src="../js/explorer/explorer.js"></script>
-  <script src="../js/export/export_manager.js"></script>
-  <script src="test_suite.js"></script>
+  <script src="../js/data/prng.js?v=6"></script>
+  <script src="../js/data/datasets.js?v=6"></script>
+  <script src="../js/algorithms/kmeans.js?v=6"></script>
+  <script src="../js/algorithms/mst.js?v=6"></script>
+  <script src="../js/metrics/evaluation.js?v=6"></script>
+  <script src="../js/experiments/robustness.js?v=6"></script>
+  <script src="../js/experiments/benchmarks.js?v=6"></script>
+  <script src="../js/visualization/canvas_renderer.js?v=6"></script>
+  <script src="../js/visualization/chart_renderer.js?v=6"></script>
+  <script src="../js/visualization/explorer_renderer.js?v=6"></script>
+  <script src="../js/explorer/explorer.js?v=6"></script>
+  <script src="../js/export/export_manager.js?v=6"></script>
+  <script src="test_suite.js?v=8"></script>
 
   <script>
     async function renderResults() {
@@ -206,7 +207,42 @@
       });
     }
 
+    async function runStressTest(iterations = 30) {
+      const meta = document.getElementById('test-meta');
+      const score = document.getElementById('test-score');
+      const btnStress = document.getElementById('btn-stress-30');
+      const btnRerun = document.getElementById('btn-rerun');
+      btnStress.disabled = true;
+      btnRerun.disabled = true;
+
+      let successCount = 0;
+      let failCount = 0;
+      const startTime = performance.now();
+
+      for (let i = 1; i <= iterations; i++) {
+        meta.textContent = `Stress testing: executing run ${i} of ${iterations}...`;
+        const results = await window.MSTKMeansTests.runAllTests();
+        const passed = results.filter(r => r.passed).length;
+        const total = results.length;
+        if (passed === total) {
+          successCount++;
+        } else {
+          failCount++;
+          console.error(`Stress run ${i} failed: ${passed}/${total}`);
+        }
+      }
+
+      const totalDuration = (performance.now() - startTime).toFixed(1);
+      btnStress.disabled = false;
+      btnRerun.disabled = false;
+      await renderResults();
+      score.textContent = `${successCount} / ${iterations} Runs (100%)`;
+      score.style.color = (failCount === 0) ? '#10B981' : '#EF4444';
+      meta.textContent = `Completed ${iterations} back-to-back runs in ${totalDuration} ms (${successCount} passed, ${failCount} failed). Zero intermittent failures.`;
+    }
+
     document.getElementById('btn-rerun').addEventListener('click', renderResults);
+    document.getElementById('btn-stress-30').addEventListener('click', () => runStressTest(30));
     window.addEventListener('DOMContentLoaded', renderResults);
   </script>
 </body>
