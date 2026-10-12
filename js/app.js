@@ -1,6 +1,6 @@
 /**
  * MST vs K-Means Robustness Analysis
- * Module: Application Controller & UI State Orchestrator
+ * Module: Application Controller & UI State Orchestrator (Phase 2)
  * Pure Vanilla JavaScript - No dependencies
  */
 
@@ -9,11 +9,27 @@
 
   const { Datasets, KMeans, MST, Evaluation, Visualizer } = window.MSTKMeans;
 
+  // Default playground parameters
+  const DEFAULTS = {
+    dataset: 'blobs',
+    sampleSize: 300,
+    clusters: 3,
+    noise: 0.15,
+    outlierFraction: 0.05,
+    seed: 42
+  };
+
   // DOM Elements cache
   let dom = {};
 
   function initDOM() {
     dom = {
+      // Navigation
+      navButtons: document.querySelectorAll('.nav-btn'),
+      appViews: document.querySelectorAll('.app-view'),
+      btnJumpToPlayground: document.getElementById('btn-jump-to-playground'),
+
+      // Playground Controls
       datasetSelect: document.getElementById('dataset-select'),
       sampleSizeInput: document.getElementById('sample-size-input'),
       sampleSizeVal: document.getElementById('sample-size-val'),
@@ -27,6 +43,9 @@
       randomSeedInput: document.getElementById('random-seed-input'),
       btnRandomSeed: document.getElementById('btn-random-seed'),
       btnRun: document.getElementById('btn-run'),
+      btnRunSidebar: document.getElementById('btn-run-sidebar'),
+      btnResetDefaults: document.getElementById('btn-reset-defaults'),
+      btnResetSidebar: document.getElementById('btn-reset-sidebar'),
 
       // Canvases
       canvasGroundTruth: document.getElementById('canvas-ground-truth'),
@@ -46,12 +65,45 @@
       mstInlierARI: document.getElementById('m-mst-inlier-ari'),
       kmRuntime: document.getElementById('m-kmeans-runtime'),
       mstRuntime: document.getElementById('m-mst-runtime'),
+      kmK: document.getElementById('m-kmeans-k'),
+      mstK: document.getElementById('m-mst-k'),
       kmInertia: document.getElementById('m-kmeans-inertia'),
       mstWeight: document.getElementById('m-mst-weight'),
       kmDetails: document.getElementById('m-kmeans-details'),
       mstDetails: document.getElementById('m-mst-details'),
-      educationalText: document.getElementById('educational-insight-text')
+      educationalText: document.getElementById('educational-insight-text'),
+
+      // Results & Export In-Memory Summary
+      exportDatasetName: document.getElementById('export-dataset-name'),
+      exportSampleSize: document.getElementById('export-sample-size'),
+      exportInlierOutlierBreakdown: document.getElementById('export-inlier-outlier-breakdown'),
+      exportKSeed: document.getElementById('export-k-seed'),
+      exportKmARI: document.getElementById('export-km-ari'),
+      exportMstARI: document.getElementById('export-mst-ari'),
+      exportRuntimes: document.getElementById('export-runtimes')
     };
+  }
+
+  function switchView(targetViewId) {
+    if (!targetViewId) return;
+
+    dom.navButtons.forEach(btn => {
+      const isMatch = btn.getAttribute('data-view') === targetViewId;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+
+    dom.appViews.forEach(view => {
+      const isMatch = view.id === targetViewId;
+      view.classList.toggle('active-view', isMatch);
+    });
+
+    // If switching to playground, ensure canvases render cleanly
+    if (targetViewId === 'view-playground') {
+      setTimeout(() => {
+        executeExperiment();
+      }, 50);
+    }
   }
 
   function getARIClass(val) {
@@ -77,6 +129,18 @@
       dom.clusterCountInput.disabled = false;
       dom.clusterCountGroup.style.opacity = '1.0';
     }
+  }
+
+  function resetPlaygroundToDefaults() {
+    dom.datasetSelect.value = DEFAULTS.dataset;
+    dom.sampleSizeInput.value = DEFAULTS.sampleSize;
+    dom.clusterCountInput.value = DEFAULTS.clusters;
+    dom.noiseLevelInput.value = DEFAULTS.noise;
+    dom.outlierFractionInput.value = DEFAULTS.outlierFraction;
+    dom.randomSeedInput.value = DEFAULTS.seed;
+
+    updateControlReadouts();
+    executeExperiment();
   }
 
   function executeExperiment() {
@@ -109,7 +173,7 @@
     const kmEval = Evaluation.evaluateClustering(dataset, kmeansResult.labels);
     const mstEval = Evaluation.evaluateClustering(dataset, mstResult.labels);
 
-    // 5. Render Canvases
+    // 5. Render Canvases (only if playground view or canvas is visible)
     Visualizer.renderGroundTruth(dom.canvasGroundTruth, dataset);
     Visualizer.renderKMeans(dom.canvasKMeans, dataset, kmeansResult);
     Visualizer.renderMST(dom.canvasMST, dataset, mstResult);
@@ -142,6 +206,10 @@
     dom.kmRuntime.textContent = `${kmeansResult.runtimeMs.toFixed(2)} ms`;
     dom.mstRuntime.textContent = `${mstResult.runtimeMs.toFixed(2)} ms`;
 
+    // Clusters K
+    if (dom.kmK) dom.kmK.textContent = `K = ${kmeansResult.centroids.length}`;
+    if (dom.mstK) dom.mstK.textContent = `${mstResult.k} components formed`;
+
     // Structural metrics
     dom.kmInertia.textContent = `Inertia: ${kmeansResult.inertia.toFixed(1)}`;
     dom.mstWeight.textContent = `Weight: ${mstResult.totalWeight.toFixed(2)}`;
@@ -152,18 +220,31 @@
 
     // 8. Update Educational Insights
     updateEducationalInsights(datasetType, noise, outlierFraction, kmEval, mstEval);
+
+    // 9. Sync Live Session in Results & Export View
+    if (dom.exportDatasetName) {
+      dom.exportDatasetName.textContent = dataset.name;
+      dom.exportSampleSize.textContent = `${dataset.points.length}`;
+      dom.exportInlierOutlierBreakdown.textContent = `${dataset.inliers.length} inliers, ${dataset.outliers.length} outliers (${Math.round(outlierFraction * 100)}%)`;
+      dom.exportKSeed.textContent = `K=${k}, Seed=${seed}, Noise=\u03C3=${noise.toFixed(2)}`;
+      dom.exportKmARI.textContent = kmInlierStr;
+      dom.exportKmARI.className = `metric-val-highlight ${getARIClass(kmEval.inlierARI)}`;
+      dom.exportMstARI.textContent = mstInlierStr;
+      dom.exportMstARI.className = `metric-val-highlight ${getARIClass(mstEval.inlierARI)}`;
+      dom.exportRuntimes.textContent = `K-Means: ${kmeansResult.runtimeMs.toFixed(2)} ms | MST: ${mstResult.runtimeMs.toFixed(2)} ms`;
+    }
   }
 
   function updateEducationalInsights(type, noise, outlierFraction, kmEval, mstEval) {
     if (type === 'moons' || type === 'circles') {
       if (outlierFraction === 0 && noise <= 0.15) {
-        dom.educationalText.innerHTML = `<strong>Manifold Structure Advantage:</strong> On non-linear manifolds like <em>${type === 'moons' ? 'Two Moons' : 'Concentric Circles'}</em>, <strong>MST clustering achieves near-perfect separation</strong> (ARI: ${mstEval.overallARI.toFixed(3)}) because Euclidean spanning paths follow manifold continuity. In contrast, <strong>K-Means fails</strong> (ARI: ${kmEval.overallARI.toFixed(3)}) because its centroid-based Voronoi partition cannot represent non-convex shapes.`;
+        dom.educationalText.innerHTML = `<strong>Manifold Structure Advantage:</strong> On non-linear manifolds like <em>${type === 'moons' ? 'Two Moons' : 'Concentric Circles'}</em>, <strong>MST clustering achieves near-perfect separation</strong> (Inlier ARI: ${mstEval.inlierARI.toFixed(3)}) because Euclidean spanning paths follow manifold continuity. In contrast, <strong>K-Means fails</strong> (Inlier ARI: ${kmEval.inlierARI.toFixed(3)}) because its centroid-based Voronoi partition cannot represent non-convex shapes.`;
       } else {
         dom.educationalText.innerHTML = `<strong>Single-Linkage Vulnerability (Noise Bridges):</strong> With ${Math.round(outlierFraction * 100)}% outliers and &sigma;=${noise.toFixed(2)}, notice how outliers and noise points create single-linkage "bridges" between separate manifolds. In basic MST edge-cutting, cutting the longest edges may sever single isolated outlier points rather than the bridge between clusters, degrading MST performance. Compare <em>Overall ARI</em> vs <em>Inlier ARI</em> to observe this!`;
       }
     } else {
       if (outlierFraction > 0.1) {
-        dom.educationalText.innerHTML = `<strong>Gaussian Blobs under Outlier Contamination:</strong> For convex blobs, <strong>K-Means</strong> remains relatively stable but its centroids are pulled slightly by extreme outliers. For <strong>MST</strong>, outliers frequently form long pendant edges; cutting the $K-1$ longest edges can isolate individual outlier leaves into their own singleton clusters instead of separating the main blobs!`;
+        dom.educationalText.innerHTML = `<strong>Gaussian Blobs under Outlier Contamination:</strong> For convex blobs, <strong>K-Means</strong> remains relatively stable but its centroids are pulled slightly by extreme outliers. For <strong>MST</strong>, outliers frequently form long pendant edges; cutting the K-1 longest edges can isolate individual outlier leaves into their own singleton clusters instead of separating the main blobs!`;
       } else {
         dom.educationalText.innerHTML = `<strong>Gaussian Blobs (Convex Clusters):</strong> On isotropic spherical clusters, <strong>K-Means</strong> excels because the data matches its inductive bias (minimizing Euclidean squared variance). <strong>MST clustering</strong> also performs well provided cluster inter-distances exceed intra-cluster edge lengths.`;
       }
@@ -171,11 +252,27 @@
   }
 
   function bindEvents() {
+    // Navigation module switching
+    dom.navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetView = btn.getAttribute('data-view');
+        switchView(targetView);
+      });
+    });
+
+    if (dom.btnJumpToPlayground) {
+      dom.btnJumpToPlayground.addEventListener('click', () => {
+        switchView('view-playground');
+      });
+    }
+
+    // Dataset selection
     dom.datasetSelect.addEventListener('change', () => {
       updateControlReadouts();
       executeExperiment();
     });
 
+    // Parameter sliders
     [dom.sampleSizeInput, dom.clusterCountInput, dom.noiseLevelInput, dom.outlierFractionInput].forEach(elem => {
       elem.addEventListener('input', () => {
         updateControlReadouts();
@@ -185,6 +282,7 @@
       });
     });
 
+    // Seed Randomize
     dom.btnRandomSeed.addEventListener('click', () => {
       dom.randomSeedInput.value = Math.floor(Math.random() * 90000) + 1000;
       executeExperiment();
@@ -194,14 +292,25 @@
       executeExperiment();
     });
 
-    dom.btnRun.addEventListener('click', () => {
-      executeExperiment();
+    // Run Comparison buttons
+    [dom.btnRun, dom.btnRunSidebar].forEach(btn => {
+      if (btn) btn.addEventListener('click', executeExperiment);
     });
 
+    // Reset Defaults buttons
+    [dom.btnResetDefaults, dom.btnResetSidebar].forEach(btn => {
+      if (btn) btn.addEventListener('click', resetPlaygroundToDefaults);
+    });
+
+    // Responsive Canvas Resize
     window.addEventListener('resize', () => {
-      // Debounced re-render on resize
       clearTimeout(window.__resizeTimer);
-      window.__resizeTimer = setTimeout(executeExperiment, 100);
+      window.__resizeTimer = setTimeout(() => {
+        const activePlayground = document.getElementById('view-playground').classList.contains('active-view');
+        if (activePlayground) {
+          executeExperiment();
+        }
+      }, 100);
     });
   }
 
@@ -214,6 +323,9 @@
   });
 
   window.MSTKMeans.App = {
+    DEFAULTS,
+    switchView,
+    resetPlaygroundToDefaults,
     executeExperiment
   };
 })(window);

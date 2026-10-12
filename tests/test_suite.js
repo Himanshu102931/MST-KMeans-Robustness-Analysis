@@ -262,6 +262,63 @@
       `K-Means cannot cluster non-convex concentric rings, got ARI: ${kmCirclesARI.toFixed(4)}`
     );
 
+    // ---------------------------------------------------------
+    // 7. Phase 2 Playground Configuration & Pipeline Tests
+    // ---------------------------------------------------------
+    const defaultBlobs = Datasets.generateDataset('blobs', {
+      n: 300,
+      k: 3,
+      noise: 0.15,
+      outlierFraction: 0.05,
+      seed: 42
+    });
+    assert(
+      defaultBlobs.points.length === 300 && defaultBlobs.outliers.length === 15 && defaultBlobs.inliers.length === 285,
+      'Playground: Default Blobs Parameter Integrity (N=300, 5% outliers)',
+      `Expected 300 total points with 15 outliers, got ${defaultBlobs.points.length} and ${defaultBlobs.outliers.length}`
+    );
+
+    const defaultMoons = Datasets.generateDataset('moons', {
+      n: 200,
+      noise: 0.1,
+      outlierFraction: 0.0,
+      seed: 42
+    });
+    assert(
+      defaultMoons.k === 2 && defaultMoons.inliers.every(p => p.groundTruth === 0 || p.groundTruth === 1),
+      'Playground: Two Moons K=2 Geometric Invariance',
+      'Two Moons dataset must strictly enforce K=2 classes'
+    );
+
+    const defaultCircles = Datasets.generateDataset('circles', {
+      n: 200,
+      noise: 0.1,
+      outlierFraction: 0.0,
+      seed: 42
+    });
+    assert(
+      defaultCircles.k === 2 && defaultCircles.inliers.every(p => p.groundTruth === 0 || p.groundTruth === 1),
+      'Playground: Concentric Circles K=2 Geometric Invariance',
+      'Concentric Circles dataset must strictly enforce K=2 classes'
+    );
+
+    // End-to-end simultaneous pipeline execution test
+    const kmEvalDef = Evaluation.evaluateClustering(
+      defaultBlobs,
+      KMeans.runKMeans(defaultBlobs.points, 3, { seed: 42 }).labels
+    );
+    const mstEvalDef = Evaluation.evaluateClustering(
+      defaultBlobs,
+      MST.runMSTClustering(defaultBlobs.points, 3).labels
+    );
+    assert(
+      typeof kmEvalDef.overallARI === 'number' && typeof mstEvalDef.overallARI === 'number' &&
+      isFinite(kmEvalDef.overallARI) && isFinite(mstEvalDef.overallARI) &&
+      kmEvalDef.inlierARI !== null && mstEvalDef.inlierARI !== null,
+      'Playground: Simultaneous Pipeline & Metric Integrity',
+      'Both algorithms must produce valid finite overall and inlier ARI metrics on identical data'
+    );
+
     console.log(`--- Test Suite Finished: ${testResults.filter(r => r.passed).length}/${testResults.length} passed ---`);
     return testResults;
   }

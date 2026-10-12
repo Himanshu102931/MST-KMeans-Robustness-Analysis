@@ -1,14 +1,16 @@
 /* ==========================================================================
    MST vs K-Means Robustness Analysis
-   Main Stylesheet - Modern Scientific Dashboard
+   Main Stylesheet - Modern Scientific Dashboard (Phase 2)
    ========================================================================== */
 
 :root {
   --bg-primary: #0b0f19;
   --bg-surface: #111827;
   --bg-surface-elevated: #1f2937;
+  --bg-surface-hover: #283548;
   --border-subtle: #1e293b;
   --border-strong: #334155;
+  --border-focus: #3b82f6;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
@@ -18,11 +20,13 @@
   --accent-amber: #f59e0b;
   --accent-purple: #8b5cf6;
   --accent-rose: #ef4444;
+  --accent-cyan: #06b6d4;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --sidebar-nav-width: 260px;
 }
 
 * {
@@ -39,6 +43,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -47,16 +52,23 @@ body {
 .app-header {
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
-  padding: 16px 28px;
+  padding: 14px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+  z-index: 20;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header-title-group h1 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #ffffff;
@@ -66,7 +78,7 @@ body {
 }
 
 .header-title-group .phase-badge {
-  background-color: rgba(59, 130, 246, 0.18);
+  background-color: rgba(59, 130, 246, 0.16);
   color: #60a5fa;
   border: 1px solid rgba(59, 130, 246, 0.35);
   font-size: 0.72rem;
@@ -80,9 +92,9 @@ body {
 .header-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--text-muted);
 }
 
@@ -99,33 +111,129 @@ body {
 .meta-tag {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #cbd5e1;
 }
 
 /* --------------------------------------------------------------------------
-   App Layout (Sidebar + Main Workspace)
+   App Layout (Sidebar Navigation + Dynamic Main Workspace)
    -------------------------------------------------------------------------- */
 .app-container {
   display: flex;
   flex: 1;
+  min-height: calc(100vh - 65px);
   overflow: hidden;
 }
 
-.sidebar {
-  width: 320px;
+/* Primary Sidebar Navigation */
+.app-nav-sidebar {
+  width: var(--sidebar-nav-width);
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
-  padding: 24px 20px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  overflow-y: auto;
   flex-shrink: 0;
+  overflow-y: auto;
+  padding: 16px 12px;
+  gap: 20px;
 }
 
+.nav-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  width: 100%;
+}
+
+.nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.nav-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.nav-btn:hover {
+  background-color: var(--bg-surface-elevated);
+  color: #ffffff;
+}
+
+.nav-btn.active {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.nav-btn.active svg {
+  stroke: #60a5fa;
+}
+
+.nav-badge-pill {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-dim);
+}
+
+.nav-btn.active .nav-badge-pill {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}
+
+.sidebar-footer-card {
+  margin-top: auto;
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.sidebar-footer-card strong {
+  color: #e2e8f0;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Main View Container */
 .main-content {
   flex: 1;
   padding: 24px 28px;
@@ -133,25 +241,84 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background-color: var(--bg-primary);
+}
+
+/* App Views Toggle */
+.app-view {
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.18s ease-in-out;
+}
+
+.app-view.active-view {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* View Headings */
+.view-header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.view-title-group h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
 /* --------------------------------------------------------------------------
-   Sidebar Controls
+   Clustering Playground Layout (Sub-layout)
    -------------------------------------------------------------------------- */
-.sidebar-section-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-dim);
-  margin-bottom: 12px;
+.playground-layout {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
+.playground-controls-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.playground-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Playground Form Controls */
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 7px;
 }
 
 .control-label {
@@ -203,6 +370,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 9px 16px;
@@ -211,6 +379,7 @@ body {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  text-decoration: none;
 }
 
 .btn-primary {
@@ -230,6 +399,18 @@ body {
 
 .btn-secondary:hover {
   background-color: #374151;
+  color: #ffffff;
+}
+
+.btn-outline-danger {
+  background-color: transparent;
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.btn-outline-danger:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  border-color: var(--accent-rose);
 }
 
 .btn-sm {
@@ -242,8 +423,8 @@ body {
    -------------------------------------------------------------------------- */
 .visualizations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 18px;
 }
 
 .canvas-card {
@@ -257,7 +438,7 @@ body {
 }
 
 .canvas-card-header {
-  padding: 12px 16px;
+  padding: 11px 15px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
@@ -266,7 +447,7 @@ body {
 }
 
 .canvas-card-title {
-  font-size: 0.92rem;
+  font-size: 0.90rem;
   font-weight: 600;
   color: #f1f5f9;
   display: flex;
@@ -310,9 +491,9 @@ body {
 }
 
 .canvas-legend {
-  padding: 10px 16px;
+  padding: 9px 14px;
   border-top: 1px solid var(--border-subtle);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
   display: flex;
   flex-wrap: wrap;
@@ -353,14 +534,14 @@ body {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 20px 24px;
+  padding: 18px 22px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -369,6 +550,9 @@ body {
   font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .metrics-table-wrapper {
@@ -423,7 +607,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Educational Scientific Callout Banner
+   Educational Callout Banner & Cards
    -------------------------------------------------------------------------- */
 .callout-banner {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
@@ -449,15 +633,165 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Responsive Design
+   Structured Content Grid & Cards (Overview, Explorer, etc.)
    -------------------------------------------------------------------------- */
-@media (max-width: 992px) {
+.content-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.content-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-blue);
+}
+
+.card p, .card li {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.card ul {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card strong {
+  color: #e2e8f0;
+}
+
+.phase-roadmap-card {
+  background-color: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phase-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.phase-complete {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+.phase-current {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.phase-upcoming {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+/* Architecture / Planned Feature Placeholder Panels */
+.feature-preview-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.feature-preview-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+}
+
+.preview-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Layout Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .playground-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
   .app-container {
     flex-direction: column;
   }
-  .sidebar {
+  .app-nav-sidebar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 16px;
+  }
+  .nav-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+  .sidebar-footer-card {
+    display: none;
+  }
+  .main-content {
+    padding: 16px;
   }
 }
