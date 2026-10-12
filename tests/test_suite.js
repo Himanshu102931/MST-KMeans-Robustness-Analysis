@@ -7,7 +7,7 @@
 (function (window) {
   'use strict';
 
-  const { PRNG, Datasets, KMeans, MST, Evaluation } = window.MSTKMeans;
+  const { PRNG, Datasets, KMeans, MST, Evaluation, Robustness, Benchmarks } = window.MSTKMeans;
 
   const testResults = [];
 
@@ -31,7 +31,7 @@
     );
   }
 
-  function runAllTests() {
+  async function runAllTests() {
     testResults.length = 0;
     console.log('--- Starting MST vs K-Means Test Suite ---');
 
@@ -318,6 +318,106 @@
       'Playground: Simultaneous Pipeline & Metric Integrity',
       'Both algorithms must produce valid finite overall and inlier ARI metrics on identical data'
     );
+
+    // ---------------------------------------------------------
+    // 8. Phase 3 Robustness & Benchmarking Engine Tests
+    // ---------------------------------------------------------
+    if (Robustness && Benchmarks) {
+      // 8.1 Statistical Aggregator (Mean & Sample Std Dev)
+      const stats = Robustness.computeStatistics([1, 2, 3, 4, 5]);
+      assert(
+        stats.mean === 3.0 && stats.median === 3.0 && stats.min === 1.0 && stats.max === 5.0,
+        'Robustness: Statistics Aggregator (Mean, Median, Min, Max)',
+        `Expected mean=3, got ${stats.mean}`
+      );
+      assertApprox(
+        stats.std,
+        Math.sqrt(2.5),
+        1e-4,
+        'Robustness: Statistics Sample Standard Deviation (std = sqrt(2.5))'
+      );
+
+      // 8.2 Controlled Dataset Inlier Count Invariance
+      const controlledData = Robustness.generateControlledDataset('blobs', {
+        inlierCount: 200,
+        outlierFraction: 0.10,
+        seed: 42
+      });
+      assert(
+        controlledData.inliers.length === 200 && controlledData.outliers.length === 20 && controlledData.points.length === 220,
+        'Robustness: Controlled Dataset Inlier Count Invariance',
+        `Expected 200 inliers and 20 outliers, got ${controlledData.inliers.length} and ${controlledData.outliers.length}`
+      );
+
+      // 8.3 Paired Single Trial Input Identity & Metric Validity
+      const trial = Robustness.runSingleTrial('moons', {
+        inlierCount: 150,
+        k: 2,
+        noise: 0.05,
+        outlierFraction: 0.05,
+        seed: 11
+      });
+      assert(
+        typeof trial.kmeans.inlierARI === 'number' && typeof trial.mst.inlierARI === 'number' &&
+        trial.kmeans.runtimeMs > 0 && trial.mst.runtimeMs > 0 &&
+        trial.kmeans.predictedK === 2 && trial.mst.predictedK === 2,
+        'Robustness: Paired Single Trial Input Identity & Metric Validity',
+        'Trial must record valid Inlier ARI and runtimes for both algorithms on identical points'
+      );
+
+      // 8.4 Deterministic Repeated Experiments Across Seeds
+      const trialA = Robustness.runSingleTrial('blobs', { inlierCount: 100, k: 3, noise: 0.1, outlierFraction: 0, seed: 77 });
+      const trialB = Robustness.runSingleTrial('blobs', { inlierCount: 100, k: 3, noise: 0.1, outlierFraction: 0, seed: 77 });
+      assert(
+        trialA.kmeans.inlierARI === trialB.kmeans.inlierARI && trialA.mst.inlierARI === trialB.mst.inlierARI,
+        'Robustness: Deterministic Reproducibility Across Identical Seeds',
+        'Independent runs with identical seeds must yield identical ARI scores'
+      );
+
+      // 8.5 Clean Baseline Matching & Degradation Calculation
+      const baseClean = Robustness.runSingleTrial('moons', { inlierCount: 120, k: 2, noise: 0.0, outlierFraction: 0.0, seed: 22 });
+      const perturbed = Robustness.runSingleTrial('moons', { inlierCount: 120, k: 2, noise: 0.0, outlierFraction: 0.15, seed: 22 });
+      const mstLoss = (baseClean.mst.inlierARI || 0) - (perturbed.mst.inlierARI || 0);
+      assert(
+        baseClean.outlierCount === 0 && perturbed.outlierCount > 0 && typeof mstLoss === 'number' && isFinite(mstLoss),
+        'Robustness: Clean Baseline Matching & Degradation Metric',
+        'Clean baseline must have 0 outliers and compute a valid degradation loss delta'
+      );
+
+      // 8.6 Cancellation Flag Handling
+      const testRunner = new Robustness.RobustnessRunner();
+      testRunner.cancel();
+      let caughtCancel = false;
+      try {
+        await testRunner.runExperiment({ datasetType: 'blobs', seeds: [99] });
+      } catch (err) {
+        if (err.message.includes('cancelled')) caughtCancel = true;
+      }
+      assert(
+        caughtCancel,
+        'Robustness: Runner Cancellation Flag Graceful Termination',
+        'RobustnessRunner must gracefully abort when cancelled'
+      );
+
+      // 8.7 Large Sample Boundary Scaling (N = 600 points)
+      const largeData = Datasets.generateDataset('blobs', { n: 600, k: 3, seed: 42 });
+      const t0 = performance.now();
+      const largeMST = MST.runMSTClustering(largeData.points, 3);
+      const tMST = performance.now() - t0;
+      assert(
+        largeMST.mstEdges.length === 599 && largeMST.labels.length === 600 && tMST > 0,
+        'Benchmarks: Large Sample Boundary Scaling (N = 600 Points)',
+        `MST must form 599 edges on 600 points without memory or precision errors`
+      );
+
+      // 8.8 Environment Detection Profile Completeness
+      const env = Benchmarks.getEnvironmentInfo();
+      assert(
+        typeof env.userAgent === 'string' && typeof env.platform === 'string' && env.timerPrecision.includes('performance.now'),
+        'Benchmarks: Hardware & Environment Detection Profile',
+        'Must safely record environment profile without errors'
+      );
+    }
 
     console.log(`--- Test Suite Finished: ${testResults.filter(r => r.passed).length}/${testResults.length} passed ---`);
     return testResults;
