@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.venv/
+.venv_py314_backup/
+
+# Installed dependencies
+node_modules/
+
+# Python cache (if used later)
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Temporary files and logs
+*.log
+*.tmp
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini

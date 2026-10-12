@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MST vs K-Means Robustness Analysis | Pattern Matching Lab</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- Top Academic Metadata Header -->
+  <header class="app-header">
+    <div class="header-title-group">
+      <h1>
+        MST vs K-Means Robustness Analysis
+        <span class="phase-badge">Phase 1: Core Engine</span>
+      </h1>
+    </div>
+    <div class="header-meta">
+      <div class="meta-item">
+        <span>Student:</span>
+        <strong>Himanshu Gupta</strong>
+        <span class="meta-tag">Alloc #19</span>
+      </div>
+      <div class="meta-item">
+        <span>Partner:</span>
+        <strong>Parth Yadav</strong>
+      </div>
+      <div class="meta-item">
+        <span class="meta-tag">MRIIRS</span>
+        <span class="meta-tag">BCS-DS-777</span>
+      </div>
+      <div class="meta-item">
+        <a href="tests/test_runner.html" class="btn btn-secondary btn-sm" id="test-runner-link" title="Open Automated Test Runner">🧪 Run Unit Tests</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-container">
+
+    <!-- Interactive Sidebar Controls -->
+    <aside class="sidebar">
+      <div>
+        <h2 class="sidebar-section-title">Dataset Configuration</h2>
+        
+        <div class="control-group">
+          <label class="control-label" for="dataset-select">Dataset Geometry</label>
+          <select id="dataset-select" class="select-input">
+            <option value="blobs">Gaussian Blobs (Convex)</option>
+            <option value="moons">Two Moons (Non-linear)</option>
+            <option value="circles">Concentric Circles (Non-linear)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <label for="sample-size-input">Sample Size (N)</label>
+            <span class="control-val" id="sample-size-val">300</span>
+          </div>
+          <input type="range" id="sample-size-input" class="range-input" min="50" max="600" step="25" value="300">
+        </div>
+
+        <div class="control-group" id="cluster-count-group">
+          <div class="control-label">
+            <label for="cluster-count-input">Clusters (K)</label>
+            <span class="control-val" id="cluster-count-val">3</span>
+          </div>
+          <input type="range" id="cluster-count-input" class="range-input" min="2" max="6" step="1" value="3">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <label for="noise-level-input">Noise Level (&sigma;)</label>
+            <span class="control-val" id="noise-level-val">0.15</span>
+          </div>
+          <input type="range" id="noise-level-input" class="range-input" min="0.02" max="0.45" step="0.01" value="0.15">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <label for="outlier-fraction-input">Outlier Fraction</label>
+            <span class="control-val" id="outlier-fraction-val">5%</span>
+          </div>
+          <input type="range" id="outlier-fraction-input" class="range-input" min="0" max="0.30" step="0.02" value="0.05">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <label for="random-seed-input">Random Seed</label>
+          </div>
+          <div class="btn-group">
+            <input type="number" id="random-seed-input" class="text-input" value="42" style="max-width: 130px;">
+            <button type="button" id="btn-random-seed" class="btn btn-secondary btn-sm">🎲 Randomize</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="btn-run" class="btn btn-primary" style="width: 100%; padding: 12px;">
+          ▶ Run Clustering & Compare
+        </button>
+      </div>
+
+      <div class="callout-banner" style="margin-top: auto; font-size: 0.78rem;">
+        <div>
+          <h4>Evaluation Rigor</h4>
+          <p>Ground-truth labels are strictly reserved for evaluation and never exposed to the algorithms. Outliers are tracked separately to evaluate Inlier ARI.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+
+      <!-- Visualizations Grid -->
+      <section class="visualizations-grid">
+        
+        <!-- Canvas 1: Ground Truth -->
+        <div class="canvas-card">
+          <div class="canvas-card-header">
+            <h3 class="canvas-card-title">
+              1. Ground Truth Synthetic Data
+            </h3>
+            <span class="badge badge-ground" id="ground-truth-badge">N=300</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="canvas-ground-truth"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <span class="legend-item"><span class="legend-swatch" style="background:#3B82F6;"></span> Cluster 0</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#10B981;"></span> Cluster 1</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#F59E0B;"></span> Cluster 2</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#EF4444; border: 1px dashed #ffffff;"></span> Injected Outlier</span>
+          </div>
+        </div>
+
+        <!-- Canvas 2: K-Means -->
+        <div class="canvas-card">
+          <div class="canvas-card-header">
+            <h3 class="canvas-card-title">
+              2. K-Means (Lloyd's ++ )
+            </h3>
+            <span class="badge badge-kmeans" id="kmeans-badge">K=3</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="canvas-kmeans"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <span class="legend-item"><span class="legend-swatch" style="background:#3B82F6;"></span> Partition</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#ffffff; border: 2px solid #F59E0B;"></span> Centroid &#10010;</span>
+          </div>
+        </div>
+
+        <!-- Canvas 3: MST Clustering -->
+        <div class="canvas-card">
+          <div class="canvas-card-header">
+            <h3 class="canvas-card-title">
+              3. Euclidean MST Clustering
+            </h3>
+            <span class="badge badge-mst" id="mst-badge">K-1 cuts</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="canvas-mst"></canvas>
+          </div>
+          <div class="canvas-legend">
+            <span class="legend-item"><span class="legend-swatch-line" style="background:rgba(148,163,184,0.6);"></span> MST Edge</span>
+            <span class="legend-item"><span class="legend-swatch-dashed"></span> Cut Longest Edge</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Quantitative Comparison Metrics -->
+      <section class="metrics-section">
+        <div class="section-header">
+          <h2 class="section-title">Quantitative Robustness & Performance Comparison</h2>
+          <span style="font-size: 0.8rem; color: var(--text-dim);" id="dataset-summary-text">Dataset: Gaussian Blobs (300 points, 5% outliers)</span>
+        </div>
+
+        <div class="metrics-table-wrapper">
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Evaluation Metric</th>
+                <th>K-Means (Centroidal)</th>
+                <th>Euclidean MST (Single-Linkage Graph)</th>
+                <th>Academic Significance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Overall ARI</strong></td>
+                <td id="m-kmeans-overall-ari" class="metric-val-highlight">-</td>
+                <td id="m-mst-overall-ari" class="metric-val-highlight">-</td>
+                <td>Chance-corrected partition agreement across all N points [-1, 1].</td>
+              </tr>
+              <tr>
+                <td><strong>Inlier ARI (Manifold Recovery)</strong></td>
+                <td id="m-kmeans-inlier-ari" class="metric-val-highlight">-</td>
+                <td id="m-mst-inlier-ari" class="metric-val-highlight">-</td>
+                <td>Evaluates clustering strictly on generating inliers, revealing true manifold recovery without outlier bias.</td>
+              </tr>
+              <tr>
+                <td><strong>Execution Runtime</strong></td>
+                <td id="m-kmeans-runtime" class="metric-val-highlight">-</td>
+                <td id="m-mst-runtime" class="metric-val-highlight">-</td>
+                <td>Measured in-browser via high-precision <code>performance.now()</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>Structural Metric</strong></td>
+                <td id="m-kmeans-inertia">-</td>
+                <td id="m-mst-weight">-</td>
+                <td>K-Means: Inertia / WCSS. MST: Total spanning tree Euclidean weight.</td>
+              </tr>
+              <tr>
+                <td><strong>Algorithm Details</strong></td>
+                <td id="m-kmeans-details">-</td>
+                <td id="m-mst-details">-</td>
+                <td>Iterations & convergence status vs removed edge cuts.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Educational Takeaway Banner -->
+      <div class="callout-banner">
+        <div>
+          <h4>Core Theoretical Insight</h4>
+          <p id="educational-insight-text">
+            <strong>K-Means</strong> optimizes within-cluster variance assuming isotropic convex clusters, causing it to fail on non-linear manifolds like Two Moons or Concentric Circles. <strong>MST Single-Linkage</strong> successfully traverses arbitrary manifold topologies, but basic longest-edge cutting is sensitive to noise bridges between clusters.
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Vanilla Scripts in Correct Dependency Order -->
+  <script src="js/data/prng.js"></script>
+  <script src="js/data/datasets.js"></script>
+  <script src="js/algorithms/kmeans.js"></script>
+  <script src="js/algorithms/mst.js"></script>
+  <script src="js/metrics/evaluation.js"></script>
+  <script src="js/visualization/canvas_renderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
