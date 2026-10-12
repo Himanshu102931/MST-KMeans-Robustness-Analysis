@@ -739,85 +739,187 @@
       </section>
 
       <!-- ====================================================================
-           VIEW 5: ALGORITHM EXPLORER (EDUCATIONAL FOUNDATION FOR PHASE 4)
+           VIEW 5: INTERACTIVE ALGORITHM EXPLORER (PHASE 4)
            ==================================================================== -->
       <section id="view-explorer" class="app-view" role="tabpanel">
         <div class="view-header">
           <div class="view-title-group">
-            <h2>Algorithm Explorer &amp; Mathematical Principles</h2>
-            <p class="view-subtitle">Algorithmic mechanics, pseudo-code walkthroughs, and geometric failure mode analysis.</p>
+            <h2>Algorithm Explorer &amp; Interactive Step Scrubber</h2>
+            <p class="view-subtitle">Step-by-step visual dissection of Lloyd's K-Means and Prim's Minimum Spanning Tree clustering on authentic computational traces.</p>
           </div>
-          <span class="preview-badge" style="background: rgba(139, 92, 246, 0.15); color: #c084fc; border-color: rgba(139, 92, 246, 0.3);">
-            Interactive Step Scrubber Coming in Phase 4
-          </span>
-        </div>
-
-        <div class="content-grid-2">
-          <!-- K-Means Explanation Card -->
-          <div class="card">
-            <h3 class="card-title" style="color: #fbbf24;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 16 12 12 8"/></svg>
-              K-Means Clustering: Lloyd's Heuristic with K-Means++
-            </h3>
-            <ol style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.86rem; color: var(--text-muted);">
-              <li>
-                <strong>Seeded K-Means++ Initialization:</strong> Selects the first centroid c<sub>1</sub> uniformly at random from dataset. Successive centroids c<sub>j</sub> are sampled with probability proportional to squared distance D(x)&sup2; to the nearest chosen centroid, preventing poor local minima.
-              </li>
-              <li>
-                <strong>Voronoi Assignment:</strong> Every point x<sub>i</sub> is assigned to its closest centroid in Euclidean space: y<sub>i</sub> = argmin<sub>k</sub> ||x<sub>i</sub> - c<sub>k</sub>||&sup2;.
-              </li>
-              <li>
-                <strong>Centroid Mean Update:</strong> Each centroid is recomputed as the arithmetic mean of its assigned points: c<sub>k</sub> = (1 / |S<sub>k</sub>|) &sum; x<sub>i</sub>.
-              </li>
-              <li>
-                <strong>Empty Cluster Handling:</strong> If a cluster loses all members (|S<sub>k</sub>| = 0), it is re-seeded at the data point with maximal squared distance to its assigned center.
-              </li>
-              <li>
-                <strong>Convergence Criterion:</strong> Iterates until centroid movement ||&Delta;c|| &lt; 10<sup>-5</sup> or maximum iteration count (100) is reached.
-              </li>
-            </ol>
-          </div>
-
-          <!-- MST Explanation Card -->
-          <div class="card">
-            <h3 class="card-title" style="color: #34d399;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="m18 9-9 6"/></svg>
-              Euclidean Minimum Spanning Tree (MST) Clustering
-            </h3>
-            <ol style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.86rem; color: var(--text-muted);">
-              <li>
-                <strong>Complete Graph Formulation:</strong> Treats all N points as vertices in a complete geometric graph G = (V, E) where edge weights equal Euclidean distances d(p<sub>i</sub>, p<sub>j</sub>).
-              </li>
-              <li>
-                <strong>Prim's Dense Construction:</strong> Greedily grows a tree from vertex 0 in O(N&sup2;) time, continuously attaching the non-tree vertex with minimum distance to the current tree until exactly N - 1 edges are selected.
-              </li>
-              <li>
-                <strong>K - 1 Longest Edge Cut:</strong> Sorts the N - 1 tree edges in descending order of Euclidean length and deletes the K - 1 longest edges.
-              </li>
-              <li>
-                <strong>Connected Component Extraction:</strong> Uses Disjoint Set Union (DSU / Union-Find) with path compression and rank optimization to identify the remaining K connected components.
-              </li>
-              <li>
-                <strong>Topological Invariance:</strong> Because MST edges follow shortest local point-to-point connections, it traces non-linear manifolds regardless of curvature.
-              </li>
-            </ol>
+          <div class="algo-switch-group">
+            <button type="button" class="btn btn-sm btn-primary active" id="exp-tab-kmeans">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 16 12 12 8"/></svg>
+              K-Means Step-by-Step
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" id="exp-tab-mst">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="m18 9-9 6"/></svg>
+              MST Prim's Step-by-Step
+            </button>
           </div>
         </div>
 
-        <!-- Inductive Bias Comparison Card -->
-        <div class="card">
-          <h3 class="card-title">Comparative Inductive Biases &amp; Known Failure Modes</h3>
-          <div class="content-grid-2" style="margin-top: 4px;">
+        <!-- Explorer Configuration & Playback Bar -->
+        <div class="card experiment-control-card">
+          <div class="experiment-toolbar">
+            <div class="control-group">
+              <label for="exp-dataset-select">Dataset Geometry</label>
+              <select id="exp-dataset-select" class="form-select">
+                <option value="blobs" selected>Gaussian Blobs</option>
+                <option value="moons">Two Moons</option>
+                <option value="circles">Concentric Circles</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="exp-sample-size">Points (N)</label>
+              <select id="exp-sample-size" class="form-select">
+                <option value="12">12 Points (Fast)</option>
+                <option value="16">16 Points</option>
+                <option value="20" selected>20 Points (Recommended)</option>
+                <option value="28">28 Points</option>
+                <option value="36">36 Points</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="exp-k">Target Clusters (K)</label>
+              <select id="exp-k" class="form-select">
+                <option value="2">K = 2</option>
+                <option value="3" selected>K = 3</option>
+                <option value="4">K = 4</option>
+                <option value="5">K = 5</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="exp-seed">PRNG Seed</label>
+              <div style="display: flex; gap: 6px;">
+                <input type="number" id="exp-seed" class="form-control" value="42" style="width: 80px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="exp-btn-regenerate" title="Generate New Seed">🎲</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="exp-speed-select">Playback Speed</label>
+              <select id="exp-speed-select" class="form-select">
+                <option value="0.5">0.5&times; (Slow)</option>
+                <option value="1.0" selected>1.0&times; (Normal)</option>
+                <option value="2.0">2.0&times; (Fast)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Interactive Playback Toolbar -->
+          <div class="playback-bar" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="exp-btn-prev" title="Step Backwards">
+                &larr; Prev Step
+              </button>
+              <button type="button" class="btn btn-success btn-sm" id="exp-btn-play" title="Play / Pause Animation">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Play
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="exp-btn-next" title="Step Forward">
+                Next Step &rarr;
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="exp-btn-restart" title="Restart from Step 0">
+                ↺ Restart
+              </button>
+            </div>
+
+            <!-- Scrubber & Step Counter -->
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px; max-width: 500px;">
+              <span id="exp-step-counter" class="badge-pill" style="min-width: 95px; text-align: center;">Step 1 of 1</span>
+              <input type="range" id="exp-step-slider" min="0" max="1" value="0" class="step-scrubber" style="flex: 1;" title="Drag to jump to any intermediate step">
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Explorer Visualizer & Live Metric Readouts -->
+        <div class="content-grid-3-2" style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md); margin-top: var(--space-md);">
+          <!-- Canvas Visualizer Container -->
+          <div class="card" style="padding: var(--space-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 class="card-title" style="margin: 0;">Trace Canvas Visualizer</h3>
+              <span id="exp-canvas-mode-badge" class="badge-status badge-success">K-Means State</span>
+            </div>
+            <div class="canvas-container" style="background: #0f172a; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); overflow: hidden;">
+              <canvas id="canvas-explorer" width="800" height="420" style="width: 100%; height: 380px; display: block;"></canvas>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; font-size: 0.76rem; color: var(--text-dim);">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #38bdf8;"></span>
+                Observation Vertex
+              </span>
+              <span id="exp-legend-centroids" style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 10px; height: 10px; transform: rotate(45deg); background: #f59e0b; border: 1px solid #ffffff;"></span>
+                Centroid Marker
+              </span>
+              <span id="exp-legend-edges" style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 14px; height: 3px; background: #10b981;"></span>
+                MST Accepted Edge
+              </span>
+              <span id="exp-legend-cut" style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 14px; height: 3px; border-top: 2px dashed #ef4444;"></span>
+                Cut Edge (&Delta;K)
+              </span>
+            </div>
+          </div>
+
+          <!-- Step Explanation & Metric Pills -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <div class="card" style="flex: 1;">
+              <h3 class="card-title">Active Step Explanation</h3>
+              <div id="exp-explanation-box" class="explanation-callout" style="background: rgba(15, 23, 42, 0.6); border-left: 4px solid var(--primary); padding: 14px; border-radius: var(--radius-sm); font-size: 0.88rem; line-height: 1.5; color: var(--text);">
+                Loading algorithm trace...
+              </div>
+
+              <!-- Metric Pills Grid -->
+              <div class="content-grid-2" style="margin-top: 14px; gap: 10px;">
+                <div class="env-spec-item">
+                  <span class="env-spec-label" id="exp-m1-name">Iteration:</span>
+                  <span class="env-spec-value" id="exp-m1-val">0</span>
+                </div>
+                <div class="env-spec-item">
+                  <span class="env-spec-label" id="exp-m2-name">Inertia (WCSS):</span>
+                  <span class="env-spec-value" id="exp-m2-val">-</span>
+                </div>
+                <div class="env-spec-item">
+                  <span class="env-spec-label" id="exp-m3-name">Centroid Shift:</span>
+                  <span class="env-spec-value" id="exp-m3-val">-</span>
+                </div>
+                <div class="env-spec-item">
+                  <span class="env-spec-label" id="exp-m4-name">Convergence:</span>
+                  <span class="env-spec-value" id="exp-m4-val">In Progress...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mathematical Mechanics Card -->
+            <div class="card">
+              <h4 style="font-size: 0.90rem; color: #38bdf8; margin-bottom: 6px;">Algorithmic Integrity</h4>
+              <p style="font-size: 0.80rem; color: var(--text-muted); margin: 0;">
+                Every displayed frame represents an authentic mathematical calculation. Final assignments identically match the Playground engine for identical parameters.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative Inductive Biases & Educational Deep Dive -->
+        <div class="card" style="margin-top: var(--space-md);">
+          <h3 class="card-title">Comparative Inductive Biases &amp; Vulnerabilities</h3>
+          <div class="content-grid-2" style="margin-top: 8px;">
             <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
-              <strong style="color: #fbbf24; display: block; margin-bottom: 6px;">K-Means Failure: Non-Convex Geometries</strong>
+              <strong style="color: #fbbf24; display: block; margin-bottom: 6px;">K-Means: Voronoi Convex Partitioning</strong>
               <p style="font-size: 0.84rem;">
-                K-Means partitions space into linear convex polyhedra (Voronoi cells). When clusters are shaped as concentric rings or interlocking crescents, no linear boundary can separate them. K-Means forcibly cuts through the crescents to minimize within-cluster variance.
+                Minimizes within-cluster sum of squares: <code>argmin &sum; ||x - &mu;<sub>k</sub>||&sup2;</code>. This inductive bias restricts boundaries to linear Voronoi hyperplanes, which inevitably cuts through non-convex manifolds (e.g. concentric circles and interlocking crescent moons). However, centroid averaging provides natural robustness against sparse random bridging noise.
               </p>
             </div>
             <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
-              <strong style="color: #34d399; display: block; margin-bottom: 6px;">MST Failure: Chaining &amp; Outlier Isolation</strong>
+              <strong style="color: #34d399; display: block; margin-bottom: 6px;">MST Clustering: Single-Linkage Chaining &amp; Outlier Breakdown</strong>
               <p style="font-size: 0.84rem;">
-                Because MST clustering relies on single linkage, a few random noise points positioned between two distinct manifolds form a "stepping stone" bridge. Furthermore, extreme isolated outliers generate long pendant edges; cutting the K-1 longest edges often lops off single outliers as singleton clusters, leaving the main clusters merged!
+                Constructs a Minimum Spanning Tree in <code>O(N&sup2;)</code> via Prim's algorithm, then cuts the <code>K - 1</code> longest edges. While this effortlessly traces arbitrary non-linear manifolds, it exhibits extreme vulnerability to single-linkage chaining: a single noise point between two clusters creates a short-distance bridge that merges them. Furthermore, isolated outliers produce long pendant edges; removing the longest edges isolates outliers into singleton clusters while leaving true clusters unseparated!
               </p>
             </div>
           </div>
@@ -825,100 +927,218 @@
       </section>
 
       <!-- ====================================================================
-           VIEW 6: RESULTS & EXPORT
+           VIEW 6: SCIENTIFIC RESULTS & EXPORT HUB (PHASE 4)
            ==================================================================== -->
       <section id="view-export" class="app-view" role="tabpanel">
         <div class="view-header">
           <div class="view-title-group">
-            <h2>Experimental Results &amp; Data Export</h2>
-            <p class="view-subtitle">Review current in-memory trial metrics and learn about Phase 4 reproducible export formats.</p>
+            <h2>Experimental Results &amp; Scientific Export Hub</h2>
+            <p class="view-subtitle">Download reproducible tabular datasets (CSV), performance benchmarks, machine-readable reproducibility recipes (JSON), and publication-ready figures (PNG).</p>
           </div>
-          <span class="preview-badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">
-            Active Session Synchronized
+          <span class="preview-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
+            Live Session Synchronized
           </span>
         </div>
 
-        <div class="card">
-          <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Active In-Memory Session Summary
-          </h3>
-          <p style="font-size: 0.86rem;">
-            The table below reflects the actual, non-fabricated metrics computed during your latest execution in the Clustering Playground:
-          </p>
+        <!-- Export Categories Grid -->
+        <div class="content-grid-2">
+          <!-- Card 1: Playground Dataset CSV -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #38bdf8;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Current Playground Dataset (CSV)
+              </h3>
+              <span id="status-export-dataset" class="badge-status badge-success">Available</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Exports current coordinates, ground truth labels, outlier tags, and predicted labels from both K-Means and MST. Equipped with formula injection defense.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              point_index, x, y, ground_truth_label, is_outlier, kmeans_predicted_cluster, mst_predicted_cluster
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-dataset-csv">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Dataset CSV
+            </button>
+          </div>
 
-          <div class="metrics-table-wrapper" style="margin-top: 8px;">
-            <table class="metrics-table">
-              <thead>
-                <tr>
-                  <th>Session Parameter / Metric</th>
-                  <th>Observed Value</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Active Dataset</strong></td>
-                  <td id="export-dataset-name" style="font-weight: 600; color: #38bdf8;">Gaussian Blobs</td>
-                  <td>Selected geometry manifold</td>
-                </tr>
-                <tr>
-                  <td><strong>Total Points (N)</strong></td>
-                  <td id="export-sample-size" style="font-family: var(--font-mono);">300</td>
-                  <td id="export-inlier-outlier-breakdown">Inliers vs Outliers count</td>
-                </tr>
-                <tr>
-                  <td><strong>Clusters (K) &amp; Seed</strong></td>
-                  <td id="export-k-seed" style="font-family: var(--font-mono);">K=3, Seed=42</td>
-                  <td>Reproducible PRNG state</td>
-                </tr>
-                <tr>
-                  <td><strong>K-Means Inlier ARI</strong></td>
-                  <td id="export-km-ari" class="metric-val-highlight">-</td>
-                  <td>Evaluates manifold recovery on non-outlier points</td>
-                </tr>
-                <tr>
-                  <td><strong>Euclidean MST Inlier ARI</strong></td>
-                  <td id="export-mst-ari" class="metric-val-highlight">-</td>
-                  <td>Graph-theoretic connected component recovery</td>
-                </tr>
-                <tr>
-                  <td><strong>Measured Runtimes</strong></td>
-                  <td id="export-runtimes" style="font-family: var(--font-mono);">-</td>
-                  <td>In-browser performance.now() execution</td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Card 2: Playground Metrics CSV -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #34d399;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                Current Playground Metrics (CSV)
+              </h3>
+              <span id="status-export-metrics" class="badge-status badge-success">Available</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Exports session parameters, Inlier ARI, Overall ARI, runtimes, inertia WCSS, and MST total tree weights for the active playground trial.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              dataset, sample_count, k, noise, outlier_fraction, seed, algorithm_name, inlier_ari, runtime_ms...
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-metrics-csv">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Metrics CSV
+            </button>
+          </div>
+
+          <!-- Card 3: Robustness Raw Observations CSV -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #fbbf24;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Robustness Raw Observations (CSV)
+              </h3>
+              <span id="status-export-rob-raw" class="badge-status badge-warning">Not Run Yet</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Individual trial data for every seed, noise step, and outlier level. Includes matched clean baseline ARI and empirical &Delta;ARI degradation deltas.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              dataset_family, seed, N, k, noise, outliers, sweep_type, algorithm, inlier_ari, baseline_ari, degradation...
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-rob-raw-csv" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Raw Robustness CSV
+            </button>
+          </div>
+
+          <!-- Card 4: Robustness Aggregated Statistics CSV -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #fbbf24;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Aggregated Robustness Statistics (CSV)
+              </h3>
+              <span id="status-export-rob-agg" class="badge-status badge-warning">Not Run Yet</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Sample mean Inlier ARI, unbiased sample standard deviations (&plusmn;&sigma;), and mean performance degradation deltas across repeated experimental trials.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              parameter_group, sweep_param, value, algorithm, repetitions, mean_ari, std_ari, mean_degradation...
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-rob-agg-csv" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Aggregated Robustness CSV
+            </button>
+          </div>
+
+          <!-- Card 5: Performance Benchmarks Measurements CSV -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #c084fc;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Performance Benchmark Measurements (CSV)
+              </h3>
+              <span id="status-export-bm" class="badge-status badge-warning">Not Run Yet</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Empirical execution timings across sample sizes (100, 200, 400, 600), individual trial runtimes, mean/median/std metrics, speedup ratios, and hardware environment specs.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              sample_size, algorithm, trial_id, runtime_ms, mean_ms, std_ms, median_ms, speedup_vs_mst...
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-bm-csv" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Benchmarks CSV
+            </button>
+          </div>
+
+          <!-- Card 6: Reproducibility Recipe JSON -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="card-title" style="color: #60a5fa;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Reproducibility Recipe &amp; Config (JSON)
+              </h3>
+              <span id="status-export-repro" class="badge-status badge-success">Ready</span>
+            </div>
+            <p style="font-size: 0.84rem; margin-top: 6px;">
+              Machine-readable JSON schema containing project credentials, student details, PRNG seeds, algorithm parameters, and browser environment specs (free of private tokens or paths).
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: var(--radius-sm); margin: 8px 0;">
+              { projectMetadata, softwareEnvironment, clusteringSpecifications, activePlaygroundState... }
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-export-repro-json">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Reproducibility JSON
+            </button>
           </div>
         </div>
 
-        <div class="card">
-          <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Phase 4 Export Architecture Specification
-          </h3>
-          <p style="font-size: 0.86rem;">
-            Full client-side export pipelines will be implemented in Phase 4. To preserve academic integrity, non-functional download buttons are withheld until their underlying data pipelines are active:
+        <!-- Scientific Figures & Charts PNG Export Gallery -->
+        <div class="card" style="margin-top: var(--space-md);">
+          <h3 class="card-title">Scientific Figures &amp; Charts (High-DPI PNG Gallery)</h3>
+          <p style="font-size: 0.84rem;">
+            Export sharp, publication-ready PNG figures rasterized directly from active Canvas visualizations for academic report inclusion:
           </p>
 
-          <div class="content-grid-3" style="margin-top: 8px;">
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
-              <strong style="color: #38bdf8;">1. Tabular Dataset CSV</strong>
-              <p style="font-size: 0.80rem; margin-top: 4px;">
-                Download dataset coordinates with schema: <code>point_id, x, y, ground_truth, is_outlier, kmeans_label, mst_label</code> for offline verification in R or Python.
-              </p>
+          <div class="content-grid-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md); margin-top: 10px;">
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Playground: Ground Truth</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Synthetic reference manifold</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-gt">Export PNG</button>
             </div>
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
-              <strong style="color: #34d399;">2. High-DPI Figures PNG</strong>
-              <p style="font-size: 0.80rem; margin-top: 4px;">
-                Direct rasterization of high-resolution canvas plots at 2x pixel ratio for direct inclusion in LaTeX project reports and conference slide decks.
-              </p>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Playground: K-Means Partition</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Centroids and Voronoi clusters</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-km">Export PNG</button>
             </div>
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
-              <strong style="color: #c084fc;">3. Reproducibility Recipe JSON</strong>
-              <p style="font-size: 0.80rem; margin-top: 4px;">
-                Export full experimental configurations (seed, noise, outlier fraction, centroid coordinates, and cut edge indices) for peer review.
-              </p>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Playground: MST Partition</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Spanning tree &amp; cut edges</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-mst">Export PNG</button>
+            </div>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Robustness: ARI vs Noise</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Dual curve with error bars</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-noise">Export PNG</button>
+            </div>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Robustness: ARI vs Outliers</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Contamination stress test</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-outliers">Export PNG</button>
+            </div>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Robustness: Baseline Loss</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">&Delta;ARI degradation bar chart</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-degradation">Export PNG</button>
+            </div>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Benchmarks: Scaling Curve</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Runtime scaling vs N points</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-scaling">Export PNG</button>
+            </div>
+
+            <div class="env-spec-item" style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <strong>Explorer: Active Step State</strong>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Current trace canvas view</div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-png-explorer">Export PNG</button>
             </div>
           </div>
         </div>
@@ -937,6 +1157,9 @@
   <script src="js/experiments/benchmarks.js"></script>
   <script src="js/visualization/canvas_renderer.js"></script>
   <script src="js/visualization/chart_renderer.js"></script>
+  <script src="js/visualization/explorer_renderer.js"></script>
+  <script src="js/explorer/explorer.js"></script>
+  <script src="js/export/export_manager.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

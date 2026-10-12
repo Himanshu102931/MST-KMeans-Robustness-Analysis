@@ -236,8 +236,222 @@
     };
   }
 
+  /**
+   * Generate step-by-step execution trace of K-Means clustering for interactive educational exploration.
+   * Every snapshot represents an authentic computational state.
+   *
+   * @param {Array<{x: number, y: number}>} points Point array
+   * @param {number} k Number of clusters
+   * @param {Object} options Configuration options
+   * @returns {{steps: Array<Object>, finalResult: Object}}
+   */
+  function generateKMeansTrace(points, k, options = {}) {
+    const startTime = performance.now();
+    const {
+      maxIterations = 100,
+      tolerance = 1e-5,
+      seed = 42,
+      initMethod = 'kmeans++'
+    } = options;
+
+    const n = points.length;
+    if (n === 0) {
+      return {
+        steps: [{
+          stepIndex: 0,
+          type: 'init',
+          iteration: 0,
+          centroids: [],
+          previousCentroids: [],
+          labels: [],
+          inertia: 0,
+          maxShift: 0,
+          converged: true,
+          clusterCounts: [],
+          explanation: 'Empty dataset: No points to cluster.'
+        }],
+        finalResult: {
+          labels: [],
+          centroids: [],
+          iterations: 0,
+          converged: true,
+          inertia: 0,
+          runtimeMs: 0
+        }
+      };
+    }
+
+    const actualK = Math.min(Math.max(1, Math.floor(k)), n);
+    const rng = createPRNG(seed);
+
+    let centroids;
+    if (initMethod === 'kmeans++') {
+      centroids = initKMeansPlusPlus(points, actualK, rng);
+    } else {
+      const indices = Array.from({ length: n }, (_, i) => i);
+      for (let i = 0; i < actualK; i++) {
+        const j = i + Math.floor(rng() * (n - i));
+        const temp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = temp;
+      }
+      centroids = indices.slice(0, actualK).map(idx => ({ x: points[idx].x, y: points[idx].y }));
+    }
+
+    const labels = new Int32Array(n).fill(-1);
+    const steps = [];
+
+    // Step 0: Initialization snapshot
+    steps.push({
+      stepIndex: 0,
+      type: 'init',
+      iteration: 0,
+      centroids: centroids.map(c => ({ x: c.x, y: c.y })),
+      previousCentroids: [],
+      labels: Array.from(labels),
+      inertia: null,
+      maxShift: null,
+      converged: false,
+      clusterCounts: new Array(actualK).fill(0),
+      explanation: `Step 1 — K-Means++ Initialization: Placed ${actualK} initial centroids using seeded probabilistic distance sampling. Observations are unassigned.`
+    });
+
+    let converged = false;
+    let iteration = 0;
+
+    while (iteration < maxIterations && !converged) {
+      iteration++;
+
+      // 1. Assignment step: Assign each point to nearest centroid
+      for (let i = 0; i < n; i++) {
+        let bestDist = Infinity;
+        let bestCluster = 0;
+        for (let c = 0; c < actualK; c++) {
+          const d = distSq(points[i], centroids[c]);
+          if (d < bestDist) {
+            bestDist = d;
+            bestCluster = c;
+          }
+        }
+        labels[i] = bestCluster;
+      }
+
+      // Compute inertia for current assignments & current centroids
+      let currentInertia = 0;
+      for (let i = 0; i < n; i++) {
+        currentInertia += distSq(points[i], centroids[labels[i]]);
+      }
+
+      // Count points per cluster
+      const counts = new Array(actualK).fill(0);
+      for (let i = 0; i < n; i++) {
+        counts[labels[i]]++;
+      }
+
+      steps.push({
+        stepIndex: steps.length,
+        type: 'assignment',
+        iteration,
+        centroids: centroids.map(c => ({ x: c.x, y: c.y })),
+        previousCentroids: [],
+        labels: Array.from(labels),
+        inertia: currentInertia,
+        maxShift: null,
+        converged: false,
+        clusterCounts: counts,
+        explanation: `Iteration ${iteration} — Assignment: Assigned all ${n} points to their nearest centroid in Euclidean space. Current inertia (WCSS) = ${currentInertia.toFixed(3)}.`
+      });
+
+      // 2. Update step: Compute new centroid positions
+      const clusterCounts = new Int32Array(actualK);
+      const newSumsX = new Float64Array(actualK);
+      const newSumsY = new Float64Array(actualK);
+
+      for (let i = 0; i < n; i++) {
+        const c = labels[i];
+        clusterCounts[c]++;
+        newSumsX[c] += points[i].x;
+        newSumsY[c] += points[i].y;
+      }
+
+      const prevCentroidsCopy = centroids.map(c => ({ x: c.x, y: c.y }));
+      const nextCentroids = [];
+      let maxShift = 0;
+
+      for (let c = 0; c < actualK; c++) {
+        if (clusterCounts[c] > 0) {
+          const newX = newSumsX[c] / clusterCounts[c];
+          const newY = newSumsY[c] / clusterCounts[c];
+          const shift = dist({ x: newX, y: newY }, centroids[c]);
+          if (shift > maxShift) maxShift = shift;
+          nextCentroids.push({ x: newX, y: newY });
+        } else {
+          // Empty cluster handling: reseed at farthest point
+          let maxD = -1;
+          let farthestPointIdx = 0;
+          for (let i = 0; i < n; i++) {
+            const currentC = labels[i];
+            const d = distSq(points[i], centroids[currentC]);
+            if (d > maxD) {
+              maxD = d;
+              farthestPointIdx = i;
+            }
+          }
+          nextCentroids.push({
+            x: points[farthestPointIdx].x,
+            y: points[farthestPointIdx].y
+          });
+          maxShift = Infinity;
+        }
+      }
+
+      centroids = nextCentroids;
+
+      // Recompute inertia with new centroid positions
+      let updatedInertia = 0;
+      for (let i = 0; i < n; i++) {
+        updatedInertia += distSq(points[i], centroids[labels[i]]);
+      }
+
+      if (maxShift < tolerance) {
+        converged = true;
+      }
+
+      steps.push({
+        stepIndex: steps.length,
+        type: 'update',
+        iteration,
+        centroids: centroids.map(c => ({ x: c.x, y: c.y })),
+        previousCentroids: prevCentroidsCopy,
+        labels: Array.from(labels),
+        inertia: updatedInertia,
+        maxShift,
+        converged,
+        clusterCounts: counts,
+        explanation: converged
+          ? `Iteration ${iteration} — Centroid Update & Convergence: Centroids updated to cluster means. Shift (${maxShift.toFixed(5)}) is below tolerance (${tolerance}). Algorithm has converged!`
+          : `Iteration ${iteration} — Centroid Update: Centroids relocated to arithmetic means of assigned observations (max shift: ${maxShift.toFixed(5)}). Continuing to next iteration.`
+      });
+    }
+
+    const runtimeMs = performance.now() - startTime;
+
+    return {
+      steps,
+      finalResult: {
+        labels: Array.from(labels),
+        centroids,
+        iterations: iteration,
+        converged,
+        inertia: steps[steps.length - 1].inertia,
+        runtimeMs
+      }
+    };
+  }
+
   window.MSTKMeans.KMeans = {
     runKMeans,
+    generateKMeansTrace,
     dist,
     distSq
   };

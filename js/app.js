@@ -7,7 +7,7 @@
 (function (window) {
   'use strict';
 
-  const { Datasets, KMeans, MST, Evaluation, Visualizer, Robustness, Benchmarks, ChartRenderer } = window.MSTKMeans;
+  const { Datasets, KMeans, MST, Evaluation, Visualizer, Robustness, Benchmarks, ChartRenderer, Explorer, ExportManager } = window.MSTKMeans;
 
   // Default playground parameters
   const DEFAULTS = {
@@ -18,6 +18,10 @@
     outlierFraction: 0.05,
     seed: 42
   };
+
+  // State management
+  let currentSession = null;
+  let explorerController = null;
 
   // Experiment & Benchmark Runners
   const robustnessRunner = new Robustness.RobustnessRunner();
@@ -118,12 +122,68 @@
       bmEnvPlatform: document.getElementById('bm-env-platform'),
       bmEnvCores: document.getElementById('bm-env-cores'),
       bmEnvPrecision: document.getElementById('bm-env-precision'),
-      bmEnvAgent: document.getElementById('bm-env-agent')
+      bmEnvAgent: document.getElementById('bm-env-agent'),
+
+      // Phase 4: Algorithm Explorer Controls
+      expTabKMeans: document.getElementById('exp-tab-kmeans'),
+      expTabMST: document.getElementById('exp-tab-mst'),
+      expDatasetSelect: document.getElementById('exp-dataset-select'),
+      expSampleSize: document.getElementById('exp-sample-size'),
+      expK: document.getElementById('exp-k'),
+      expSeed: document.getElementById('exp-seed'),
+      expBtnRegenerate: document.getElementById('exp-btn-regenerate'),
+      expSpeedSelect: document.getElementById('exp-speed-select'),
+      expBtnPrev: document.getElementById('exp-btn-prev'),
+      expBtnPlay: document.getElementById('exp-btn-play'),
+      expBtnNext: document.getElementById('exp-btn-next'),
+      expBtnRestart: document.getElementById('exp-btn-restart'),
+      expStepSlider: document.getElementById('exp-step-slider'),
+      expStepCounter: document.getElementById('exp-step-counter'),
+      canvasExplorer: document.getElementById('canvas-explorer'),
+      expExplanationBox: document.getElementById('exp-explanation-box'),
+      expM1Name: document.getElementById('exp-m1-name'),
+      expM1Val: document.getElementById('exp-m1-val'),
+      expM2Name: document.getElementById('exp-m2-name'),
+      expM2Val: document.getElementById('exp-m2-val'),
+      expM3Name: document.getElementById('exp-m3-name'),
+      expM3Val: document.getElementById('exp-m3-val'),
+      expM4Name: document.getElementById('exp-m4-name'),
+      expM4Val: document.getElementById('exp-m4-val'),
+      expLegendCentroids: document.getElementById('exp-legend-centroids'),
+      expLegendEdges: document.getElementById('exp-legend-edges'),
+      expLegendCut: document.getElementById('exp-legend-cut'),
+      expCanvasModeBadge: document.getElementById('exp-canvas-mode-badge'),
+
+      // Phase 4: Results & Export Hub Controls
+      btnExportDatasetCSV: document.getElementById('btn-export-dataset-csv'),
+      statusExportDataset: document.getElementById('status-export-dataset'),
+      btnExportMetricsCSV: document.getElementById('btn-export-metrics-csv'),
+      statusExportMetrics: document.getElementById('status-export-metrics'),
+      btnExportRobRawCSV: document.getElementById('btn-export-rob-raw-csv'),
+      statusExportRobRaw: document.getElementById('status-export-rob-raw'),
+      btnExportRobAggCSV: document.getElementById('btn-export-rob-agg-csv'),
+      statusExportRobAgg: document.getElementById('status-export-rob-agg'),
+      btnExportBMCSV: document.getElementById('btn-export-bm-csv'),
+      statusExportBM: document.getElementById('status-export-bm'),
+      btnExportReproJSON: document.getElementById('btn-export-repro-json'),
+      btnExportPNGGT: document.getElementById('btn-export-png-gt'),
+      btnExportPNGKM: document.getElementById('btn-export-png-km'),
+      btnExportPNGMST: document.getElementById('btn-export-png-mst'),
+      btnExportPNGNoise: document.getElementById('btn-export-png-noise'),
+      btnExportPNGOutliers: document.getElementById('btn-export-png-outliers'),
+      btnExportPNGDegradation: document.getElementById('btn-export-png-degradation'),
+      btnExportPNGScaling: document.getElementById('btn-export-png-scaling'),
+      btnExportPNGExplorer: document.getElementById('btn-export-png-explorer')
     };
   }
 
   function switchView(targetViewId) {
     if (!targetViewId) return;
+
+    // Pause explorer if leaving explorer view
+    if (explorerController && explorerController.isPlaying && targetViewId !== 'view-explorer') {
+      explorerController.pause();
+    }
 
     dom.navButtons.forEach(btn => {
       const isMatch = btn.getAttribute('data-view') === targetViewId;
@@ -143,6 +203,10 @@
       setTimeout(() => renderRobustnessResults(robustnessRunner.lastResults), 50);
     } else if (targetViewId === 'view-benchmarks' && benchmarkRunner.lastResults) {
       setTimeout(() => renderBenchmarkResults(benchmarkRunner.lastResults), 50);
+    } else if (targetViewId === 'view-explorer' && explorerController) {
+      setTimeout(() => explorerController.updateUI(), 50);
+    } else if (targetViewId === 'view-export') {
+      updateExportStatus();
     }
   }
 
@@ -259,6 +323,16 @@
       dom.exportMstARI.className = `metric-val-highlight ${getARIClass(mstEval.inlierARI)}`;
       dom.exportRuntimes.textContent = `K-Means: ${kmeansResult.runtimeMs.toFixed(2)} ms | MST: ${mstResult.runtimeMs.toFixed(2)} ms`;
     }
+
+    currentSession = {
+      dataset,
+      params: { dataset: datasetType, sampleSize: n, clusters: k, noise, outlierFraction, seed },
+      kmeans: kmeansResult,
+      mst: mstResult,
+      kmeansEval: kmEval,
+      mstEval: mstEval
+    };
+    updateExportStatus();
   }
 
   function updatePlaygroundEducationalInsights(type, noise, outlierFraction, kmEval, mstEval) {
@@ -309,6 +383,7 @@
       });
 
       renderRobustnessResults(results);
+      updateExportStatus();
     } catch (err) {
       if (err.message.includes('cancelled')) {
         dom.robProgressStatus.textContent = 'Experiment cancelled by user.';
@@ -501,6 +576,7 @@
       });
 
       renderBenchmarkResults(results);
+      updateExportStatus();
     } catch (err) {
       if (err.message.includes('cancelled')) {
         dom.bmProgressStatus.textContent = 'Benchmark cancelled by user.';
@@ -557,6 +633,143 @@
   }
 
   // ------------------------------------------------------------------------
+  // Phase 4: Algorithm Explorer Initialization
+  // ------------------------------------------------------------------------
+
+  function initExplorer() {
+    explorerController = new Explorer.AlgorithmExplorerController();
+    explorerController.bindDOM({
+      btnTabKMeans: dom.expTabKMeans,
+      btnTabMST: dom.expTabMST,
+      selectDataset: dom.expDatasetSelect,
+      inputSampleSize: dom.expSampleSize,
+      inputK: dom.expK,
+      inputSeed: dom.expSeed,
+      btnRegenerate: dom.expBtnRegenerate,
+      selectSpeed: dom.expSpeedSelect,
+      btnPrev: dom.expBtnPrev,
+      btnPlayPause: dom.expBtnPlay,
+      btnNext: dom.expBtnNext,
+      btnRestart: dom.expBtnRestart,
+      stepSlider: dom.expStepSlider,
+      stepCounter: dom.expStepCounter,
+      canvas: dom.canvasExplorer,
+      explanationBox: dom.expExplanationBox,
+      lblMetric1Name: dom.expM1Name,
+      lblMetric1Val: dom.expM1Val,
+      lblMetric2Name: dom.expM2Name,
+      lblMetric2Val: dom.expM2Val,
+      lblMetric3Name: dom.expM3Name,
+      lblMetric3Val: dom.expM3Val,
+      lblMetric4Name: dom.expM4Name,
+      lblMetric4Val: dom.expM4Val
+    });
+
+    if (dom.expTabKMeans) {
+      dom.expTabKMeans.addEventListener('click', () => {
+        if (dom.expCanvasModeBadge) {
+          dom.expCanvasModeBadge.textContent = 'K-Means State';
+          dom.expCanvasModeBadge.className = 'badge-status badge-success';
+        }
+        if (dom.expLegendCentroids) dom.expLegendCentroids.style.display = 'flex';
+        if (dom.expLegendEdges) dom.expLegendEdges.style.display = 'none';
+        if (dom.expLegendCut) dom.expLegendCut.style.display = 'none';
+      });
+    }
+
+    if (dom.expTabMST) {
+      dom.expTabMST.addEventListener('click', () => {
+        if (dom.expCanvasModeBadge) {
+          dom.expCanvasModeBadge.textContent = 'MST Prim State';
+          dom.expCanvasModeBadge.className = 'badge-status badge-primary';
+        }
+        if (dom.expLegendCentroids) dom.expLegendCentroids.style.display = 'none';
+        if (dom.expLegendEdges) dom.expLegendEdges.style.display = 'flex';
+        if (dom.expLegendCut) dom.expLegendCut.style.display = 'flex';
+      });
+    }
+
+    // Initial legend visibility: K-Means active
+    if (dom.expLegendEdges) dom.expLegendEdges.style.display = 'none';
+    if (dom.expLegendCut) dom.expLegendCut.style.display = 'none';
+  }
+
+  // ------------------------------------------------------------------------
+  // Phase 4: Results & Export Hub Synchronization
+  // ------------------------------------------------------------------------
+
+  function updateExportStatus() {
+    // 1. Playground Dataset & Metrics
+    if (currentSession && currentSession.dataset) {
+      if (dom.statusExportDataset) {
+        dom.statusExportDataset.textContent = 'Available';
+        dom.statusExportDataset.className = 'badge-status badge-success';
+      }
+      if (dom.btnExportDatasetCSV) dom.btnExportDatasetCSV.disabled = false;
+
+      if (dom.statusExportMetrics) {
+        dom.statusExportMetrics.textContent = 'Available';
+        dom.statusExportMetrics.className = 'badge-status badge-success';
+      }
+      if (dom.btnExportMetricsCSV) dom.btnExportMetricsCSV.disabled = false;
+    } else {
+      if (dom.statusExportDataset) {
+        dom.statusExportDataset.textContent = 'Not Run Yet';
+        dom.statusExportDataset.className = 'badge-status badge-warning';
+      }
+      if (dom.btnExportDatasetCSV) dom.btnExportDatasetCSV.disabled = true;
+
+      if (dom.statusExportMetrics) {
+        dom.statusExportMetrics.textContent = 'Not Run Yet';
+        dom.statusExportMetrics.className = 'badge-status badge-warning';
+      }
+      if (dom.btnExportMetricsCSV) dom.btnExportMetricsCSV.disabled = true;
+    }
+
+    // 2. Robustness Raw & Aggregated Results
+    if (robustnessRunner && robustnessRunner.lastResults) {
+      if (dom.statusExportRobRaw) {
+        dom.statusExportRobRaw.textContent = 'Available';
+        dom.statusExportRobRaw.className = 'badge-status badge-success';
+      }
+      if (dom.btnExportRobRawCSV) dom.btnExportRobRawCSV.disabled = false;
+
+      if (dom.statusExportRobAgg) {
+        dom.statusExportRobAgg.textContent = 'Available';
+        dom.statusExportRobAgg.className = 'badge-status badge-success';
+      }
+      if (dom.btnExportRobAggCSV) dom.btnExportRobAggCSV.disabled = false;
+    } else {
+      if (dom.statusExportRobRaw) {
+        dom.statusExportRobRaw.textContent = 'Not Run Yet';
+        dom.statusExportRobRaw.className = 'badge-status badge-warning';
+      }
+      if (dom.btnExportRobRawCSV) dom.btnExportRobRawCSV.disabled = true;
+
+      if (dom.statusExportRobAgg) {
+        dom.statusExportRobAgg.textContent = 'Not Run Yet';
+        dom.statusExportRobAgg.className = 'badge-status badge-warning';
+      }
+      if (dom.btnExportRobAggCSV) dom.btnExportRobAggCSV.disabled = true;
+    }
+
+    // 3. Performance Benchmarks Results
+    if (benchmarkRunner && benchmarkRunner.lastResults) {
+      if (dom.statusExportBM) {
+        dom.statusExportBM.textContent = 'Available';
+        dom.statusExportBM.className = 'badge-status badge-success';
+      }
+      if (dom.btnExportBMCSV) dom.btnExportBMCSV.disabled = false;
+    } else {
+      if (dom.statusExportBM) {
+        dom.statusExportBM.textContent = 'Not Run Yet';
+        dom.statusExportBM.className = 'badge-status badge-warning';
+      }
+      if (dom.btnExportBMCSV) dom.btnExportBMCSV.disabled = true;
+    }
+  }
+
+  // ------------------------------------------------------------------------
   // Event Bindings & Lifecycle
   // ------------------------------------------------------------------------
 
@@ -609,6 +822,99 @@
     if (dom.btnRunBenchmark) dom.btnRunBenchmark.addEventListener('click', handleRunBenchmark);
     if (dom.btnCancelBenchmark) dom.btnCancelBenchmark.addEventListener('click', handleCancelBenchmark);
 
+    // Phase 4: Results & Export Hub Listeners
+    if (dom.btnExportDatasetCSV) {
+      dom.btnExportDatasetCSV.addEventListener('click', () => {
+        if (currentSession && currentSession.dataset) {
+          ExportManager.exportPlaygroundDatasetCSV(currentSession.dataset, currentSession.kmeans, currentSession.mst);
+        }
+      });
+    }
+
+    if (dom.btnExportMetricsCSV) {
+      dom.btnExportMetricsCSV.addEventListener('click', () => {
+        if (currentSession) {
+          ExportManager.exportPlaygroundMetricsCSV(currentSession);
+        }
+      });
+    }
+
+    if (dom.btnExportRobRawCSV) {
+      dom.btnExportRobRawCSV.addEventListener('click', () => {
+        if (robustnessRunner.lastResults) {
+          ExportManager.exportRobustnessRawCSV(robustnessRunner.lastResults);
+        }
+      });
+    }
+
+    if (dom.btnExportRobAggCSV) {
+      dom.btnExportRobAggCSV.addEventListener('click', () => {
+        if (robustnessRunner.lastResults) {
+          ExportManager.exportRobustnessAggregatedCSV(robustnessRunner.lastResults);
+        }
+      });
+    }
+
+    if (dom.btnExportBMCSV) {
+      dom.btnExportBMCSV.addEventListener('click', () => {
+        if (benchmarkRunner.lastResults) {
+          ExportManager.exportBenchmarksCSV(benchmarkRunner.lastResults);
+        }
+      });
+    }
+
+    if (dom.btnExportReproJSON) {
+      dom.btnExportReproJSON.addEventListener('click', () => {
+        ExportManager.exportReproducibilityJSON({
+          playground: currentSession,
+          robustness: robustnessRunner.lastResults,
+          benchmarks: benchmarkRunner.lastResults
+        });
+      });
+    }
+
+    // High-DPI Scientific Figures PNG exports
+    if (dom.btnExportPNGGT) {
+      dom.btnExportPNGGT.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasGroundTruth, 'mst_kmeans_playground_ground_truth.png');
+      });
+    }
+    if (dom.btnExportPNGKM) {
+      dom.btnExportPNGKM.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasKMeans, 'mst_kmeans_playground_kmeans_clusters.png');
+      });
+    }
+    if (dom.btnExportPNGMST) {
+      dom.btnExportPNGMST.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasMST, 'mst_kmeans_playground_mst_clusters.png');
+      });
+    }
+    if (dom.btnExportPNGNoise) {
+      dom.btnExportPNGNoise.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasChartNoise, 'mst_kmeans_chart_inlier_ari_vs_noise.png');
+      });
+    }
+    if (dom.btnExportPNGOutliers) {
+      dom.btnExportPNGOutliers.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasChartOutliers, 'mst_kmeans_chart_inlier_ari_vs_outliers.png');
+      });
+    }
+    if (dom.btnExportPNGDegradation) {
+      dom.btnExportPNGDegradation.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasChartDegradation, 'mst_kmeans_chart_baseline_degradation.png');
+      });
+    }
+    if (dom.btnExportPNGScaling) {
+      dom.btnExportPNGScaling.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasChartScaling, 'mst_kmeans_chart_runtime_scaling.png');
+      });
+    }
+    if (dom.btnExportPNGExplorer) {
+      dom.btnExportPNGExplorer.addEventListener('click', () => {
+        ExportManager.exportCanvasAsPNG(dom.canvasExplorer, 'mst_kmeans_algorithm_explorer_step.png');
+      });
+    }
+
     // Window Resize debouncer
     window.addEventListener('resize', () => {
       clearTimeout(window.__resizeTimer);
@@ -618,6 +924,7 @@
         if (activeView.id === 'view-playground') executePlaygroundExperiment();
         else if (activeView.id === 'view-robustness' && robustnessRunner.lastResults) renderRobustnessResults(robustnessRunner.lastResults);
         else if (activeView.id === 'view-benchmarks' && benchmarkRunner.lastResults) renderBenchmarkResults(benchmarkRunner.lastResults);
+        else if (activeView.id === 'view-explorer' && explorerController) explorerController.updateUI();
       }, 100);
     });
   }
@@ -636,6 +943,8 @@
     initEnvironmentProfile();
     updatePlaygroundControlReadouts();
     initChartEmptyStates();
+    initExplorer();
+    updateExportStatus();
     bindEvents();
     executePlaygroundExperiment();
   });
@@ -646,6 +955,10 @@
     resetPlaygroundToDefaults,
     executePlaygroundExperiment,
     handleRunRobustness,
-    handleRunBenchmark
+    handleRunBenchmark,
+    updateExportStatus,
+    getExplorerController: () => explorerController,
+    getCurrentSession: () => currentSession
   };
 })(window);
+

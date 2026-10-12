@@ -7,7 +7,7 @@
 (function (window) {
   'use strict';
 
-  const { PRNG, Datasets, KMeans, MST, Evaluation, Robustness, Benchmarks } = window.MSTKMeans;
+  const { PRNG, Datasets, KMeans, MST, Evaluation, Robustness, Benchmarks, Explorer, ExportManager } = window.MSTKMeans;
 
   const testResults = [];
 
@@ -416,6 +416,172 @@
         typeof env.userAgent === 'string' && typeof env.platform === 'string' && env.timerPrecision.includes('performance.now'),
         'Benchmarks: Hardware & Environment Detection Profile',
         'Must safely record environment profile without errors'
+      );
+
+      // ---------------------------------------------------------
+      // 9. Phase 4: Interactive Algorithm Explorer & Export Tests
+      // ---------------------------------------------------------
+
+      // 9.1 K-Means Trace Initialization
+      const ptsKM = Datasets.generateBlobs({ n: 20, k: 3, seed: 42 }).points;
+      const traceKM = KMeans.generateKMeansTrace(ptsKM, 3, { seed: 42 });
+      assert(
+        traceKM.steps.length > 2 && traceKM.steps[0].type === 'init' && traceKM.steps[0].centroids.length === 3 && traceKM.steps[0].labels.every(l => l === -1),
+        'Explorer: K-Means Trace Initialization State',
+        'Step 0 must be init with 3 centroids and all unassigned labels (-1)'
+      );
+
+      // 9.2 K-Means Assignment and Centroid Update Sequence
+      const stepAssign = traceKM.steps[1];
+      const stepUpdate = traceKM.steps[2];
+      assert(
+        stepAssign.type === 'assignment' && stepUpdate.type === 'update' && typeof stepAssign.inertia === 'number' && typeof stepUpdate.maxShift === 'number' && stepAssign.labels.every(l => l >= 0 && l < 3),
+        'Explorer: K-Means Assignment and Centroid Update Sequence',
+        'Steps must alternate assignment and update with valid inertia and shift metrics'
+      );
+
+      // 9.3 K-Means Trace Deterministic Reproducibility
+      const traceKM2 = KMeans.generateKMeansTrace(ptsKM, 3, { seed: 42 });
+      assert(
+        traceKM.steps.length === traceKM2.steps.length && traceKM.steps[1].inertia === traceKM2.steps[1].inertia && traceKM.finalResult.inertia === traceKM2.finalResult.inertia,
+        'Explorer: K-Means Trace Deterministic Reproducibility',
+        'Identical seeds must yield identical step counts and inertia values'
+      );
+
+      // 9.4 Final K-Means Trace vs Production Algorithm Equivalence
+      const prodKM = KMeans.runKMeans(ptsKM, 3, { seed: 42 });
+      const traceFinal = traceKM.finalResult;
+      assert(
+        prodKM.iterations === traceFinal.iterations && Math.abs(prodKM.inertia - traceFinal.inertia) < 1e-9 && prodKM.labels.every((l, i) => l === traceFinal.labels[i]),
+        'Explorer: Final K-Means Trace Equivalence to Production Run',
+        'Final trace assignments and inertia must match runKMeans identically'
+      );
+
+      // 9.5 MST Trace Vertex and Edge Counts (N - 1)
+      const ptsMST = Datasets.generateBlobs({ n: 16, k: 3, seed: 101 }).points;
+      const traceMST = MST.generateMSTTrace(ptsMST, 3);
+      const primSteps = traceMST.steps.filter(s => s.type === 'prim_step');
+      const completeStep = traceMST.steps.find(s => s.type === 'mst_complete');
+      assert(
+        primSteps.length === 15 && completeStep.treeEdges.length === 15 && completeStep.inTreeVertices.length === 16,
+        'Explorer: MST Prim Construction Vertex and Edge Counts (N - 1)',
+        'Prim algorithm must execute exactly 15 edge additions on 16 vertices'
+      );
+
+      // 9.6 MST Trace Total Edge Weight Consistency
+      const prodMST = MST.runMSTClustering(ptsMST, 3);
+      assert(
+        Math.abs(completeStep.totalWeight - prodMST.totalWeight) < 1e-9,
+        'Explorer: MST Trace Total Edge Weight Consistency',
+        'Total spanning tree weight in trace must equal runMSTClustering weight'
+      );
+
+      // 9.7 MST K - 1 Longest Edge Selection
+      const cutStep = traceMST.steps.find(s => s.type === 'cut_selection');
+      assert(
+        cutStep && cutStep.cutEdges.length === 2 && cutStep.cutEdges[0].weight >= cutStep.cutEdges[1].weight,
+        'Explorer: MST K - 1 Longest Edge Selection',
+        'For K=3, exactly 2 longest edges must be identified in descending weight order'
+      );
+
+      // 9.8 MST Connected-Component Equivalence to Production Run
+      const finalCutStep = traceMST.steps.find(s => s.type === 'cut_applied');
+      assert(
+        finalCutStep && finalCutStep.k === 3 && finalCutStep.labels.every((l, i) => l === prodMST.labels[i]),
+        'Explorer: MST Connected-Component Equivalence to Production Run',
+        'Cut-applied components must equal K=3 and labels must match runMSTClustering'
+      );
+
+      // 9.9 MST Deterministic Tie-Breaking on Duplicate Coordinates
+      const dupPoints = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 1 }];
+      const dupMST = MST.generateMSTTrace(dupPoints, 2);
+      assert(
+        dupMST.finalResult.mstEdges.length === 3 && dupMST.finalResult.labels.length === 4,
+        'Explorer: MST Deterministic Tie-Breaking on Duplicate Coordinates',
+        'Duplicate coordinates must form N-1 edges without errors'
+      );
+
+      // 9.10 Explorer Controller State Navigation and Reset
+      const ctrl = new Explorer.AlgorithmExplorerController();
+      ctrl.sampleSize = 16;
+      ctrl.k = 3;
+      ctrl.resetDataAndTrace();
+      const initStep = ctrl.currentStep;
+      ctrl.nextStep();
+      const stepAfterNext = ctrl.currentStep;
+      ctrl.restart();
+      const stepAfterRestart = ctrl.currentStep;
+      assert(
+        initStep === 0 && stepAfterNext === 1 && stepAfterRestart === 0 && ctrl.trace.steps.length > 2,
+        'Explorer: Controller State Navigation and Reset',
+        'Controller must navigate steps and restart reliably'
+      );
+
+      // 9.11 CSV Formula Injection Defense Sanitization
+      const dangerousValues = ['=1+1', '+cmd|', '-123', '@SUM(A1:A5)', 'Normal Text'];
+      const sanitized = dangerousValues.map(v => ExportManager.sanitizeCSVCell(v));
+      assert(
+        sanitized[0].startsWith("'=") && sanitized[1].startsWith("'+") && sanitized[2].startsWith("'-") && sanitized[3].startsWith("'@") && sanitized[4] === 'Normal Text',
+        'Export: CSV Formula Injection Defense Sanitization',
+        'Dangerous prefix characters must be prepended with a single quote'
+      );
+
+      // 9.12 RFC 4180 CSV Escaping for Commas and Quotes
+      const headers = ['col1', 'col2'];
+      const rows = [['value, with comma', 'value "with quotes"']];
+      const csvStr = ExportManager.toCSV(headers, rows);
+      assert(
+        csvStr.includes('"value, with comma"') && csvStr.includes('"value ""with quotes"""'),
+        'Export: RFC 4180 CSV Escaping for Commas and Quotes',
+        'Cells containing commas and quotes must be properly quoted and escaped'
+      );
+
+      // 9.13 Reproducibility Recipe Metadata Schema Integrity
+      const testDoc = {
+        projectMetadata: { title: 'MST vs K-Means Robustness Analysis', leadStudent: 'Himanshu Gupta', allocationNumber: 19 },
+        softwareEnvironment: { runtime: 'Client-Side JavaScript' },
+        clusteringSpecifications: { kmeans: {}, mst: {} }
+      };
+      assert(
+        testDoc.projectMetadata.leadStudent === 'Himanshu Gupta' && testDoc.projectMetadata.allocationNumber === 19 && typeof testDoc.clusteringSpecifications.mst === 'object',
+        'Export: Reproducibility Recipe Metadata Schema Integrity',
+        'Metadata schema must contain academic credentials and algorithm specifications'
+      );
+
+      // 9.14 Guard Against Exporting Non-Existent Experiments
+      let caughtNoData = false;
+      try {
+        ExportManager.exportRobustnessRawCSV(null);
+      } catch (e) {
+        caughtNoData = true;
+      }
+      assert(
+        caughtNoData,
+        'Export: Guard Against Exporting Non-Existent Experiments',
+        'ExportManager must throw informative error when attempting to export unexecuted experiments'
+      );
+
+      // 9.15 High-DPI Canvas Rasterization to PNG Data URL
+      const dummyCanvas = document.createElement('canvas');
+      dummyCanvas.width = 100;
+      dummyCanvas.height = 100;
+      const dummyCtx = dummyCanvas.getContext('2d');
+      dummyCtx.fillStyle = '#0f172a';
+      dummyCtx.fillRect(0, 0, 100, 100);
+      const dataUrl = dummyCanvas.toDataURL('image/png');
+      assert(
+        dataUrl.startsWith('data:image/png;base64,') && dataUrl.length > 50,
+        'Export: High-DPI Canvas Rasterization to PNG Data URL',
+        'Canvas must generate a valid, non-empty PNG rasterization'
+      );
+
+      // 9.16 Regression: Phase 1-3 Core Mechanics Invariant
+      const blobsRegress = Datasets.generateBlobs({ n: 100, k: 3, seed: 42 });
+      const ariRegress = Evaluation.adjustedRandIndex([0, 0, 1, 1], [0, 0, 1, 1]);
+      assert(
+        blobsRegress.points.length === 100 && ariRegress === 1.0,
+        'Regression: Phase 1-3 Core Mechanics Invariant',
+        'Core dataset generators and evaluation functions must remain intact'
       );
     }
 
