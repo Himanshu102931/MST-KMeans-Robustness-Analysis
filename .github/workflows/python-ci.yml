@@ -1,0 +1,45 @@
+name: Python CI - Streamlit Lab
+
+on:
+  push:
+    branches:
+      - feature/python-streamlit-migration
+  pull_request:
+    branches:
+      - main
+      - feature/python-streamlit-migration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, Import Verification & Pytest (Python 3.12 / Ubuntu)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "python_app/requirements-dev.txt"
+
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r python_app/requirements-dev.txt
+
+      - name: Verify scientific stack and library imports
+        run: |
+          python -c "import streamlit, numpy, pandas, scipy, sklearn, matplotlib, plotly, pytest; print('All required scientific and dashboard libraries imported successfully.')"
+
+      - name: Execute pytest test suite
+        env:
+          PYTHONPATH: python_app
+        run: |
+          pytest python_app/tests -v --durations=10

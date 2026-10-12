@@ -1,0 +1,11 @@
+# ==============================================================================
+# MST vs K-Means Robustness Analysis
+# Pattern Matching Lab (BCS-DS-777) — 7th Semester (2026–2027)
+# Development and Quality Assurance Dependencies
+# ==============================================================================
+
+# Include production application requirements
+-r requirements.txt
+
+# Automated Unit & Integration Testing Framework
+pytest>=8.0.0,<9.0.0
