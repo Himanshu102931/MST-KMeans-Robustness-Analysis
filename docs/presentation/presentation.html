@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MST vs K-Means Robustness Analysis — Academic Presentation</title>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --font-heading: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #presentation-container {
+      width: 100vw;
+      height: 100vh;
+      max-width: 177.78vh; /* 16:9 ratio */
+      max-height: 56.25vw;
+      position: relative;
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #1e293b;
+    }
+
+    .slide {
+      flex: 1;
+      padding: 40px 60px;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      position: relative;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header styling */
+    .slide-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #1e293b;
+      padding-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .slide-title {
+      font-size: 26pt;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .slide-subtitle {
+      font-size: 13pt;
+      color: var(--accent-cyan);
+      margin-top: 4px;
+    }
+
+    .slide-category {
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* Slide content layout */
+    .slide-body {
+      flex: 1;
+      display: grid;
+      gap: 24px;
+    }
+
+    .grid-2col {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-2col-wide-left {
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+
+    .grid-2col-wide-right {
+      grid-template-columns: 0.8fr 1.2fr;
+    }
+
+    .grid-3col {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    /* Cards & Containers */
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card h3 {
+      font-size: 14pt;
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p, .card li {
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: #ffffff;
+    }
+
+    /* Tables */
+    table.slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11pt;
+      margin-top: 10px;
+    }
+
+    table.slide-table th, table.slide-table td {
+      padding: 8px 12px;
+      border: 1px solid #1e293b;
+      text-align: left;
+    }
+
+    table.slide-table th {
+      background: #1e293b;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    table.slide-table tr:nth-child(even) {
+      background: rgba(30, 41, 59, 0.4);
+    }
+
+    .val-highlight {
+      color: var(--accent-green);
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .val-danger {
+      color: var(--accent-red);
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    /* Images */
+    .figure-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .figure-box img {
+      max-width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .figure-box span {
+      font-size: 9.5pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Math Formula Block */
+    .math-block {
+      background: #0f172a;
+      border-left: 4px solid var(--accent-blue);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11pt;
+      color: #e2e8f0;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Navigation Bar */
+    #nav-bar {
+      height: 48px;
+      background: #0b0f19;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    button.nav-btn {
+      background: #1e293b;
+      color: #ffffff;
+      border: 1px solid #334155;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10pt;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    button.nav-btn:hover {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    #slide-indicator {
+      font-size: 10.5pt;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Speaker notes overlay */
+    #notes-drawer {
+      position: absolute;
+      bottom: 48px;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.96);
+      border-top: 2px solid var(--accent-blue);
+      padding: 18px 30px;
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    #notes-drawer.open {
+      display: block;
+    }
+
+    #notes-drawer h4 {
+      font-size: 11pt;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #notes-drawer p {
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    /* Title Slide Specifics */
+    .title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+    }
+
+    .title-badge {
+      display: inline-block;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-cyan);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 11pt;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .main-title {
+      font-size: 34pt;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .main-subtitle {
+      font-size: 16pt;
+      color: #94a3b8;
+      max-width: 880px;
+      line-height: 1.4;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 780px;
+      margin-top: 20px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+<div id="presentation-container">
+
+  <!-- SLIDE 1: TITLE SLIDE -->
+  <div class="slide title-slide active" id="slide-1">
+    <div class="title-badge">Pattern Matching Lab (BCS-DS-777) &bull; Final Defense Deck</div>
+    <h1 class="main-title">MST vs K-Means Robustness Analysis</h1>
+    <p class="main-subtitle">A Comparative Quantitative Investigation of Graph-Theoretic Spanning Forest Clustering and Centroid Voronoi Partitioning Under Controlled Topological and Stochastic Perturbations</p>
+    
+    <div class="meta-grid">
+      <div class="card">
+        <p style="font-size: 10pt; color: var(--accent-blue); text-transform: uppercase; font-weight: 600;">Student Investigators</p>
+        <p style="font-size: 13pt; font-weight: 700; color: #fff; margin-top: 4px;">Himanshu Gupta &bull; Alloc. No. 19</p>
+        <p style="font-size: 12pt; color: #cbd5e1;">Parth Yadav &bull; Project Partner</p>
+      </div>
+      <div class="card">
+        <p style="font-size: 10pt; color: var(--accent-blue); text-transform: uppercase; font-weight: 600;">Academic Institution</p>
+        <p style="font-size: 12pt; font-weight: 600; color: #fff; margin-top: 4px;">Manav Rachna International Institute of Research and Studies</p>
+        <p style="font-size: 11pt; color: #94a3b8;">Department of Computer Science and Engineering &bull; MRIIRS</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: INTRODUCTION -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Motivation & Context</div>
+        <h2 class="slide-title">The Challenge of Unsupervised Clustering</h2>
+      </div>
+      <div class="slide-subtitle">Uncovering latent grouping without supervision</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> The Algorithmic Dilemma</h3>
+        <ul>
+          <li><strong>Inductive Bias:</strong> Clustering algorithms impose strict mathematical assumptions on cluster shapes.</li>
+          <li><strong>Centroid Models (K-Means):</strong> Assume spatial convexity, spherical compactness, and linear hyperplane separability.</li>
+          <li><strong>Graph Models (MST):</strong> Assume continuous topological proximity traced via single-linkage paths.</li>
+          <li><strong>The Conflict:</strong> When data deviates from spherical ideals, centroid methods fail structurally.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Real-World Robustness</h3>
+        <ul>
+          <li><strong>Physical Sensors:</strong> Produce isotropic thermal and Gaussian measurement noise ($\sigma$).</li>
+          <li><strong>Anomaly Contamination:</strong> Background noise and uncalibrated readings create ambient outliers ($\eta$).</li>
+          <li><strong>Non-Linear Topologies:</strong> Biological cell trajectories, GIS corridors, and spiral structures are non-convex.</li>
+          <li><strong>Our Research Goal:</strong> Quantitatively determine exact breakdown boundaries under controlled perturbations.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: PROBLEM STATEMENT -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Problem Definition</div>
+        <h2 class="slide-title">Research Problem & Core Questions</h2>
+      </div>
+      <div class="slide-subtitle">Official Allocation No. 19 Objective</div>
+    </div>
+    <div class="slide-body grid-2col-wide-left">
+      <div class="card">
+        <h3><span>&bull;</span> Official Allocated Objective</h3>
+        <div class="math-block" style="font-size: 12pt; line-height: 1.4; color: #93c5fd; border-color: var(--accent-cyan);">
+          "Compare MST-based clustering and K-Means under noise, outliers, and non-linear data distributions using quantitative robustness measures."
+        </div>
+        <p style="margin-top: 14px;"><strong>Methodological Gaps in Existing Studies:</strong></p>
+        <ul style="margin-top: 6px;">
+          <li>Confounding noise and outliers together in unisolated sweeps.</li>
+          <li>Treating uniform outliers as true natural clusters, distorting ARI.</li>
+          <li>Relying on opaque Python libraries rather than auditable implementations.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Core Research Questions</h3>
+        <ul>
+          <li><strong>RQ1 (Manifolds):</strong> Can MST recover non-convex shapes where K-Means is theoretically blind?</li>
+          <li><strong>RQ2 (Noise $\sigma$):</strong> At what threshold does Gaussian noise bridge inter-cluster margins?</li>
+          <li><strong>RQ3 (Outliers $\eta$):</strong> Does single-linkage MST suffer from catastrophic cut misallocation?</li>
+          <li><strong>RQ4 (Scaling):</strong> How do client-side runtimes scale for dense Prim's MST vs. Lloyd's K-Means?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: OBJECTIVES & SCOPE -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Project Foundation</div>
+        <h2 class="slide-title">Measurable Objectives & Boundaries</h2>
+      </div>
+      <div class="slide-subtitle">Targeted milestones & empirical limits</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> 5 Measurable Learning Objectives</h3>
+        <ul>
+          <li><strong>LO-1 (Algorithms):</strong> Native JS K-Means++ and dense Prim's MST verified by <strong>64 automated unit tests</strong>.</li>
+          <li><strong>LO-2 (Synthetic Engine):</strong> Deterministic coordinate generation with reproducible PRNG seeds ($11, 22, 33$).</li>
+          <li><strong>LO-3 (Robustness Suite):</strong> 144 paired trials measuring Inlier ARI and degradation ($\Delta\text{ARI}$).</li>
+          <li><strong>LO-4 (Benchmarking):</strong> Profile runtimes across $N \in [100, 600]$ using high-resolution monotonic timers.</li>
+          <li><strong>LO-5 (Interactive Dashboard):</strong> Web application with live playground, step-by-step explorer, and scientific CSV exports.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Scope & Delimitations</h3>
+        <ul>
+          <li><strong>Feature Space:</strong> 2D Euclidean coordinates ($D = 2$) for unambiguous visual validation.</li>
+          <li><strong>Sample Boundaries:</strong> $N = 300$ inliers per condition; scaling sweeps $N \in [100, 600]$.</li>
+          <li><strong>Architecture Constraint:</strong> 100% browser-native client-side JavaScript. Zero Python, Node.js, or backend servers.</li>
+          <li><strong>Evaluation Focus:</strong> Quantitative Adjusted Rand Index against known ground truth.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: K-MEANS ALGORITHM -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Centroid Paradigm</div>
+        <h2 class="slide-title">Lloyd's K-Means & K-Means++ Seeding</h2>
+      </div>
+      <div class="slide-subtitle">Within-Cluster Sum of Squares (WCSS) minimization</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> Mathematical Formulation</h3>
+        <p>Minimizes Inertia (Within-Cluster Sum of Squares):</p>
+        <div class="math-block">J = &sum;<sub>k=1</sub><sup>K</sup> &sum;<sub>x<sub>i</sub> &isin; C<sub>k</sub></sub> || x<sub>i</sub> - &mu;<sub>k</sub> ||<sup>2</sup></div>
+        <ul>
+          <li><strong>K-Means++ Seeding:</strong> Sample $\mu_k$ with probability $P(x) \propto D(x)^2$; guarantees $O(\log K)$ approximation bound.</li>
+          <li><strong>Assignment:</strong> $l_i = \arg\min_k \|x_i - \mu_k\|^2$ (Voronoi partitioning).</li>
+          <li><strong>Update:</strong> $\mu_k = \frac{1}{|C_k|} \sum x_i$ (Gradient stationary point).</li>
+          <li><strong>Convergence:</strong> Stop when centroid shift $< 10^{-5}$ or $I \ge 100$.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Mechanics & Geometric Bias</h3>
+        <ul>
+          <li><strong>Noise Averaging Advantage:</strong> Centroid calculation is an arithmetic mean. Sample mean variance is $\sigma^2 / |C_k|$, suppressing zero-mean Gaussian noise by $1/N_k$.</li>
+          <li><strong>The Linear Hyperplane Constraint:</strong> Decision boundaries between any two clusters are hyperplanes $\{x : \|x - \mu_A\| = \|x - \mu_B\|\}$.</li>
+          <li><strong>Consequence:</strong> Incapable of bending around curved crescent arcs or separating nested concentric spheres.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: MST CLUSTERING -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Graph Paradigm</div>
+        <h2 class="slide-title">Prim's MST & Graph-Theoretic Cuts</h2>
+      </div>
+      <div class="slide-subtitle">Single-linkage spanning forest partitioning</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> Minimum Spanning Tree Construction</h3>
+        <p>Complete Euclidean Graph $G = (V, E)$, $|V| = N$:</p>
+        <div class="math-block">w(T) = &sum;<sub>e &isin; T</sub> || u - v ||<sub>2</sub> &rarr; Minimized</div>
+        <ul>
+          <li><strong>Prim's Dense Algorithm:</strong> Greedily adds minimum-weight cut edge using distance array $\kappa[v]$. Time complexity: $\Theta(N^2)$.</li>
+          <li><strong>Zahn's Partitioning:</strong> Sort all $N-1$ tree edges in descending order; delete $(K-1)$ longest edges.</li>
+          <li><strong>Subtree Extraction:</strong> Disjoint Set Union (Union-Find) with path compression labels the $K$ connected components.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Topological Transitivity & Fragility</h3>
+        <ul>
+          <li><strong>Manifold Discovery:</strong> Connects points through chains of short pairwise Euclidean steps, regardless of non-linear shape.</li>
+          <li><strong>Single-Linkage Vulnerability:</strong> Distance between clusters is defined by nearest neighbor pair: $d(A, B) = \min_{u \in A, v \in B} \|u - v\|$.</li>
+          <li><strong>The Outlier Trap:</strong> A single intermediate noise point bridges disparate clusters, while isolated outliers hijack tree cuts.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: SYSTEM ARCHITECTURE -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Software Engineering</div>
+        <h2 class="slide-title">System Architecture: 100% Browser-Native</h2>
+      </div>
+      <div class="slide-subtitle">Auditable, modular client-side scientific laboratory</div>
+    </div>
+    <div class="slide-body grid-3col">
+      <div class="card">
+        <h3><span>&bull;</span> Data & PRNG Layer</h3>
+        <ul>
+          <li><strong>`js/data/prng.js`:</strong> Linear Congruential Generator ($2^{32}$ modulus) ensuring bit-for-bit reproducibility.</li>
+          <li><strong>`js/data/datasets.js`:</strong> Parametric generators for Blobs, Moons, and Circles with Box-Muller transforms.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Computational Engines</h3>
+        <ul>
+          <li><strong>`js/algorithms/`:</strong> Pure JS Lloyd K-Means++ and dense Prim MST with Union-Find.</li>
+          <li><strong>`js/metrics/`:</strong> Contingency table and Adjusted Rand Index evaluator.</li>
+          <li><strong>`js/experiments/`:</strong> Automated robustness sweeps and timer benchmark harness.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Visualization & Export</h3>
+        <ul>
+          <li><strong>Interactive Explorer:</strong> Visualizes centroid migration and Prim's frontier growth step-by-step.</li>
+          <li><strong>Export Manager:</strong> One-click CSV trial records, summary tables, and high-DPI PNG canvas downloads.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: DATASET FAMILIES -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Experimental Setup</div>
+        <h2 class="slide-title">Synthetic Dataset Geometries ($N_{\text{inliers}} = 300$)</h2>
+      </div>
+      <div class="slide-subtitle">Three canonical topological testbeds</div>
+    </div>
+    <div class="slide-body grid-3col">
+      <div class="card">
+        <h3 style="color: #60a5fa;">Gaussian Blobs ($K=3$)</h3>
+        <p style="font-size: 10.5pt; margin-bottom: 8px;">Convex, isotropic spherical clusters ($100$ pts/cluster). Linearly separable by hyperplanes.</p>
+        <div class="figure-box">
+          <img src="../../results/figures/blobs_comparison.png" alt="Blobs">
+          <span>Ground Truth vs K-Means vs MST</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color: #34d399;">Two Moons ($K=2$)</h3>
+        <p style="font-size: 10.5pt; margin-bottom: 8px;">Interlocking semicircular arcs ($150$ pts/crescent). Non-convex; requires manifold transitivity.</p>
+        <div class="figure-box">
+          <img src="../../results/figures/moons_comparison.png" alt="Moons">
+          <span>MST traces arcs; K-Means cuts through</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color: #f472b6;">Concentric Circles ($K=2$)</h3>
+        <p style="font-size: 10.5pt; margin-bottom: 8px;">Nested circular rings ($150$ pts/ring). Non-convex; centroids coincide at $(0, 0)$.</p>
+        <div class="figure-box">
+          <img src="../../results/figures/circles_comparison.png" alt="Circles">
+          <span>MST separates rings; K-Means splits</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: EXPERIMENTAL METHODOLOGY -->
+  <div class="slide" id="slide-9">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Rigorous Evaluation</div>
+        <h2 class="slide-title">Controlled Methodology & Inlier Metric</h2>
+      </div>
+      <div class="slide-subtitle">Strict separation of noise and outlier variables</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> Controlled Perturbation Protocol</h3>
+        <ul>
+          <li><strong>Experiment A (Noise Sweep):</strong> Gaussian noise $\sigma \in \{0.00, 0.05, 0.10, 0.20\}$ with outliers fixed at $0\%$.</li>
+          <li><strong>Experiment B (Outlier Sweep):</strong> Uniform ambient outliers $\eta \in \{0\%, 5\%, 10\%, 20\%\}$ ($0, 15, 30, 60$ pts) with noise fixed at $0.00$.</li>
+          <li><strong>Experiment C (Baseline):</strong> Clean matched baseline condition ($\sigma=0.00, \eta=0\%$).</li>
+          <li><strong>Paired Trials:</strong> Seeds $\{11, 22, 33\}$ &rarr; identical coordinates fed to both algorithms &rarr; <strong>144 evaluations</strong>.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Evaluation Metrics & Inlier Protocol</h3>
+        <ul>
+          <li><strong>Adjusted Rand Index (ARI):</strong> Chance-corrected partition agreement (Hubert & Arabie, 1985) in $[-1.0, 1.0]$. Expected value is $0.0$ for random labels; $1.0$ for perfect partition.</li>
+          <li><strong>Inlier Evaluation Rule:</strong> ARI evaluated strictly across the $300$ ground-truth inliers. Prevents arbitrary outlier groupings from distorting scores.</li>
+          <li><strong>Baseline Degradation:</strong> $\Delta\text{ARI} = \max(0.0, \text{ARI}_{\text{baseline}} - \text{ARI}_{\text{perturbed}})$. Measures non-negative performance loss.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: CLEAN DATASET RESULTS -->
+  <div class="slide" id="slide-10">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Empirical Results</div>
+        <h2 class="slide-title">Clean Geometry Results: Topological Contrast</h2>
+      </div>
+      <div class="slide-subtitle">Baseline evaluations under zero perturbation ($\sigma=0.00, \eta=0\%$)</div>
+    </div>
+    <div class="slide-body grid-2col-wide-left">
+      <div class="card">
+        <h3><span>&bull;</span> Measured Baseline Concordance</h3>
+        <table class="slide-table">
+          <thead>
+            <tr>
+              <th>Dataset Family</th>
+              <th>K</th>
+              <th>K-Means Inlier ARI</th>
+              <th>MST Inlier ARI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Gaussian Blobs</strong></td>
+              <td>3</td>
+              <td class="val-highlight">1.0000 &plusmn; 0.0000</td>
+              <td class="val-highlight">1.0000 &plusmn; 0.0000</td>
+            </tr>
+            <tr>
+              <td><strong>Two Moons</strong></td>
+              <td>2</td>
+              <td class="val-danger">0.1941 &plusmn; 0.0588</td>
+              <td class="val-highlight">1.0000 &plusmn; 0.0000</td>
+            </tr>
+            <tr>
+              <td><strong>Concentric Circles</strong></td>
+              <td>2</td>
+              <td class="val-danger">-0.0019 &plusmn; 0.0012</td>
+              <td class="val-highlight">1.0000 &plusmn; 0.0000</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 14px;">
+          <p><strong>Topological Confirmation:</strong></p>
+          <ul style="margin-top: 6px;">
+            <li>On <strong>Blobs</strong>, both paradigms succeed completely ($\text{ARI} = 1.0000$).</li>
+            <li>On <strong>Moons</strong>, linear Voronoi cuts slice across crescents ($\text{ARI} = 0.1941$).</li>
+            <li>On <strong>Circles</strong>, coinciding centroids $(0, 0)$ force K-Means to chance levels ($\text{ARI} \approx 0.0$).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="figure-box">
+        <img src="../../results/figures/moons_comparison.png" alt="Two Moons Clean Comparison">
+        <span>Figure 8.2: MST (Right) traces arcs perfectly; K-Means (Center) bisects crescents.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: NOISE ROBUSTNESS RESULTS -->
+  <div class="slide" id="slide-11">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Empirical Results</div>
+        <h2 class="slide-title">Experiment A: Gaussian Noise Sensitivity</h2>
+      </div>
+      <div class="slide-subtitle">Degradation dynamics across noise levels &sigma; &isin; [0.00, 0.20]</div>
+    </div>
+    <div class="slide-body grid-2col-wide-right">
+      <div class="card">
+        <h3><span>&bull;</span> Key Numerical Findings</h3>
+        <ul>
+          <li><strong>Gaussian Blobs:</strong> Both algorithms maintain perfect <span class="val-highlight">ARI = 1.0000</span> across all noise levels up to $\sigma = 0.20$ ($\Delta\text{ARI} = 0.0000$).</li>
+          <li><strong>Two Moons:</strong> MST holds $\text{ARI} = 1.0000$ at $\sigma = 0.05$, drops to $0.6667$ at $\sigma = 0.10$, and collapses to <span class="val-danger">0.0000</span> at $\sigma = 0.20$ ($\Delta\text{ARI} = 1.0000$).</li>
+          <li><strong>Concentric Circles:</strong> MST holds $\text{ARI} = 1.0000$ through $\sigma = 0.10$, but collapses to <span class="val-danger">0.0935</span> at $\sigma = 0.20$ ($\Delta\text{ARI} = 0.9065$).</li>
+          <li><strong>Breakdown Threshold:</strong> MST collapses when noise dispersion creates inter-cluster shortcuts shorter than intra-cluster edges.</li>
+        </ul>
+      </div>
+      <div class="figure-box">
+        <img src="../../results/figures/ari_vs_noise.png" alt="ARI vs Noise">
+        <span>Figure 8.4: Inlier ARI vs. Additive Gaussian Noise (&sigma; &isin; [0.00, 0.20])</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: OUTLIER ROBUSTNESS RESULTS -->
+  <div class="slide" id="slide-12">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Empirical Discovery</div>
+        <h2 class="slide-title">Experiment B: Outlier Robustness & MST Cut Collapse</h2>
+      </div>
+      <div class="slide-subtitle">Pendant edge cut misallocation under uniform contamination</div>
+    </div>
+    <div class="slide-body grid-2col-wide-right">
+      <div class="card">
+        <h3><span>&bull;</span> The Central Finding: MST Collapse</h3>
+        <ul>
+          <li><strong>Catastrophic Plunge:</strong> On Two Moons, adding just <strong>5% uniform outliers (15 points)</strong> causes MST ARI to collapse from <span class="val-highlight">1.0000</span> directly to <span class="val-danger">0.0000</span> ($\Delta\text{ARI} = 1.0000$).</li>
+          <li><strong>K-Means Resilience:</strong> On Blobs, K-Means maintains <span class="val-highlight">ARI = 1.0000</span> up to 20% outliers, while MST degrades to $0.3799$.</li>
+          <li><strong>The Mechanism (Pendant Edges):</strong> Outliers form long peripheral edges. The $(K-1)$ tree cuts isolate individual outliers into singleton clusters, leaving all $300$ inliers trapped in one giant component!</li>
+        </ul>
+      </div>
+      <div class="figure-box">
+        <img src="../../results/figures/ari_vs_outliers.png" alt="ARI vs Outliers">
+        <span>Figure 8.5: Inlier ARI vs. Outlier Contamination (&eta; &isin; [0%, 20%])</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: PERFORMANCE BENCHMARK -->
+  <div class="slide" id="slide-13">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Computational Scalability</div>
+        <h2 class="slide-title">Performance Benchmarking & Complexity</h2>
+      </div>
+      <div class="slide-subtitle">Runtime scaling across sample sizes N &isin; [100, 600] on Gaussian Blobs</div>
+    </div>
+    <div class="slide-body grid-2col-wide-left">
+      <div class="card">
+        <h3><span>&bull;</span> Measured Execution Runtimes</h3>
+        <table class="slide-table">
+          <thead>
+            <tr>
+              <th>N</th>
+              <th>K-Means Mean</th>
+              <th>MST Prim Mean</th>
+              <th>Ratio of Means</th>
+              <th>Ratio of Medians</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>100</td>
+              <td>0.1000 ms</td>
+              <td>0.1400 ms</td>
+              <td>1.40&times;</td>
+              <td>2.00&times;</td>
+            </tr>
+            <tr>
+              <td>200</td>
+              <td>0.1600 ms</td>
+              <td>0.3800 ms</td>
+              <td>2.38&times;</td>
+              <td>1.50&times;</td>
+            </tr>
+            <tr>
+              <td>400</td>
+              <td>0.1400 ms</td>
+              <td>0.9400 ms</td>
+              <td>6.71&times;</td>
+              <td>10.00&times;</td>
+            </tr>
+            <tr>
+              <td>600</td>
+              <td>0.1400 ms</td>
+              <td>1.7000 ms</td>
+              <td class="val-highlight">12.14&times;</td>
+              <td class="val-highlight">17.00&times;</td>
+            </tr>
+          </tbody>
+        </table>
+        <ul style="margin-top: 12px;">
+          <li><strong>Asymptotic Contrast:</strong> Prim scales quadratically ($\Theta(N^2)$); K-Means scales linearly per pass ($O(I \cdot K \cdot N)$).</li>
+          <li><strong>Disambiguation:</strong> Median ratio ($17.00\times$) resists OS scheduling jitter; Mean ratio ($12.14\times$) reflects total aggregate work.</li>
+        </ul>
+      </div>
+      <div class="figure-box">
+        <img src="../../results/figures/runtime_scaling.png" alt="Runtime Scaling">
+        <span>Figure 8.7: Wall-Clock Runtime (ms) vs. Sample Size N</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: CONCLUSIONS & LIMITATIONS -->
+  <div class="slide" id="slide-14">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Synthesis & Practical Value</div>
+        <h2 class="slide-title">Conclusions & Practitioner Heuristic</h2>
+      </div>
+      <div class="slide-subtitle">Guiding algorithmic selection in noisy environments</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> Decision Framework for Engineers</h3>
+        <ul>
+          <li><strong>Spherical Clusters + Background Noise:</strong> &rarr; <strong style="color: var(--accent-blue);">Choose K-Means</strong> (Robust centroid averaging; linear runtime).</li>
+          <li><strong>Non-Convex Manifolds + Clean Data:</strong> &rarr; <strong style="color: var(--accent-green);">Choose MST Clustering</strong> (Perfect topological discovery).</li>
+          <li><strong>Non-Convex Manifolds + Outliers:</strong> &rarr; <strong style="color: var(--accent-red);">Neither standard algorithm works!</strong> Use DBSCAN or outlier-trimmed MST.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span>&bull;</span> Limitations & Future Extensions</h3>
+        <ul>
+          <li><strong>Experimental Limitations:</strong> Exploratory seed sample ($M=3$); 2D synthetic manifolds; browser timer quantization ($5\text{--}100\,\mu\text{s}$).</li>
+          <li><strong>Future Extensions:</strong> Outlier-trimmed MST (density filtering prior to tree construction); sparse Delaunay triangulations ($O(N \log N)$); high-dimensional benchmarking ($D \gg 2$).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: REFERENCES & DEFENSE -->
+  <div class="slide" id="slide-15">
+    <div class="slide-header">
+      <div>
+        <div class="slide-category">Academic Defense</div>
+        <h2 class="slide-title">References & Viva Defense Q&A</h2>
+      </div>
+      <div class="slide-subtitle">Pattern Matching Lab (BCS-DS-777) &bull; Allocation No. 19</div>
+    </div>
+    <div class="slide-body grid-2col">
+      <div class="card">
+        <h3><span>&bull;</span> Verified Academic References</h3>
+        <ul style="font-size: 10pt; line-height: 1.4;">
+          <li><strong>MacQueen (1967) / Lloyd (1982):</strong> Foundations of K-Means optimization & vector quantization.</li>
+          <li><strong>Arthur & Vassilvitskii (2007):</strong> k-means++ careful seeding approximation bounds.</li>
+          <li><strong>Prim (1957) / Zahn (1971):</strong> Minimum Spanning Trees & gestalt graph clustering.</li>
+          <li><strong>Hubert & Arabie (1985):</strong> Comparing partitions & Adjusted Rand Index.</li>
+          <li><strong>Jain (2010):</strong> Data clustering: 50 years beyond K-means.</li>
+        </ul>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <h3 style="font-size: 18pt; color: #ffffff; margin-bottom: 8px;">Thank You</h3>
+        <p style="font-size: 12pt; color: var(--accent-cyan); margin-bottom: 14px;">We invite questions, critiques, and discussion from the evaluation committee.</p>
+        <p style="font-size: 10pt; color: #94a3b8;">Himanshu Gupta (Alloc. No. 19) &bull; Parth Yadav</p>
+        <p style="font-size: 9pt; color: #64748b; font-family: var(--font-mono); margin-top: 8px;">GitHub: Himanshu102931/MST-KMeans-Robustness-Analysis</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <div id="nav-bar">
+    <div class="nav-controls">
+      <button class="nav-btn" id="prev-btn" onclick="prevSlide()">&larr; Prev</button>
+      <button class="nav-btn" id="next-btn" onclick="nextSlide()">Next &rarr;</button>
+      <button class="nav-btn" id="notes-btn" onclick="toggleNotes()">Speaker Notes [S]</button>
+    </div>
+    <div id="slide-indicator">Slide 1 of 15</div>
+    <div class="nav-controls">
+      <button class="nav-btn" onclick="toggleFullscreen()">Fullscreen [F]</button>
+    </div>
+  </div>
+
+  <!-- SPEAKER NOTES DRAWER -->
+  <div id="notes-drawer">
+    <h4>
+      <span>Speaker Speaking Script</span>
+      <span id="notes-speaker" style="color: var(--accent-blue); font-weight: 600;">Speaker: Himanshu Gupta</span>
+    </h4>
+    <p id="notes-content">Welcome to our final academic project presentation.</p>
+  </div>
+
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 15;
+
+  const speakerNotes = {
+    1: { speaker: "Himanshu Gupta", text: "Respected external examiner, course coordinator, and faculty mentors. Good morning. I am Himanshu Gupta, Allocation Number 19, and alongside my project partner, Parth Yadav, we are presenting our final academic project in Pattern Matching Lab (BCS-DS-777): 'MST vs K-Means Robustness Analysis.' Our project compares how two fundamentally contrasting clustering algorithms behave when exposed to real-world data imperfections—specifically geometric non-linearity, Gaussian noise, and ambient outliers—evaluated natively using browser technologies." },
+    2: { speaker: "Parth Yadav", text: "In unsupervised pattern recognition, our goal is to uncover natural group structure from unlabelled points. However, every clustering algorithm comes with an underlying mathematical assumption. K-Means assumes spherical, compact clusters, while graph-based clustering like MST traces connectivity through local proximity. In real-world domains like medical imaging or sensor networks, data contains noise, outliers, and curved manifolds. This motivated our research to test where these two models break down." },
+    3: { speaker: "Himanshu Gupta", text: "Our official allocated objective for Allocation 19 is: 'Compare MST-based clustering and K-Means under noise, outliers, and non-linear data distributions using quantitative robustness measures.' We formulated four core research questions: RQ1 on manifold recovery, RQ2 on Gaussian noise bridging thresholds, RQ3 on outlier sensitivity, and RQ4 on computational scalability in client-side execution." },
+    4: { speaker: "Parth Yadav", text: "We defined five measurable learning objectives: LO-1 native JavaScript implementation with 64 automated tests; LO-2 deterministic synthetic engine with seeds 11, 22, 33; LO-3 conducting 144 paired trials measuring Inlier ARI and degradation; LO-4 micro-benchmarking across N from 100 to 600; and LO-5 building an open, auditable web dashboard with scientific exports." },
+    5: { speaker: "Himanshu Gupta", text: "K-Means minimizes Within-Cluster Sum of Squares (Inertia). We implemented Lloyd's algorithm with K-Means++ seeding, which samples initial centroids with D^2 weighting, providing an O(log K) bound. Centroid updates are arithmetic means, naturally suppressing zero-mean Gaussian noise. However, decision boundaries are strictly linear hyperplanes, making K-Means incapable of wrapping around non-convex manifolds." },
+    6: { speaker: "Parth Yadav", text: "In Zahn's MST clustering, the dataset is modeled as a complete graph. We compute the Minimum Spanning Tree using Prim's dense algorithm in O(N^2) time, then delete the K-1 longest edges. The remaining subtrees form our clusters. Because this operates on single-linkage connectivity, MST easily discovers curved manifolds. But as our experiments prove, this makes it extraordinarily sensitive to outlier bridges." },
+    7: { speaker: "Himanshu Gupta", text: "The entire research laboratory runs natively inside the web browser—no Python, no Node.js, and no backend. We engineered an internal LCG PRNG for exact seed reproducibility, modular algorithmic engines, an ARI evaluator, and high-DPI canvas renderers. The test runner passes all 64 unit tests in under 50 milliseconds." },
+    8: { speaker: "Parth Yadav", text: "We evaluated across three canonical dataset families with 300 baseline inliers: Gaussian Blobs (K=3, convex spherical case), Two Moons (K=2, interlocking non-convex crescents), and Concentric Circles (K=2, nested rings with identical centroids at origin). All datasets were generated deterministically using fixed seeds." },
+    9: { speaker: "Himanshu Gupta", text: "To avoid confounding variables, we strictly separated our tests: Experiment A varied Gaussian noise sigma from 0.00 to 0.20 with zero outliers; Experiment B varied outliers from 0% to 20% with zero noise; and Experiment C established clean baselines. We evaluated Adjusted Rand Index strictly over the 300 ground-truth inliers to prevent artificial outlier cluster inflation." },
+    10: { speaker: "Parth Yadav", text: "Looking at our clean baseline results: On Gaussian Blobs, both algorithms achieve perfect ARI of 1.0000. On Two Moons, MST achieves 1.0000, while K-Means fails at 0.1941 because its Voronoi line bisects both crescents. On Concentric Circles, MST achieves 1.0000, while K-Means scores -0.0019 (chance level) due to coinciding centroids. These results confirm theoretical expectations." },
+    11: { speaker: "Himanshu Gupta", text: "Under Gaussian coordinate noise: On Blobs, both algorithms remain completely solid at ARI = 1.0000 up to sigma = 0.20. On Concentric Circles, MST holds at 1.0000 through sigma = 0.10, but collapses to 0.0935 at sigma = 0.20. On Two Moons, MST drops to 0.6667 at sigma = 0.10 and collapses to 0.0000 at sigma = 0.20. High noise creates Euclidean shortcuts across cluster boundaries." },
+    12: { speaker: "Parth Yadav", text: "This is our central empirical discovery: the catastrophic vulnerability of MST to outliers. On Two Moons, adding just 5% uniform outliers—only 15 points—causes MST ARI to drop instantly from 1.0000 to 0.0000. We call this 'Pendant Edge Cut Misallocation.' Outliers form long peripheral edges that consume the K-1 cuts, isolating individual outlier points and leaving all 300 inliers trapped in a single giant component. Meanwhile, K-Means on Blobs stays at 1.0000 up to 20% outliers." },
+    13: { speaker: "Himanshu Gupta", text: "We profiled runtimes from 100 to 600 points on Blobs. At N = 100, both execute under 0.2 ms. At N = 600, dense Prim MST scales quadratically to 1.70 ms, while K-Means remains flat at 0.14 ms. This yields a speedup of 12.14x using means, and 17.00x using medians. Our audit carefully distinguished the ratio of means from the ratio of medians to account for browser timer quantization." },
+    14: { speaker: "Parth Yadav", text: "Our decision heuristic: If data is spherical with background noise, select K-Means. If data is continuous non-linear manifolds and pristine, select MST. If data has BOTH non-convex manifolds AND outliers, neither standard algorithm works—density-based methods like DBSCAN or outlier-trimmed MST are required. We acknowledge limitations of 3 seeds, 2D data, and browser timer coarsening." },
+    15: { speaker: "Himanshu Gupta", text: "Our work builds on foundational literature from MacQueen, Lloyd, Arthur and Vassilvitskii, Prim, Zahn, Hubert and Arabie, and Anil Jain. Our complete code, test suite, and evidence reports are open-source on GitHub. We thank our examiners and mentors for their guidance, and we welcome your questions." }
+  };
+
+  function updateSlide(newSlide) {
+    if (newSlide < 1 || newSlide > totalSlides) return;
+    document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+    currentSlide = newSlide;
+    document.getElementById(`slide-${currentSlide}`).classList.add('active');
+    document.getElementById('slide-indicator').innerText = `Slide ${currentSlide} of ${totalSlides}`;
+    
+    // Update speaker notes
+    if (speakerNotes[currentSlide]) {
+      document.getElementById('notes-speaker').innerText = `Speaker: ${speakerNotes[currentSlide].speaker}`;
+      document.getElementById('notes-content').innerText = speakerNotes[currentSlide].text;
+    }
+  }
+
+  function prevSlide() { updateSlide(currentSlide - 1); }
+  function nextSlide() { updateSlide(currentSlide + 1); }
+
+  function toggleNotes() {
+    const drawer = document.getElementById('notes-drawer');
+    drawer.classList.toggle('open');
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  }
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      prevSlide();
+    } else if (e.key === 'Home') {
+      updateSlide(1);
+    } else if (e.key === 'End') {
+      updateSlide(totalSlides);
+    } else if (e.key === 's' || e.key === 'S') {
+      toggleNotes();
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleFullscreen();
+    }
+  });
+
+  // Initial load
+  updateSlide(1);
+</script>
+
+</body>
+</html>
