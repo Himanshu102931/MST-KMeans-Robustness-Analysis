@@ -323,3 +323,199 @@ def create_mst_figure(
     )
     _apply_standard_layout(fig, title=title_text, x_label=x_label, y_label=y_label, height=height)
     return fig
+
+
+def create_robustness_curve_figure(
+    aggregates_df: pd.DataFrame,
+    family: str,
+    sweep_type: str,
+    metric_col: str = "mean_inlier_ari",
+    std_col: Optional[str] = "std_inlier_ari",
+    y_label: str = "Inlier Adjusted Rand Index (ARI)",
+    title_suffix: str = "Robustness Curve",
+    height: int = 480,
+) -> go.Figure:
+    """Plot mean metric trajectory comparing K-Means and Prim's MST with sample std error bars.
+
+    Args:
+        aggregates_df: DataFrame containing SweepAggregateRow records.
+        family: Selected dataset family ('blobs', 'moons', 'circles').
+        sweep_type: Selected perturbation sweep ('noise' or 'outlier').
+        metric_col: Name of column containing the mean metric to plot.
+        std_col: Name of column containing sample standard deviation (or None).
+        y_label: Y-axis title.
+        title_suffix: Suffix for the chart title.
+        height: Figure height in pixels.
+
+    Returns:
+        Plotly Figure with dual algorithm traces and error bars.
+    """
+    fig = go.Figure()
+
+    sub = aggregates_df[
+        (aggregates_df["dataset_family"] == family.lower())
+        & (aggregates_df["sweep_type"] == sweep_type.lower())
+    ].sort_values(by="parameter_value")
+
+    if sub.empty:
+        fig.add_annotation(
+            text="No experiment data available for selected filter.",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=14, color="#94a3b8"),
+        )
+        return fig
+
+    param_name = sub["parameter_name"].iloc[0] if not sub.empty else "Parameter"
+    x_label = (
+        "Gaussian Noise Standard Deviation (sigma)"
+        if param_name == "noise_sigma"
+        else "Uniform Outlier Contamination Rate"
+    )
+
+    algorithms = [
+        ("Lloyd K-Means", "#38bdf8", "circle"),     # Sky blue
+        ("Prim MST", "#10b981", "diamond"),          # Emerald green
+    ]
+
+    n_seeds_reported = 1
+    for algo_name, color, symbol in algorithms:
+        algo_sub = sub[sub["algorithm"] == algo_name].sort_values(by="parameter_value")
+        if algo_sub.empty:
+            continue
+
+        x_vals = algo_sub["parameter_value"].values
+        y_vals = algo_sub[metric_col].values
+        n_seeds_reported = int(algo_sub["n_seeds"].iloc[0])
+
+        error_dict = None
+        if std_col and std_col in algo_sub.columns and n_seeds_reported > 1:
+            std_vals = algo_sub[std_col].values
+            error_dict = dict(
+                type="data",
+                array=std_vals,
+                visible=True,
+                thickness=1.5,
+                width=4,
+                color=color,
+            )
+
+        fig.add_trace(
+            go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                error_y=error_dict,
+                mode="lines+markers",
+                name=f"{algo_name} (Mean ± Std)",
+                line=dict(color=color, width=2.5),
+                marker=dict(symbol=symbol, size=8, color=color),
+                hovertemplate=(
+                    f"<b>{algo_name}</b><br>"
+                    + f"{param_name}: %{{x:.2f}}<br>"
+                    + f"{y_label}: %{{y:.4f}}<br>"
+                    + f"Seeds (N): {n_seeds_reported}<extra></extra>"
+                ),
+            )
+        )
+
+    family_title = family.capitalize()
+    if family.lower() == "blobs":
+        family_title = "Gaussian Blobs"
+    elif family.lower() == "moons":
+        family_title = "Two Moons"
+    elif family.lower() == "circles":
+        family_title = "Concentric Circles"
+
+    seed_note = f"N = {n_seeds_reported} seeds"
+    if n_seeds_reported <= 3:
+        seed_note += " (Quick Mode — illustrative)"
+
+    fig.update_layout(
+        title=dict(
+            text=f"{family_title} — {title_suffix} ({seed_note})",
+            font=dict(size=14, color="#f8fafc", family="Inter, system-ui, sans-serif"),
+            x=0.02,
+            y=0.96,
+        ),
+        margin=dict(l=45, r=40, t=50, b=45),
+        height=height,
+        paper_bgcolor="#0f172a",
+        plot_bgcolor="#1e293b",
+        xaxis=dict(
+            title=dict(text=x_label, font=dict(color="#cbd5e1", size=12)),
+            tickfont=dict(color="#94a3b8", size=10),
+            gridcolor="#334155",
+            zerolinecolor="#475569",
+        ),
+        yaxis=dict(
+            title=dict(text=y_label, font=dict(color="#cbd5e1", size=12)),
+            tickfont=dict(color="#94a3b8", size=10),
+            gridcolor="#334155",
+            zerolinecolor="#475569",
+        ),
+        legend=dict(
+            font=dict(color="#e2e8f0", size=11),
+            bgcolor="rgba(15, 23, 42, 0.75)",
+            bordercolor="#334155",
+            borderwidth=1,
+            x=0.02,
+            y=0.08,
+        ),
+    )
+    return fig
+
+
+def create_degradation_curve_figure(
+    aggregates_df: pd.DataFrame,
+    family: str,
+    sweep_type: str,
+    use_nonnegative_loss: bool = False,
+    height: int = 480,
+) -> go.Figure:
+    """Plot baseline degradation curves comparing K-Means and Prim's MST.
+
+    Args:
+        aggregates_df: DataFrame containing SweepAggregateRow records.
+        family: Selected dataset family.
+        sweep_type: Selected perturbation sweep ('noise' or 'outlier').
+        use_nonnegative_loss: If True, plots nonnegative loss; if False, plots signed delta.
+        height: Figure height in pixels.
+
+    Returns:
+        Plotly Figure showing degradation trajectory relative to matched baseline.
+    """
+    if use_nonnegative_loss:
+        metric_col = "mean_degradation_inlier_ari"
+        std_col = "std_degradation_inlier_ari"
+        y_label = "ARI Degradation Loss [max(0, Base - Current)]"
+        title_suffix = "Nonnegative ARI Degradation Loss"
+    else:
+        metric_col = "mean_delta_inlier_ari"
+        std_col = "std_delta_inlier_ari"
+        y_label = "Signed ARI Change Δ [Current - Base]"
+        title_suffix = "Signed Baseline ARI Change (Δ)"
+
+    fig = create_robustness_curve_figure(
+        aggregates_df=aggregates_df,
+        family=family,
+        sweep_type=sweep_type,
+        metric_col=metric_col,
+        std_col=std_col,
+        y_label=y_label,
+        title_suffix=title_suffix,
+        height=height,
+    )
+
+    # Add zero reference line
+    fig.add_hline(
+        y=0.0,
+        line_dash="dot",
+        line_color="#94a3b8",
+        annotation_text="Matched Baseline Reference (0.0)",
+        annotation_position="bottom right",
+        annotation_font=dict(size=10, color="#94a3b8"),
+    )
+    return fig

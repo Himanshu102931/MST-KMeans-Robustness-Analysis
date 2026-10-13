@@ -10,9 +10,11 @@ Interactive and publication-quality scientific visualization:
 
 from clustering_lab.visualization.figures import (
     CLUSTER_COLORS,
+    create_degradation_curve_figure,
     create_ground_truth_figure,
     create_kmeans_figure,
     create_mst_figure,
+    create_robustness_curve_figure,
 )
 
 __all__ = [
@@ -20,4 +22,6 @@ __all__ = [
     "create_ground_truth_figure",
     "create_kmeans_figure",
     "create_mst_figure",
+    "create_robustness_curve_figure",
+    "create_degradation_curve_figure",
 ]

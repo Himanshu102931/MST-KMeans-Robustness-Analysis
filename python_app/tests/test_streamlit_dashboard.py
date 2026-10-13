@@ -115,6 +115,7 @@ def test_navigation_across_all_modules():
     views = [
         "Overview",
         "Clustering Playground",
+        "Robustness Analysis",
         "Dataset & CSV Import",
         "Reproducibility & Configuration",
         "Methodology / Help",
