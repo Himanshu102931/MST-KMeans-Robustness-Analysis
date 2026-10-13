@@ -23,6 +23,7 @@ import json
 import platform
 import sys
 from typing import Any, Dict, List
+import numpy as np
 import pandas as pd
 
 from clustering_lab.experiments.aggregation import SweepAggregateRow, aggregates_to_dataframe, trials_to_dataframe
@@ -126,3 +127,118 @@ def export_experiment_metadata(
             "config": config.to_dict(),
         },
     }
+
+
+def export_benchmark_trials_to_csv(trials: Any) -> str:
+    """Serialize raw benchmark trials to a CSV string.
+
+    Columns:
+        sample_size, repetition_index, seed, algorithm, runtime_ns, runtime_ms,
+        k, n_clusters_predicted, inertia_or_weight, converged
+    """
+    if not trials:
+        return ""
+    df = pd.DataFrame([t.to_dict() for t in trials])
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    return buf.getvalue()
+
+
+def export_benchmark_summary_to_csv(summary: Any) -> str:
+    """Serialize aggregated benchmark summary to a CSV string.
+
+    Supports BenchmarkSummary objects, lists of rows, or pandas DataFrames.
+    """
+    if summary is None:
+        return ""
+    if isinstance(summary, pd.DataFrame):
+        df = summary
+    elif hasattr(summary, "to_dataframe"):
+        df = summary.to_dataframe()
+    elif isinstance(summary, (list, tuple)):
+        rows = []
+        for item in summary:
+            if hasattr(item, "to_dict"):
+                rows.append(item.to_dict())
+            elif hasattr(item, "to_dataframe"):
+                sub_df = item.to_dataframe()
+                rows.extend(sub_df.to_dict(orient="records"))
+            elif isinstance(item, dict):
+                rows.append(item)
+            else:
+                try:
+                    rows.append(dict(item))
+                except Exception:
+                    pass
+        df = pd.DataFrame(rows)
+    else:
+        return ""
+
+    if df.empty:
+        return ""
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    return buf.getvalue()
+
+
+def export_benchmark_config_json(config: Any) -> str:
+    """Serialize BenchmarkConfig to formatted JSON string."""
+    return json.dumps(config.to_dict(), indent=2)
+
+
+def export_benchmark_metadata(
+    config: Optional[Any] = None,
+    n_trials: int = 0,
+) -> str:
+    """Compile comprehensive runtime environment and provenance metadata for benchmarks as a JSON string."""
+    pkg_versions: Dict[str, str] = {}
+    for pkg_name in ["numpy", "scipy", "sklearn", "pandas", "streamlit", "plotly", "pytest", "matplotlib"]:
+        try:
+            mod = __import__(pkg_name)
+            pkg_versions[pkg_name] = getattr(mod, "__version__", "unknown")
+        except ImportError:
+            pkg_versions[pkg_name] = "not_installed"
+
+    meta_dict = {
+        "engine": "Python Clustering Laboratory Performance Benchmark Engine",
+        "phase": "M5B — Python Performance Benchmarks, Algorithm Explorers & Research Exports",
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "academic_context": {
+            "course": "Pattern Matching Lab (BCS-DS-777)",
+            "institution": "Manav Rachna International Institute of Research and Studies (MRIIRS)",
+            "school": "School of Engineering & Technology (SET)",
+            "degree": "B.Tech CSE (AIML), 7th Semester (2026–2027)",
+            "students": [
+                {"name": "Himanshu Gupta", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
+                {"name": "Parth Yadav", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
+            ],
+            "instructor": "Mr. Aman Kumar, Assistant Professor",
+        },
+        "institution": "MRIIRS, School of Engineering & Technology",
+        "git": {
+            "branch": "feature/python-streamlit-migration",
+            "repository": "Himanshu102931/MST-KMeans-Robustness-Analysis",
+        },
+        "environment": {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "machine": platform.machine(),
+            "packages": pkg_versions,
+        },
+        "python_version": sys.version.split()[0],
+        "platform": platform.platform(),
+        "numpy_version": np.__version__,
+        "timer": "time.perf_counter_ns",
+        "implementation": "Custom Pure NumPy (kmeans.py, mst.py)",
+        "provenance_statement": (
+            "These benchmark results were measured natively in the Python environment using "
+            "time.perf_counter_ns() on pure NumPy custom clustering implementations. "
+            "They are strictly independent from legacy JavaScript timing results."
+        ),
+        "execution_summary": {
+            "n_trials_measured": n_trials,
+            "n_clustering_executions": n_trials * 2,
+            "config": config.to_dict() if config is not None and hasattr(config, "to_dict") else {},
+        },
+    }
+    return json.dumps(meta_dict, indent=2)

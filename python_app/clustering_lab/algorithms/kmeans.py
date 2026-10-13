@@ -47,6 +47,11 @@ class KMeansResult:
     converged: bool
     k: int
 
+    @property
+    def centroids(self) -> np.ndarray:
+        """Alias for cluster_centers."""
+        return self.cluster_centers
+
 
 def _validate_input_data(X: np.ndarray, k: int, max_iter: int, tol: float) -> Tuple[np.ndarray, int]:
     """Validate numerical data and hyperparameters.

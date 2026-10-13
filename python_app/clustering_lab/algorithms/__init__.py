@@ -6,6 +6,14 @@ Core clustering algorithm implementations:
 - Lloyd's K-Means clustering (centroid-based / Voronoi tessellation)
 """
 
+from clustering_lab.algorithms.explorer import (
+    KMeansTraceResult,
+    KMeansTraceStep,
+    MSTTraceResult,
+    MSTTraceStep,
+    run_kmeans_trace,
+    run_mst_trace,
+)
 from clustering_lab.algorithms.kmeans import KMeans, KMeansResult, kmeans
 from clustering_lab.algorithms.mst import (
     MSTClustering,
@@ -22,4 +30,10 @@ __all__ = [
     "MSTClusteringResult",
     "MSTEdge",
     "mst_clustering",
+    "KMeansTraceStep",
+    "KMeansTraceResult",
+    "MSTTraceStep",
+    "MSTTraceResult",
+    "run_kmeans_trace",
+    "run_mst_trace",
 ]

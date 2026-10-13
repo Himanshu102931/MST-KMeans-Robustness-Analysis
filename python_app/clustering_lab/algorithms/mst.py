@@ -70,6 +70,11 @@ class MSTClusteringResult:
     k: int
     n_samples: int
 
+    @property
+    def total_weight(self) -> float:
+        """Alias for total_mst_weight."""
+        return self.total_mst_weight
+
 
 class _DisjointSet:
     """Disjoint Set Union (DSU / Union-Find) with path compression and union by rank."""

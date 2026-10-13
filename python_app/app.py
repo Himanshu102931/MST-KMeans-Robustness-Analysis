@@ -25,6 +25,14 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from clustering_lab.algorithms.explorer import (
+    KMeansTraceResult,
+    KMeansTraceStep,
+    MSTTraceResult,
+    MSTTraceStep,
+    run_kmeans_trace,
+    run_mst_trace,
+)
 from clustering_lab.algorithms.kmeans import KMeansResult, kmeans
 from clustering_lab.algorithms.mst import MSTClusteringResult, mst_clustering
 from clustering_lab.data.config import ExperimentConfig, create_dataset_from_config
@@ -33,32 +41,50 @@ from clustering_lab.data.dataset import Dataset
 from clustering_lab.data.synthetic import generate_synthetic_dataset
 from clustering_lab.evaluation.metrics import ClusteringMetrics, evaluate_clustering
 from clustering_lab.experiments import (
+    DEFAULT_BENCHMARK_REPETITIONS,
+    DEFAULT_BENCHMARK_SEED,
+    DEFAULT_BENCHMARK_SIZES,
     DEFAULT_EXTENDED_SEEDS,
     DEFAULT_NOISE_LEVELS,
     DEFAULT_OUTLIER_BASE_NOISE,
     DEFAULT_OUTLIER_RATES,
     DEFAULT_QUICK_SEEDS,
+    BenchmarkConfig,
+    BenchmarkSummary,
+    BenchmarkTrialResult,
     ExperimentMode,
     SweepAggregateRow,
     SweepConfig,
     SweepType,
     TrialResult,
+    aggregate_benchmark_trials,
     aggregate_trials,
     aggregates_to_dataframe,
+    export_benchmark_config_json,
+    export_benchmark_metadata,
+    export_benchmark_summary_to_csv,
+    export_benchmark_trials_to_csv,
     export_config_json,
     export_experiment_metadata,
     export_summary_to_csv,
     export_trials_to_csv,
+    run_performance_benchmark,
     run_robustness_experiment,
     trials_to_dataframe,
 )
 from clustering_lab.visualization.figures import (
+    create_benchmark_runtime_figure,
     create_degradation_curve_figure,
     create_ground_truth_figure,
+    create_kmeans_explorer_figure,
     create_kmeans_figure,
+    create_mst_explorer_figure,
     create_mst_figure,
     create_robustness_curve_figure,
+    render_benchmark_png,
+    render_clustering_png,
 )
+
 
 # Page configuration
 st.set_page_config(
@@ -121,6 +147,24 @@ def init_session_state() -> None:
 
     if "robustness_config" not in st.session_state:
         st.session_state["robustness_config"] = None
+
+    if "benchmark_trials" not in st.session_state:
+        st.session_state["benchmark_trials"] = None
+
+    if "benchmark_summary" not in st.session_state:
+        st.session_state["benchmark_summary"] = None
+
+    if "benchmark_config" not in st.session_state:
+        st.session_state["benchmark_config"] = None
+
+    if "explorer_trace" not in st.session_state:
+        st.session_state["explorer_trace"] = None
+
+    if "explorer_step_index" not in st.session_state:
+        st.session_state["explorer_step_index"] = 0
+
+    if "explorer_config_hash" not in st.session_state:
+        st.session_state["explorer_config_hash"] = None
 
 
 def _run_clustering_on_dataset(
@@ -227,6 +271,8 @@ def render_sidebar() -> str:
             options=[
                 "Overview",
                 "Clustering Playground",
+                "Performance Benchmarks",
+                "Algorithm Explorer",
                 "Robustness Analysis",
                 "Dataset & CSV Import",
                 "Reproducibility & Configuration",
@@ -241,7 +287,7 @@ def render_sidebar() -> str:
         st.subheader("System Status")
         st.markdown(
             f"""
-            - **Phase:** `M5A — Robustness Engine`
+            - **Phase:** `M5B — Benchmarks & Explorers`
             - **Python Runtime:** `{sys.version.split()[0]}`
             - **Streamlit Version:** `{st.__version__}`
             - **Algorithms:** Custom Pure NumPy
@@ -1375,6 +1421,413 @@ def render_view_config() -> None:
 
 
 # -----------------------------------------------------------------------------
+# VIEW: Performance Benchmarks
+# -----------------------------------------------------------------------------
+def render_view_benchmarks() -> None:
+    """Render scientific execution-time benchmark engine and runtime analysis view."""
+    st.subheader("Performance Benchmarks — Execution-Time Empirical Scaling")
+    st.caption("Custom Lloyd's K-Means vs. Custom Dense Prim's MST Benchmark Engine")
+
+    st.markdown(
+        """
+        Benchmark the execution time of the **actual custom Python implementations**
+        on identical synthetic coordinate inputs. Timing is measured using high-resolution
+        monotonic `time.perf_counter_ns()`, converting runtimes to milliseconds.
+        Dataset generation is strictly excluded from timed regions.
+        """
+    )
+
+    with st.expander("⚙️ Benchmark Configuration & Workload Controls", expanded=True):
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("##### Dataset Parameters")
+            st.markdown("**Dataset Family:** Gaussian Blobs")
+            n_clusters = st.slider("Number of Clusters (k)", min_value=2, max_value=6, value=3, key="bm_k")
+            cluster_std = st.slider("Cluster Dispersion (std)", min_value=0.1, max_value=1.0, value=0.4, step=0.05, key="bm_std")
+            base_seed = st.number_input("Deterministic Random Seed", min_value=1, max_value=9999, value=DEFAULT_BENCHMARK_SEED, key="bm_seed")
+
+        with col2:
+            st.markdown("##### Sample Sizes")
+            size_options = [50, 100, 150, 200, 300, 400, 500, 600]
+            selected_sizes = st.multiselect(
+                "Sample Sizes (N ≤ 600)",
+                options=size_options,
+                default=[100, 200, 400, 600],
+                key="bm_sizes",
+                help="Select observation counts. Interactive compute limit enforces N ≤ 600 for dense Prim O(N^2).",
+            )
+
+        with col3:
+            st.markdown("##### Repetitions & Warm-up")
+            repetitions = st.slider(
+                "Measured Repetitions per Size",
+                min_value=1,
+                max_value=10,
+                value=DEFAULT_BENCHMARK_REPETITIONS,
+                key="bm_reps",
+                help="Number of independent measured trials per sample size.",
+            )
+            warmup = st.checkbox(
+                "Include 1 Warm-up Stage per Size",
+                value=True,
+                key="bm_warmup",
+                help="Warm-up iteration executes prior to measurements and is strictly excluded from recorded statistics.",
+            )
+
+        sorted_sizes = tuple(sorted(selected_sizes)) if selected_sizes else ()
+        n_sizes = len(sorted_sizes)
+        runs_per_size = (1 if warmup else 0) + repetitions
+        total_executions = n_sizes * runs_per_size * 2
+        total_trials = n_sizes * repetitions
+
+        st.divider()
+        col_p1, col_p2 = st.columns([3, 1])
+        with col_p1:
+            if n_sizes == 0:
+                st.warning("Please select at least one sample size to benchmark.")
+                can_run = False
+            elif total_executions > BenchmarkConfig.MAX_TOTAL_EXECUTIONS:
+                st.error(
+                    f"Selected workload of {total_executions} algorithm executions exceeds safe threshold "
+                    f"({BenchmarkConfig.MAX_TOTAL_EXECUTIONS}). Reduce sample sizes or repetitions."
+                )
+                can_run = False
+            else:
+                st.info(
+                    f"**Preflight Estimate:** {n_sizes} sizes × {repetitions} repetitions = {total_trials} measured trials "
+                    f"({total_executions} total algorithm executions including warm-up). "
+                    f"Safe limit: ≤ {BenchmarkConfig.MAX_TOTAL_EXECUTIONS} executions."
+                )
+                can_run = True
+
+        with col_p2:
+            run_btn = st.button("🚀 Run Benchmarks", disabled=not can_run, type="primary", use_container_width=True)
+
+    if run_btn and can_run:
+        bm_config = BenchmarkConfig(
+            sample_sizes=sorted_sizes,
+            repetitions=repetitions,
+            seed=int(base_seed),
+            warmup=warmup,
+            n_clusters=n_clusters,
+            cluster_std=float(cluster_std),
+        )
+
+        progress_bar = st.progress(0.0)
+        status_text = st.empty()
+
+        def _bench_cb(completed: int, total: int, n: int, r: int, algo: str) -> None:
+            pct = min(1.0, completed / max(1, total))
+            progress_bar.progress(pct)
+            status_text.caption(f"Running benchmarks: Size N={n}, Repetition {r}/{repetitions} ({algo})...")
+
+        with st.spinner("Executing custom Python algorithms..."):
+            trials = run_performance_benchmark(bm_config, progress_callback=_bench_cb)
+            summary = aggregate_benchmark_trials(trials)
+
+        progress_bar.progress(1.0)
+        status_text.success(f"✓ Benchmark complete: {len(trials)} trials across {len(summary)} sample sizes.")
+
+        st.session_state["benchmark_trials"] = trials
+        st.session_state["benchmark_summary"] = summary
+        st.session_state["benchmark_config"] = bm_config
+
+    trials = st.session_state.get("benchmark_trials")
+    summary = st.session_state.get("benchmark_summary")
+    active_bm_cfg = st.session_state.get("benchmark_config")
+
+    if trials and summary:
+        if active_bm_cfg is not None:
+            current_settings = (sorted_sizes, repetitions, int(base_seed), warmup, n_clusters, float(cluster_std))
+            cached_settings = (
+                active_bm_cfg.sample_sizes,
+                active_bm_cfg.repetitions,
+                active_bm_cfg.seed,
+                active_bm_cfg.warmup,
+                active_bm_cfg.n_clusters,
+                active_bm_cfg.cluster_std,
+            )
+            if current_settings != cached_settings:
+                st.warning("⚠️ Controls have changed since the last benchmark run. Displaying previous results. Click 'Run Benchmarks' to update.")
+
+        st.divider()
+        tab_chart, tab_table, tab_theory, tab_export = st.tabs(
+            ["📈 Runtime Scaling Curves", "📊 Summary Statistics Table", "📐 Theoretical Complexity & System Notes", "💾 Research Data Export"]
+        )
+
+        with tab_chart:
+            fig = create_benchmark_runtime_figure(summary)
+            st.plotly_chart(fig, use_container_width=True)
+
+            png_bytes = render_benchmark_png(summary)
+            st.download_button(
+                label="📥 Download Benchmark Scaling Plot (Publication PNG)",
+                data=png_bytes,
+                file_name="benchmark_runtime_scaling.png",
+                mime="image/png",
+            )
+
+        with tab_table:
+            st.markdown("##### Aggregated Performance Summary (Milliseconds)")
+            rows = []
+            for s in summary:
+                ratio_str = f"{s.ratio_of_means:.2f}×" if s.ratio_of_means is not None else "N/A"
+                rows.append({
+                    "Sample Size (N)": s.sample_size,
+                    "Repetitions": s.repetitions,
+                    "K-Means Mean (ms)": f"{s.kmeans_mean_ms:.3f}",
+                    "K-Means Median (ms)": f"{s.kmeans_median_ms:.3f}",
+                    "K-Means Std (ms)": f"{s.kmeans_std_ms:.3f}",
+                    "MST Mean (ms)": f"{s.mst_mean_ms:.3f}",
+                    "MST Median (ms)": f"{s.mst_median_ms:.3f}",
+                    "MST Std (ms)": f"{s.mst_std_ms:.3f}",
+                    "Ratio of Means (MST / KM)": ratio_str,
+                })
+            df_summary = pd.DataFrame(rows)
+            st.dataframe(df_summary, use_container_width=True, hide_index=True)
+
+            st.caption(
+                "Note: Ratio of means is defined strictly as mean(MST runtime) / mean(K-Means runtime). "
+                "Sample standard deviations are computed using Bessel's correction (ddof=1)."
+            )
+
+        with tab_theory:
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                st.markdown(
+                    r"""
+                    ##### Computational Complexity
+                    - **Lloyd's K-Means Iteration:**
+                      $$\mathcal{O}(I \times N \times k \times D)$$
+                      where $I$ is iterations until convergence, $N$ is sample size, $k$ is cluster count, and $D$ is dimensionality.
+                      Initialization via K-Means++ requires $\mathcal{O}(k \times N \times D)$ distance evaluations.
+                      Runtime scales **linearly** with observation count $N$.
+                    - **Dense Prim's MST:**
+                      $$\mathcal{O}(N^2)$$
+                      The implemented dense Prim algorithm maintains a min-distance frontier array across $N$ vertices,
+                      evaluating $N(N-1)/2$ pairwise Euclidean distances.
+                      Runtime scales **quadratically** with observation count $N$.
+                    """
+                )
+            with col_t2:
+                st.markdown(
+                    """
+                    ##### Benchmarking Methodology & Disclaimers
+                    - **Deterministic Baseline:** Datasets are generated outside the timed region using fixed PRNG seeds. Both algorithms receive identical coordinate matrices `X`.
+                    - **Hardware Dependence:** Measured runtimes depend strongly on CPU clock speed, cache hierarchy, OS process scheduling, and NumPy vectorization.
+                    - **No Universal Guarantee:** Results on this machine do not constitute a universal performance guarantee across all systems.
+                    - **Scientific Interpretation:** Measured runtime curves illustrate empirical divergence matching theoretical expectations; they do not mathematically prove asymptotic complexity.
+                    """
+                )
+
+        with tab_export:
+            st.markdown("##### Research Artifacts Export")
+            st.markdown("Export raw per-repetition trial observations, aggregated statistics, and reproduction configuration.")
+
+            col_e1, col_e2, col_e3, col_e4 = st.columns(4)
+            with col_e1:
+                csv_trials = export_benchmark_trials_to_csv(trials)
+                st.download_button(
+                    label="📄 Raw Trials CSV",
+                    data=csv_trials,
+                    file_name="benchmark_trials.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                )
+            with col_e2:
+                csv_summary = export_benchmark_summary_to_csv(summary)
+                st.download_button(
+                    label="📊 Aggregated Summary CSV",
+                    data=csv_summary,
+                    file_name="benchmark_summary.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                )
+            with col_e3:
+                json_cfg = export_benchmark_config_json(active_bm_cfg) if active_bm_cfg else ""
+                st.download_button(
+                    label="⚙️ Benchmark Config JSON",
+                    data=json_cfg,
+                    file_name="benchmark_config.json",
+                    mime="application/json",
+                    use_container_width=True,
+                )
+            with col_e4:
+                json_meta = export_benchmark_metadata()
+                st.download_button(
+                    label="📋 System Metadata JSON",
+                    data=json_meta,
+                    file_name="benchmark_metadata.json",
+                    mime="application/json",
+                    use_container_width=True,
+                )
+    else:
+        st.info("Select benchmark parameters above and click **'🚀 Run Benchmarks'** to execute.")
+
+
+# -----------------------------------------------------------------------------
+# VIEW: Algorithm Explorer
+# -----------------------------------------------------------------------------
+def render_view_explorer() -> None:
+    """Render interactive step-by-step algorithm explorer for Lloyd's K-Means and dense Prim's MST."""
+    st.subheader("Algorithm Explorer — Step-by-Step Educational Visualizer")
+    st.caption("Interactive Mechanics of Custom Lloyd's K-Means & Dense Prim's MST Clustering")
+
+    algo_choice = st.radio(
+        "Select Algorithm to Explore",
+        ["Lloyd's K-Means", "Dense Prim's MST"],
+        horizontal=True,
+        key="explorer_algo_choice",
+    )
+
+    with st.expander("⚙️ Micro-Dataset Generation Controls", expanded=True):
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            family_options = ["Gaussian Blobs", "Two Moons", "Concentric Circles"]
+            default_fam_idx = 0 if algo_choice == "Lloyd's K-Means" else 1
+            family = st.selectbox("Dataset Topology", family_options, index=default_fam_idx, key="exp_family")
+        with col2:
+            n_samples = st.slider(
+                "Observations (N ≤ 60)",
+                min_value=10,
+                max_value=60,
+                value=30,
+                step=5,
+                key="exp_n",
+                help="Small sample size allows clean visualization of individual vertices, tree edges, and Voronoi assignments.",
+            )
+        with col3:
+            k_val = st.slider(
+                "Clusters (k)",
+                min_value=2,
+                max_value=5,
+                value=3 if family == "Gaussian Blobs" else 2,
+                key="exp_k",
+            )
+        with col4:
+            seed = st.number_input("Random Seed", min_value=1, max_value=9999, value=42, key="exp_seed")
+
+    fam_map = {
+        "Gaussian Blobs": "blobs",
+        "Two Moons": "moons",
+        "Concentric Circles": "circles",
+    }
+    fam_code = fam_map[family]
+
+    config_signature = (algo_choice, fam_code, n_samples, k_val, int(seed))
+    cached_sig = st.session_state.get("explorer_config_hash")
+
+    if cached_sig != config_signature or st.session_state.get("explorer_trace") is None:
+        ds = generate_synthetic_dataset(
+            family=fam_code,
+            n_samples=n_samples,
+            seed=int(seed),
+            noise=0.04 if fam_code != "blobs" else 0.0,
+            outlier_rate=0.0,
+            n_clusters=k_val,
+            cluster_std=0.4,
+            radius=3.5,
+        )
+        X = ds.X
+
+        if algo_choice == "Lloyd's K-Means":
+            trace = run_kmeans_trace(X=X, k=k_val, seed=int(seed))
+        else:
+            trace = run_mst_trace(X=X, k=k_val)
+
+        st.session_state["explorer_trace"] = trace
+        st.session_state["explorer_step_index"] = 0
+        st.session_state["explorer_config_hash"] = config_signature
+        st.session_state["explorer_dataset"] = ds
+
+    trace = st.session_state["explorer_trace"]
+    steps = trace.steps
+    total_steps = len(steps)
+
+    curr_idx = st.session_state.get("explorer_step_index", 0)
+    curr_idx = max(0, min(total_steps - 1, curr_idx))
+
+    st.divider()
+    st.markdown("#### Step Navigation Cockpit")
+
+    c_first, c_prev, c_slider, c_next, c_last, c_reset = st.columns([1, 1, 4, 1, 1, 1])
+
+    with c_first:
+        if st.button("⏮ First", use_container_width=True):
+            st.session_state["explorer_step_index"] = 0
+            st.rerun()
+    with c_prev:
+        if st.button("◀ Prev", use_container_width=True):
+            st.session_state["explorer_step_index"] = max(0, curr_idx - 1)
+            st.rerun()
+    with c_slider:
+        slider_val = st.slider(
+            "Step Navigator",
+            min_value=0,
+            max_value=total_steps - 1,
+            value=curr_idx,
+            key="exp_slider_widget",
+            label_visibility="collapsed",
+        )
+        if slider_val != curr_idx:
+            st.session_state["explorer_step_index"] = slider_val
+            st.rerun()
+    with c_next:
+        if st.button("Next ▶", use_container_width=True):
+            st.session_state["explorer_step_index"] = min(total_steps - 1, curr_idx + 1)
+            st.rerun()
+    with c_last:
+        if st.button("⏭ Last", use_container_width=True):
+            st.session_state["explorer_step_index"] = total_steps - 1
+            st.rerun()
+    with c_reset:
+        if st.button("↺ Reset", use_container_width=True):
+            st.session_state["explorer_step_index"] = 0
+            st.rerun()
+
+    current_step = steps[st.session_state["explorer_step_index"]]
+    step_num = st.session_state["explorer_step_index"] + 1
+
+    st.markdown(f"### Step {step_num} of {total_steps}: `{current_step.title}`")
+    st.info(current_step.description)
+
+    if algo_choice == "Lloyd's K-Means":
+        fig = create_kmeans_explorer_figure(current_step)
+    else:
+        fig = create_mst_explorer_figure(current_step)
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    ds_exp = st.session_state.get("explorer_dataset")
+    if ds_exp is not None:
+        lbls = current_step.labels if current_step.labels is not None else np.zeros(len(current_step.X), dtype=int)
+        png_step_bytes = render_clustering_png(
+            current_step.X,
+            lbls,
+            title=f"{algo_choice} Explorer — Step {step_num}: {current_step.title}",
+        )
+        st.download_button(
+            label=f"📥 Download Step {step_num} Visualization (PNG)",
+            data=png_step_bytes,
+            file_name=f"explorer_step_{step_num}.png",
+            mime="image/png",
+        )
+
+    st.divider()
+    if trace.final_parity_verified:
+        prod_fn = "kmeans()" if algo_choice == "Lloyd's K-Means" else "mst_clustering()"
+        parity_stat = "inertia" if algo_choice == "Lloyd's K-Means" else "MST weight and cut edges"
+        st.success(
+            f"**✓ Mathematical Parity Verified:** The explorer's algorithmic trace precisely matches "
+            f"the custom production `{prod_fn}` implementation on identical coordinates and random seed "
+            f"(100% agreement on cluster labels, {parity_stat})."
+        )
+    else:
+        st.warning("Parity check pending or failed.")
+
+
+# -----------------------------------------------------------------------------
 # VIEW 5: Methodology / Help
 # -----------------------------------------------------------------------------
 def render_view_methodology() -> None:
@@ -1480,6 +1933,10 @@ def main() -> None:
         render_view_overview()
     elif active_view == "Clustering Playground":
         render_view_playground()
+    elif active_view == "Performance Benchmarks":
+        render_view_benchmarks()
+    elif active_view == "Algorithm Explorer":
+        render_view_explorer()
     elif active_view == "Robustness Analysis":
         render_view_robustness()
     elif active_view == "Dataset & CSV Import":

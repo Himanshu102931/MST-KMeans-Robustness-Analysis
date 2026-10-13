@@ -37,7 +37,7 @@ The existing Vanilla JavaScript web application located at the repository root (
 
 ```
 python_app/
-├── app.py                      # Main Streamlit dashboard entry point (foundation stage)
+├── app.py                      # Main Streamlit dashboard entry point
 ├── requirements.txt            # Production application dependencies (Python 3.12)
 ├── requirements-dev.txt        # QA and development testing dependencies (-r requirements.txt + pytest)
 ├── README.md                   # This documentation guide
@@ -45,13 +45,16 @@ python_app/
 │   ├── ALGORITHM_SPECIFICATION.md # Formal mathematical definitions, complexities, and biases
 │   ├── DATASET_AND_REPRODUCIBILITY_SPECIFICATION.md # Dataset topologies, noise decoupling & CSV specs
 │   ├── STREAMLIT_DASHBOARD_GUIDE.md # Viva demonstration script and dashboard manual
-│   └── ROBUSTNESS_EXPERIMENT_SPECIFICATION.md # Phase M5A robustness sweeps, metrics & statistical design
+│   ├── ROBUSTNESS_EXPERIMENT_SPECIFICATION.md # Phase M5A robustness sweeps, metrics & statistical design
+│   ├── PERFORMANCE_BENCHMARK_SPECIFICATION.md # Phase M5B execution-time benchmark methodology
+│   └── ALGORITHM_EXPLORER_GUIDE.md # Phase M5B educational step-by-step algorithm explorer guide
 ├── clustering_lab/             # Core scientific Python research package
 │   ├── __init__.py             # Package metadata and version definition
 │   ├── algorithms/             # Clustering algorithm implementations
 │   │   ├── __init__.py         # Package exports (KMeans, MSTClustering)
 │   │   ├── kmeans.py           # Lloyd's K-Means with K-Means++ and deterministic tie-breaking
-│   │   └── mst.py              # Dense Prim's MST with single-linkage cut and DSU
+│   │   ├── mst.py              # Dense Prim's MST with single-linkage cut and DSU
+│   │   └── explorer.py         # Step-by-step trace generators for K-Means and dense Prim's MST
 │   ├── data/                   # Synthetic dataset generation, contamination & CSV loader
 │   │   ├── __init__.py         # Data layer public API exports
 │   │   ├── dataset.py          # Standardized immutable Dataset container and validation
@@ -59,8 +62,9 @@ python_app/
 │   │   ├── synthetic.py        # Blobs, Moons, and Circles synthetic generators
 │   │   ├── csv_loader.py       # Secure, UI-independent CSV parser with categorical encoding
 │   │   └── config.py           # Versioned JSON experiment configuration schema (1.0.0)
-│   ├── experiments/            # Automated noise sweeps & parameter sweep runners (Phase M5A)
-│   │   ├── __init__.py         # Public exports (SweepConfig, run_robustness_experiment, etc.)
+│   ├── experiments/            # Robustness sweeps & performance benchmark runners
+│   │   ├── __init__.py         # Public exports (benchmarks, sweeps, runners, etc.)
+│   │   ├── benchmarks.py       # High-resolution monotonic runtime benchmarks & statistics
 │   │   ├── sweeps.py           # SweepConfig, sweep types, presets (Quick/Extended) and validation
 │   │   ├── runner.py           # Paired execution engine with matched baseline association
 │   │   ├── aggregation.py      # Monte Carlo statistical aggregation (mean, sample std dev ddof=1)
@@ -68,9 +72,9 @@ python_app/
 │   ├── evaluation/             # Quantitative validation metrics (Phase M4)
 │   │   ├── __init__.py
 │   │   └── metrics.py          # Inlier ARI, Full ARI, safe Silhouette, runtime
-│   ├── visualization/          # Static and interactive charting utilities (Phase M4/M5A)
+│   ├── visualization/          # Static and interactive charting utilities
 │   │   ├── __init__.py
-│   │   └── figures.py          # 2D scatter plots, 1:1 scaling, and robustness sweep curves
+│   │   └── figures.py          # 2D scatter plots, 1:1 scaling, sweep curves, explorer & benchmark charts
 │   └── utils/                  # Mathematical helpers and seed management
 │       └── __init__.py
 └── tests/                      # Automated test suite (pytest)
@@ -83,7 +87,9 @@ python_app/
     ├── test_data.py            # Synthetic generators, shapes, noise/outliers, and invariants
     ├── test_data_io.py         # CSV importing, validation bounds, and JSON config round-trip
     ├── test_streamlit_dashboard.py # Interactive dashboard AppTest smoke and regressions
-    └── test_robustness_experiment.py # Phase M5A paired sweeps, statistical aggregation, and safety bounds
+    ├── test_robustness_experiment.py # Phase M5A paired sweeps, statistical aggregation, and safety bounds
+    ├── test_benchmarks.py      # Phase M5B execution-time benchmark engine and statistics tests
+    └── test_algorithm_explorer.py # Phase M5B educational trace invariants and parity tests
 ```
 
 ---
@@ -127,7 +133,7 @@ Because native C-extensions (NumPy/SciPy DLLs) may face execution restrictions i
 
 ---
 
-## 6. Streamlit Dashboard Usage & Features (Phase M4)
+## 6. Streamlit Dashboard Usage & Features
 
 ### Running the Application Locally
 Launch the interactive research dashboard with:
@@ -136,13 +142,15 @@ streamlit run python_app/app.py
 ```
 
 ### Module Organization
-The dashboard is partitioned into 6 core navigation modules:
+The dashboard is partitioned into 8 core navigation modules:
 1. **Overview:** Official research objective, project metadata, student details, and migration status.
 2. **Clustering Playground:** Interactive parameter controls, simultaneous execution of Lloyd's K-Means and Prim's MST on the same feature matrix $X$, 2D Plotly visualizations with equal 1:1 scaling, and side-by-side quantitative metrics.
-3. **Robustness Analysis (Phase M5A):** Automated paired perturbation sweeps (Gaussian noise and uniform outliers), Monte Carlo statistical aggregation across deterministic seeds, matched baseline degradation curves, and provenance-isolated CSV/JSON exports.
-4. **Dataset & CSV Import:** Secure upload of custom 2D tabular CSV datasets with automatic numeric column detection, optional ground-truth label mapping, and validation guards.
-5. **Reproducibility & Configuration:** Export and import of versioned JSON configuration files compliant with `ExperimentConfig` schema `1.0.0`.
-6. **Methodology / Help:** Algorithmic inductive biases, mathematical definitions of metrics, and a step-by-step viva demonstration walkthrough.
+3. **Algorithm Explorer (Phase M5B):** Step-by-step interactive educational visualizations for Lloyd's K-Means (K-Means++ initialization, Voronoi assignment, centroid relocation, inertia) and dense Prim's MST (root vertex, greedy minimum cut edge selection, cut of $k-1$ longest edges, connected component partition), with guaranteed 100% final parity with production algorithms.
+4. **Performance Benchmarks (Phase M5B):** Scientifically valid monotonic execution-time benchmarks ($N \in [100, 200, 400, 600]$, 5 repetitions), preflight safety limits ($\le 200$ executions), sample statistics (mean, median, Bessel-corrected sample std, ratio of means), asymptotic complexity discussion ($\mathcal{O}(I \cdot N \cdot k \cdot D)$ vs $\mathcal{O}(N^2)$), and data/figure exports.
+5. **Robustness Analysis (Phase M5A):** Automated paired perturbation sweeps (Gaussian noise and uniform outliers), Monte Carlo statistical aggregation across deterministic seeds, matched baseline degradation curves, and provenance-isolated CSV/JSON exports.
+6. **Dataset & CSV Import:** Secure upload of custom 2D tabular CSV datasets with automatic numeric column detection, optional ground-truth label mapping, and validation guards.
+7. **Reproducibility & Configuration:** Export and import of versioned JSON configuration files compliant with `ExperimentConfig` schema `1.0.0`.
+8. **Methodology / Help:** Algorithmic inductive biases, mathematical definitions of metrics, and a step-by-step viva demonstration walkthrough.
 
 ### Meaning of Controls & Hyperparameters
 - **Dataset Topology:** Choose between `Gaussian Blobs` (globular/convex), `Two Moons` (non-convex crescent manifolds), or `Concentric Circles` (nested non-convex rings).
@@ -217,16 +225,28 @@ To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
   - Tabular CSV upload workflow with numeric column mapping and boundary guards.
   - Versioned JSON configuration import/export with instant regeneration.
   - Automated Streamlit test suite (`test_streamlit_dashboard.py`) covering AppTest smoke, metadata, invariants, and bias benchmarks.
-- **Completed in Phase M5A:**
-  - Scientific robustness experiment engine (`clustering_lab/experiments/` with `sweeps.py`, `runner.py`, `aggregation.py`, `export.py`).
-  - Controlled perturbation sweeps: isolated Gaussian noise sweep ($\sigma \in [0.00, 0.20]$, outlier rate 0%) and isolated uniform outlier sweep ($r \in [0\%, 20\%]$, baseline $\sigma=0.05$).
-  - Dual execution regimes: Quick mode (seeds 11, 22, 33; 3 trials/level) and Extended mode (10 deterministic seeds: 11, 22, 33, 44, 55, 66, 77, 88, 99, 101; 10 trials/level).
-  - Paired identical coordinates and ground-truth guarantee: Lloyd's K-Means and Prim's MST evaluated on exact bitwise-identical feature matrices and inlier masks.
-  - Matched baseline delta metrics: signed ARI change ($\Delta \text{ARI}$) and non-negative degradation loss ($\max(0, \text{ARI}_{\text{base}} - \text{ARI}_{\text{curr}})$) paired strictly by dataset family, seed, and algorithm (noise baseline at $\sigma=0.00, r=0.00$; outlier baseline at $\sigma=0.05, r=0.00$ to eliminate noise confounders).
-  - Rigorous statistical aggregation: Sample mean ($\bar{x}$) and sample standard deviation ($s$) computed using Bessel's correction ($ddof=1$, $s=0.0$ for $n \le 1$).
-  - Dedicated "Robustness Analysis" Streamlit navigation module with pre-flight trial computation bounds ($N_{\text{inliers}} \le 500$, max 500 trials), Plotly error-bar trendlines, matched degradation curves, and honest findings synthesis.
-  - Provenance-isolated CSV/JSON data export: raw trial records, aggregated summaries, experiment configuration, and runtime environment/package metadata.
-  - Automated scientific test suite (`test_robustness_experiment.py`) with 15 tests verifying invariants, isolation, baseline matching, and AppTest UI rendering (96 total tests passing).
-  - Formal experiment specification (`docs/ROBUSTNESS_EXPERIMENT_SPECIFICATION.md`).
+- **Completed in Phase M5B:**
+  - Scientific performance benchmark engine (`clustering_lab/experiments/benchmarks.py`):
+    - Custom Lloyd's K-Means vs custom dense Prim's MST on Gaussian Blobs baseline ($N \in [100, 200, 400, 600]$, 5 measured repetitions per size).
+    - Monotonic nanosecond timer (`time.perf_counter_ns()`), converting runtimes to float milliseconds.
+    - Dataset generation strictly outside timed region, passing identical coordinate array to both algorithms.
+    - Pre-benchmark warm-up excluded from measured statistics.
+    - Statistical aggregation: sample mean, median, sample std ($ddof=1$, Bessel's correction), min, max, ratio of means (`mean(MST)/mean(KM)` with zero-division safety).
+  - Step-by-step interactive educational algorithm explorers (`clustering_lab/algorithms/explorer.py`):
+    - Lloyd's K-Means explorer: Step 0 unassigned points -> K-Means++ $D(x)^2$ centroid placement -> Lloyd Voronoi assignment -> Centroid arithmetic mean update -> Convergence and inertia invariants.
+    - Dense Prim's MST explorer: Step 0 root vertex -> $N-1$ minimum cut edge additions -> completed spanning tree -> cutting $k-1$ longest tree edges -> connected component partition via DSU.
+    - Guaranteed 100% final mathematical parity with production custom implementations on identical coordinates and seeds.
+  - Research data and figure exports (`clustering_lab/experiments/export.py`, `clustering_lab/visualization/figures.py`):
+    - Raw trials CSV, summary statistics CSV, benchmark configuration JSON, environment metadata JSON.
+    - In-memory Matplotlib publication-quality PNG rendering (`render_benchmark_png`, `render_clustering_png`) with verified `b'\x89PNG'` headers without filesystem writes.
+  - Streamlit UI integration (`app.py`):
+    - Dedicated "Performance Benchmarks" view with preflight workload estimate (enforcing safety bound of $\le 200$ executions), live progress bar, scaling curves with sample std error bars, and theoretical complexity discussion ($\mathcal{O}(I \cdot N \cdot k \cdot D)$ vs $\mathcal{O}(N^2)$).
+    - Dedicated "Algorithm Explorer" view with topology controls ($N \le 60$), interactive step cockpit (First, Prev, Slider, Next, Last, Reset), step descriptions with LaTeX math, isotropic 1:1 Plotly figure, and production parity verification card.
+  - Automated test suite:
+    - 27 new tests across `test_benchmarks.py` and `test_algorithm_explorer.py`.
+    - Total test suite: 123 tests passing with 0 failures in 11.89 seconds.
+  - Formal documentation specifications:
+    - Performance Benchmark Specification (`docs/PERFORMANCE_BENCHMARK_SPECIFICATION.md`).
+    - Algorithm Explorer Guide (`docs/ALGORITHM_EXPLORER_GUIDE.md`).
 - **Scheduled for Subsequent Phases:**
-  - Phase M5B: Algorithmic performance benchmarking, empirical runtime complexity scaling ($O(N)$ vs $O(N^2)$), memory footprint profiling, and advanced algorithm explorer modules.
+  - Phase M5C: Final project consolidation, clean-up, and pre-deployment verification.
