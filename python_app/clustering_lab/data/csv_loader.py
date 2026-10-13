@@ -30,6 +30,7 @@ def load_dataset_from_csv(
     feature_cols: Union[Tuple[str, str], List[str], Tuple[int, int], List[int]],
     label_col: Optional[Union[str, int]] = None,
     dataset_name: str = "custom_csv",
+    treat_minus_one_as_outlier: bool = False,
 ) -> Dataset:
     """Parse and validate an external CSV file into a standardized Dataset.
 
@@ -39,6 +40,9 @@ def load_dataset_from_csv(
             numerical feature columns.
         label_col: Optional identifier of the ground-truth cluster label column.
         dataset_name: Human-readable identifier for metadata records.
+        treat_minus_one_as_outlier: If True, rows with ground-truth label -1 are
+            assigned inlier_mask=False. If False (default), all rows are treated
+            as valid inliers with inlier_mask=True.
 
     Returns:
         Standardized, immutable Dataset instance.
@@ -177,9 +181,10 @@ def load_dataset_from_csv(
             labels = np.array([label_encoding[v] for v in raw_labels], dtype=np.int32)
 
     # 6. Construct inlier mask
-    # All imported records are considered valid inliers unless an explicit label of -1 was supplied
+    # All imported records are considered valid inliers unless the caller explicitly
+    # requests interpreting label -1 as an outlier via treat_minus_one_as_outlier=True
     n_samples = X.shape[0]
-    if labels is not None and np.any(labels == -1):
+    if treat_minus_one_as_outlier and labels is not None and np.any(labels == -1):
         inlier_mask = (labels != -1)
     else:
         inlier_mask = np.ones(n_samples, dtype=bool)
@@ -191,6 +196,7 @@ def load_dataset_from_csv(
         "has_ground_truth": labels is not None,
         "ari_available": labels is not None,
         "total_csv_columns": len(df.columns),
+        "treat_minus_one_as_outlier": treat_minus_one_as_outlier,
     }
     if label_encoding is not None:
         metadata["label_encoding"] = {str(k): v for k, v in label_encoding.items()}
@@ -198,6 +204,7 @@ def load_dataset_from_csv(
     params: Dict[str, Any] = {
         "feature_cols": resolved_feature_names,
         "label_col": resolved_label_name,
+        "treat_minus_one_as_outlier": treat_minus_one_as_outlier,
     }
 
     return create_dataset(

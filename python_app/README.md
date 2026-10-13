@@ -117,18 +117,59 @@ Because native C-extensions (NumPy/SciPy DLLs) may face execution restrictions i
 
 ---
 
-## 6. Streamlit Dashboard Entry Point & Cloud Deployment
+## 6. Streamlit Dashboard Usage & Features (Phase M4)
 
-### Entry Point
-The primary application entry point is:
+### Running the Application Locally
+Launch the interactive research dashboard with:
 ```bash
 streamlit run python_app/app.py
 ```
 
-### Cloud Deployment (Future Phase)
-Upon completion of the algorithm migration and experimental dashboards:
-- The app will be deployed on **Streamlit Community Cloud** (or Linux cloud container) connected to the GitHub repository.
-- Configuration will point to the `python_app/app.py` script with `python_app/requirements.txt` for automatic build and hosting.
+### Module Organization
+The dashboard is partitioned into 5 core navigation modules:
+1. **Overview:** Official research objective, project metadata, student details, and migration status.
+2. **Clustering Playground:** Interactive parameter controls, simultaneous execution of Lloyd's K-Means and Prim's MST on the same feature matrix $X$, 2D Plotly visualizations with equal 1:1 scaling, and side-by-side quantitative metrics.
+3. **Dataset & CSV Import:** Secure upload of custom 2D tabular CSV datasets with automatic numeric column detection, optional ground-truth label mapping, and validation guards.
+4. **Reproducibility & Configuration:** Export and import of versioned JSON configuration files compliant with `ExperimentConfig` schema `1.0.0`.
+5. **Methodology / Help:** Algorithmic inductive biases, mathematical definitions of metrics, and a step-by-step viva demonstration walkthrough.
+
+### Meaning of Controls & Hyperparameters
+- **Dataset Topology:** Choose between `Gaussian Blobs` (globular/convex), `Two Moons` (non-convex crescent manifolds), or `Concentric Circles` (nested non-convex rings).
+- **Inlier Sample Count ($N_{inliers}$):** Number of clean or noisy manifold observations ($20 \le N_{inliers} \le 600$). Enforced interactive ceiling is $\le 600$ total points ($N_{total} = N_{inliers} + N_{outliers}$) to ensure dense Prim's $O(N^2)$ responsiveness.
+- **Random Seed:** Master PRNG seed ensuring deterministic generation and reproducibility.
+- **Gaussian Noise ($\sigma$):** Standard deviation of zero-mean Gaussian jitter added independently to inliers.
+- **Outlier Contamination Rate:** Fraction of uniform random noise points injected across the bounding box ($N_{outliers} = \text{round}(N_{inliers} \times \text{rate})$). Total observation count is $N = N_{inliers} + N_{outliers}$.
+- **Cluster Count ($k$):** Number of target partitions. Configurable for Blobs ($2 \le k \le 8$); fixed at $k=2$ for Moons and Circles.
+- **Overlay Retained MST Edges / Highlight Cut Edges:** Toggle visual graph overlays to inspect the Euclidean tree structure and removed partition boundaries.
+
+### Quantitative Metrics Interpretation
+- **Inlier Adjusted Rand Index (Inlier ARI):** Measures clustering agreement strictly on true inliers. Evaluates how well the algorithm recovers intrinsic cluster topology despite surrounding contamination. Range $[-0.5, 1.0]$ ($1.0$ is perfect partition recovery).
+- **Full-Data ARI:** Evaluated across all points including outliers (label $-1$). Outliers naturally penalize both algorithms since neither assigns an explicit reject class.
+- **Inertia (WCSS):** Within-cluster sum of squared Euclidean distances to centroids. *Cannot be compared against MST weight.*
+- **Total MST Weight:** Sum of Euclidean edge lengths in the uncut minimum spanning tree.
+- **Retained Forest Weight:** Sum of edge lengths remaining after cutting the $k-1$ longest edges.
+- **Silhouette Coefficient:** Intrinsic quality metric measuring cluster tightness vs separation. *Warning: intrinsically favors convex spherical clusters and penalizes non-convex shapes (circles, moons) even when perfectly clustered by MST.*
+- **Runtime (Single Run):** Illustrative wall-clock latency measurement in milliseconds.
+
+### CSV Format Requirements
+- **File Format:** Standard comma-separated values (`.csv`), UTF-8 encoded.
+- **Size Bounds:** $\le 5\text{ MB}$ raw file size, $\le 10,000$ rows.
+- **Feature Columns:** At least two distinct numerical columns containing finite coordinates (no NaN/Inf).
+- **Label Column (Optional):** Optional column containing integer or categorical class identifiers. If omitted, data is treated as unlabeled and ARI is reported as `N/A` (never fabricated).
+- **Interactive Scalability Ceiling:** Datasets exceeding 600 total observations gracefully reject interactive clustering execution to protect dense Prim's $O(N^2)$ responsiveness without truncating input data.
+
+### JSON Configuration Import/Export
+- Complies with `ExperimentConfig` schema `1.0.0`.
+- Serializes `dataset_family`, `n_samples`, `n_clusters`, `seed`, `noise`, `outlier_rate`, and geometric hyperparameters.
+- Restoring a JSON configuration deterministically reproduces the identical dataset and clustering result.
+- *Notice:* JSON configuration alone cannot regenerate external CSV datasets without the source CSV file.
+
+### Cloud Deployment Instructions
+To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
+1. Connect the GitHub repository `Himanshu102931/MST-KMeans-Robustness-Analysis`.
+2. Set the target branch to `feature/python-streamlit-migration` (or merged production branch).
+3. Set the Main file path to `python_app/app.py`.
+4. The deployment environment automatically installs dependencies from `python_app/requirements.txt`.
 
 ---
 
@@ -148,7 +189,6 @@ Upon completion of the algorithm migration and experimental dashboards:
   - Graph-theoretic unit test suite for MST (`test_mst.py`).
   - Reference validation suite against SciPy and scikit-learn (`test_reference_validation.py`).
   - Formal algorithm specifications documentation (`docs/ALGORITHM_SPECIFICATION.md`).
-  - GitHub Actions upgraded to Node 24 actions (`checkout@v5`, `setup-python@v7`).
 - **Completed in Phase M3:**
   - Standardized immutable `Dataset` container with boundary validation (`dataset.py`).
   - Decoupled Gaussian noise and uniform outlier contamination pipeline (`noise.py`).
@@ -158,6 +198,13 @@ Upon completion of the algorithm migration and experimental dashboards:
   - Dataset and reproducibility specification (`docs/DATASET_AND_REPRODUCIBILITY_SPECIFICATION.md`).
   - Refined mathematical definitions in `ALGORITHM_SPECIFICATION.md`.
   - Comprehensive unit test suites (`test_data.py`, `test_data_io.py`).
+- **Completed in Phase M4:**
+  - Interactive Python Streamlit dashboard (`app.py`) with 5 core views.
+  - Dual algorithm execution on identical feature arrays with real-time runtime profiling.
+  - Quantitative metrics evaluation module (`metrics.py`) with Inlier ARI, Full ARI, and safe Silhouette score.
+  - Interactive 2D Plotly visualizers (`figures.py`) with 1:1 isotropic scaling, centroid markers, and MST tree edge overlays.
+  - Tabular CSV upload workflow with numeric column mapping and boundary guards.
+  - Versioned JSON configuration import/export with instant regeneration.
+  - Automated Streamlit test suite (`test_streamlit_dashboard.py`) covering AppTest smoke, metadata, invariants, and bias benchmarks.
 - **Scheduled for Subsequent Phases:**
-  - Phase M4: Robustness experiment engine, Monte Carlo sweep runners, and quantitative evaluation metrics (ARI, NMI, Silhouette).
-  - Phase M5: Interactive Streamlit UI and visualization dashboard.
+  - Phase M5: Automated robustness experiment engine, multi-seed Monte Carlo sweep runners, parameter degradation curves, and benchmark tables.
