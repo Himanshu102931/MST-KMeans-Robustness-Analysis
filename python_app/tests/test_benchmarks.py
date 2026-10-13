@@ -318,6 +318,9 @@ def test_export_benchmark_config_and_metadata_json():
     assert parsed_cfg["seed"] == 777
 
     meta_json = export_benchmark_metadata()
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in benchmark metadata"
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in benchmark metadata"
+
     parsed_meta = json.loads(meta_json)
     assert "python_version" in parsed_meta
     assert "platform" in parsed_meta
@@ -326,6 +329,14 @@ def test_export_benchmark_config_and_metadata_json():
     assert parsed_meta["timer"] == "time.perf_counter_ns"
     assert "institution" in parsed_meta
     assert "MRIIRS" in parsed_meta["institution"]
+
+    # Student privacy assertions
+    students = parsed_meta.get("academic_context", {}).get("students", [])
+    student_names = [s.get("name") for s in students]
+    assert "Himanshu Gupta" in student_names
+    assert "Parth Yadav" in student_names
+    for s in students:
+        assert "roll_no" not in s, "roll_no must not be present in public metadata"
 
 
 # =============================================================================

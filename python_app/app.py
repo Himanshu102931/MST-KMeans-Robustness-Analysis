@@ -10,8 +10,8 @@ Academic Context:
                  School of Engineering & Technology
     Degree: B.Tech Computer Science & Engineering (AIML), 7th Semester (2026–2027)
     Student Researchers:
-        - Himanshu Gupta (Roll No: [REDACTED_STUDENT_IDENTIFIER])
-        - Parth Yadav (Roll No: [REDACTED_STUDENT_IDENTIFIER])
+        - Himanshu Gupta
+        - Parth Yadav
     Instructor: Mr. Aman Kumar, Assistant Professor
 """
 
@@ -256,8 +256,8 @@ def render_sidebar() -> str:
             B.Tech CSE (AIML), 7th Semester (2026–2027)
 
             **Student Researchers:**
-            - **Himanshu Gupta** (`[REDACTED_STUDENT_IDENTIFIER]`)
-            - **Parth Yadav** (`[REDACTED_STUDENT_IDENTIFIER]`)
+            - **Himanshu Gupta**
+            - **Parth Yadav**
 
             **Course Instructor:**
             **Mr. Aman Kumar**, *Assistant Professor*
@@ -287,7 +287,7 @@ def render_sidebar() -> str:
         st.subheader("System Status")
         st.markdown(
             f"""
-            - **Phase:** `M5B — Benchmarks & Explorers`
+            - **Phase:** `M5C — Public Dashboard Privacy Preparation`
             - **Python Runtime:** `{sys.version.split()[0]}`
             - **Streamlit Version:** `{st.__version__}`
             - **Algorithms:** Custom Pure NumPy

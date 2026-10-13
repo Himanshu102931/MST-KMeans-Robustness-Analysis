@@ -88,13 +88,15 @@ def test_academic_metadata_and_forbidden_strings():
 
     combined_text = " ".join(all_text_elements)
 
-    # Required student details
+    # Required student details (both names must remain visible)
     assert "Himanshu Gupta" in combined_text, "Student Himanshu Gupta missing"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] missing"
     assert "Parth Yadav" in combined_text, "Student Parth Yadav missing"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] missing"
     assert "BCS-DS-777" in combined_text, "Course code BCS-DS-777 missing"
     assert "Mr. Aman Kumar" in combined_text, "Instructor Mr. Aman Kumar missing"
+
+    # Privacy Enforcement (Phase M5C): Student roll numbers must NOT appear on public dashboard
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] should not be displayed in UI!"
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] should not be displayed in UI!"
 
     # Strictly forbidden allocation text
     assert "Allocation #19" not in combined_text, "Prohibited string 'Allocation #19' found!"
@@ -102,7 +104,7 @@ def test_academic_metadata_and_forbidden_strings():
 
 
 def test_navigation_across_all_modules():
-    """Verify that switching between all 5 navigation modules executes without exceptions."""
+    """Verify that switching between all 8 navigation modules executes without exceptions and preserves privacy."""
     try:
         from streamlit.testing.v1 import AppTest
     except ImportError:
@@ -115,6 +117,8 @@ def test_navigation_across_all_modules():
     views = [
         "Overview",
         "Clustering Playground",
+        "Performance Benchmarks",
+        "Algorithm Explorer",
         "Robustness Analysis",
         "Dataset & CSV Import",
         "Reproducibility & Configuration",
@@ -125,6 +129,16 @@ def test_navigation_across_all_modules():
         at.sidebar.radio[0].set_value(view_name)
         at.run()
         assert not at.exception, f"Navigating to '{view_name}' caused exception: {at.exception}"
+
+        # Privacy verification across all rendered modules
+        page_texts = []
+        for elem_list in [at.title, at.subheader, at.caption, at.markdown, at.info]:
+            for item in elem_list:
+                if hasattr(item, "value"):
+                    page_texts.append(str(item.value))
+        page_combined = " ".join(page_texts)
+        assert "[REDACTED_STUDENT_IDENTIFIER]" not in page_combined, f"Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in view '{view_name}'"
+        assert "[REDACTED_STUDENT_IDENTIFIER]" not in page_combined, f"Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in view '{view_name}'"
 
 
 # =============================================================================

@@ -101,8 +101,8 @@ def export_experiment_metadata(
             "institution": "Manav Rachna International Institute of Research and Studies (MRIIRS)",
             "degree": "B.Tech CSE (AIML), 7th Semester (2026–2027)",
             "students": [
-                {"name": "Himanshu Gupta", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
-                {"name": "Parth Yadav", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
+                {"name": "Himanshu Gupta"},
+                {"name": "Parth Yadav"},
             ],
             "instructor": "Mr. Aman Kumar, Assistant Professor",
         },
@@ -209,8 +209,8 @@ def export_benchmark_metadata(
             "school": "School of Engineering & Technology (SET)",
             "degree": "B.Tech CSE (AIML), 7th Semester (2026–2027)",
             "students": [
-                {"name": "Himanshu Gupta", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
-                {"name": "Parth Yadav", "roll_no": "[REDACTED_STUDENT_IDENTIFIER]"},
+                {"name": "Himanshu Gupta"},
+                {"name": "Parth Yadav"},
             ],
             "instructor": "Mr. Aman Kumar, Assistant Professor",
         },

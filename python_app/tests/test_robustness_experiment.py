@@ -487,6 +487,17 @@ def test_export_csv_and_json_with_provenance():
     assert "legacy JavaScript" in metadata["provenance_statement"]
     assert metadata["execution_summary"]["n_trials_executed"] == len(trials)
 
+    # Student privacy assertions
+    meta_json_str = json.dumps(metadata)
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in experiment metadata"
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in experiment metadata"
+    students = metadata.get("academic_context", {}).get("students", [])
+    student_names = [s.get("name") for s in students]
+    assert "Himanshu Gupta" in student_names
+    assert "Parth Yadav" in student_names
+    for s in students:
+        assert "roll_no" not in s, "roll_no must not be present in public metadata"
+
 
 # =============================================================================
 # 11. Parameter Bounds and Computational Safety Rejections
