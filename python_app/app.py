@@ -85,6 +85,7 @@ from clustering_lab.visualization.figures import (
     render_benchmark_png,
     render_clustering_png,
 )
+from clustering_lab.visualization.theme import apply_custom_theme
 
 
 # Page configuration
@@ -251,19 +252,26 @@ def render_sidebar() -> str:
 
         st.markdown(
             """
-            **Institution:**
-            Manav Rachna International Institute of Research and Studies (MRIIRS)
-            *School of Engineering & Technology*
-            B.Tech CSE (AIML), 7th Semester (2026–2027)
-
-            **Student Researchers:**
+            **Student Researchers (Equal Attribution):**
             - **Himanshu Gupta**
             - **Parth Yadav**
-
-            **Course Instructor:**
-            **Mr. Aman Kumar**, *Assistant Professor*
             """
         )
+
+        with st.expander("Academic Course Details", expanded=False):
+            st.markdown(
+                """
+                **Institution:**
+                Manav Rachna International Institute of Research and Studies (MRIIRS)
+                *School of Engineering & Technology*
+                B.Tech CSE (AIML), 7th Semester (2026–2027)
+
+                **Course Instructor:**
+                **Mr. Aman Kumar**, *Assistant Professor*
+
+                **Course Code:** Pattern Matching Lab (BCS-DS-777)
+                """
+            )
 
         st.divider()
 
@@ -561,39 +569,45 @@ def render_view_playground() -> None:
         st.success("Configuration reset to Gaussian Blobs baseline.")
         st.rerun()
 
-    # Process Run Action
-    if run_clicked:
+    def _execute_playground_run() -> bool:
         if total_n_calc > MAX_INTERACTIVE_SAMPLES:
             st.error(
                 f"Execution blocked: Total observations ({total_n_calc}) exceeds the interactive limit "
                 f"of {MAX_INTERACTIVE_SAMPLES}. Please adjust controls."
             )
-        else:
-            with st.spinner("Synthesizing dataset and executing dual clustering algorithms..."):
-                family_key = "blobs" if family == "Gaussian Blobs" else ("moons" if family == "Two Moons" else "circles")
-                kwargs: Dict[str, Any] = {}
-                if family_key == "blobs":
-                    kwargs["n_clusters"] = k_clusters
-                    kwargs["cluster_std"] = cluster_std
-                    kwargs["radius"] = radius
-                elif family_key == "circles":
-                    kwargs["factor"] = factor
+            return False
 
-                try:
-                    new_ds = generate_synthetic_dataset(
-                        family=family_key,
-                        n_samples=n_inliers,
-                        seed=seed,
-                        noise=noise_sigma,
-                        outlier_rate=outlier_rate,
-                        **kwargs,
-                    )
-                    st.session_state["current_dataset"] = new_ds
-                    _run_clustering_on_dataset(new_ds, k=k_clusters)
-                    st.session_state["executed_config"] = current_controls
-                    st.success(f"Successfully clustered {new_ds.n_samples} observations into k={k_clusters} components.")
-                except Exception as exc:
-                    st.error(f"Error during execution: {exc}")
+        with st.spinner("Synthesizing dataset and executing dual clustering algorithms..."):
+            family_key = "blobs" if family == "Gaussian Blobs" else ("moons" if family == "Two Moons" else "circles")
+            kwargs: Dict[str, Any] = {}
+            if family_key == "blobs":
+                kwargs["n_clusters"] = k_clusters
+                kwargs["cluster_std"] = cluster_std
+                kwargs["radius"] = radius
+            elif family_key == "circles":
+                kwargs["factor"] = factor
+
+            try:
+                new_ds = generate_synthetic_dataset(
+                    family=family_key,
+                    n_samples=n_inliers,
+                    seed=seed,
+                    noise=noise_sigma,
+                    outlier_rate=outlier_rate,
+                    **kwargs,
+                )
+                _run_clustering_on_dataset(new_ds, k=k_clusters)
+                st.session_state["current_dataset"] = new_ds
+                st.session_state["executed_config"] = current_controls
+                st.success(f"Successfully clustered {new_ds.n_samples} observations into k={k_clusters} components.")
+                return True
+            except Exception as exc:
+                st.error(f"Error during execution: {exc}")
+                return False
+
+    # Process Run Action
+    if run_clicked:
+        _execute_playground_run()
 
     # State consistency check: do displayed results match the current configuration?
     executed_cfg = st.session_state.get("executed_config", {})
@@ -603,35 +617,61 @@ def render_view_playground() -> None:
         st.divider()
         if executed_cfg.get("source") == "csv":
             st.info(
-                f"ℹ️ Currently active dataset was imported from CSV ('{executed_cfg.get('name', 'file')}'). "
-                "To visualize synthetic data, click '🚀 Generate & Run Clustering' above."
+                f"ℹ️ **Dataset Source Notice:** Currently displaying imported CSV data ('{executed_cfg.get('name', 'file')}'). "
+                "To visualize synthetic data, click **'🚀 Generate & Run Clustering'** above."
             )
         else:
-            st.warning(
-                "⚠️ Parameters have changed since the last execution. Results are pending. "
-                "Click '🚀 Generate & Run Clustering' above to compute results for the current settings."
-            )
-            st.info("Visualizations and quantitative metrics will render once execution is triggered.")
-        return
+            st.warning("⚠️ Parameters Modified — Showing Previous Clustering Results")
+            recompute_col1, recompute_col2 = st.columns([2.5, 4.5])
+            with recompute_col1:
+                if st.button(
+                    "⚡ Recompute / Update Visualizations",
+                    type="primary",
+                    key="pg_recompute_stale",
+                    use_container_width=True,
+                ):
+                    if _execute_playground_run():
+                        st.rerun()
+            with recompute_col2:
+                st.caption(
+                    "Controls have changed since last execution. Previous clustering partitions remain visible below. "
+                    "Click to recompute results with current parameters."
+                )
 
     # Retrieve current executed state for display
-    dataset: Dataset = st.session_state["current_dataset"]
-    km_res: KMeansResult = st.session_state["kmeans_result"]
-    km_metrics: ClusteringMetrics = st.session_state["kmeans_metrics"]
-    mst_res: MSTClusteringResult = st.session_state["mst_result"]
-    mst_metrics: ClusteringMetrics = st.session_state["mst_metrics"]
+    dataset: Optional[Dataset] = st.session_state.get("current_dataset")
+    km_res: Optional[KMeansResult] = st.session_state.get("kmeans_result")
+    km_metrics: Optional[ClusteringMetrics] = st.session_state.get("kmeans_metrics")
+    mst_res: Optional[MSTClusteringResult] = st.session_state.get("mst_result")
+    mst_metrics: Optional[ClusteringMetrics] = st.session_state.get("mst_metrics")
     show_retained_edge_flag = st.session_state.get("pg_mst_retained", True)
     show_cut_edge_flag = st.session_state.get("pg_mst_cuts", True)
+
+    if dataset is None or km_res is None or km_metrics is None or mst_res is None or mst_metrics is None:
+        st.info("👋 Welcome to the Clustering Playground! Configure your dataset parameters above and click **'🚀 Generate & Run Clustering'** to begin.")
+        return
 
     # -------------------------------------------------------------------------
     # Visualizations Section
     # -------------------------------------------------------------------------
     st.divider()
     st.markdown("### Interactive 2D Visualizations (Isotropic 1:1 Scale)")
-    st.caption(
-        f"Displaying executed results: **{family}** | Total N={dataset.n_samples} | "
-        f"Seed={dataset.seed} | Target k={st.session_state.get('clustering_k', km_res.k)}"
-    )
+
+    disp_family = executed_cfg.get("family", family)
+    disp_n = dataset.n_samples
+    disp_seed = dataset.seed
+    disp_k = getattr(km_res, "k", k_clusters)
+
+    if is_stale:
+        st.caption(
+            f"⚠️ **Showing PREVIOUS Executed Results (Outdated):** **{disp_family}** | Total N={disp_n} | "
+            f"Seed={disp_seed} | Target k={disp_k}. Adjustments above are pending recomputation."
+        )
+    else:
+        st.caption(
+            f"Displaying executed results: **{disp_family}** | Total N={disp_n} | "
+            f"Seed={disp_seed} | Target k={disp_k}"
+        )
 
     viz_tab1, viz_tab2, viz_tab3 = st.tabs(
         ["Ground Truth & Contamination", "Lloyd's K-Means Result", "Prim's MST Result"]
@@ -1744,6 +1784,7 @@ def render_view_explorer() -> None:
 
         st.session_state["explorer_trace"] = trace
         st.session_state["explorer_step_index"] = 0
+        st.session_state["exp_slider_widget"] = 0
         st.session_state["explorer_config_hash"] = config_signature
         st.session_state["explorer_dataset"] = ds
 
@@ -1751,8 +1792,36 @@ def render_view_explorer() -> None:
     steps = trace.steps
     total_steps = len(steps)
 
+    # Callbacks for seamless step synchronization without widget collisions or double reruns
+    def _set_step(target_idx: int) -> None:
+        clamped = max(0, min(total_steps - 1, target_idx))
+        st.session_state["explorer_step_index"] = clamped
+        st.session_state["exp_slider_widget"] = clamped
+
+    def _cb_first() -> None:
+        _set_step(0)
+
+    def _cb_prev() -> None:
+        _set_step(st.session_state.get("explorer_step_index", 0) - 1)
+
+    def _cb_next() -> None:
+        _set_step(st.session_state.get("explorer_step_index", 0) + 1)
+
+    def _cb_last() -> None:
+        _set_step(total_steps - 1)
+
+    def _cb_reset() -> None:
+        _set_step(0)
+
+    def _cb_slider() -> None:
+        val = st.session_state.get("exp_slider_widget", 0)
+        st.session_state["explorer_step_index"] = max(0, min(total_steps - 1, int(val)))
+
+    # Ensure single authoritative step index within bounds
     curr_idx = st.session_state.get("explorer_step_index", 0)
     curr_idx = max(0, min(total_steps - 1, curr_idx))
+    st.session_state["explorer_step_index"] = curr_idx
+    st.session_state["exp_slider_widget"] = curr_idx
 
     st.divider()
     st.markdown("#### Step Navigation Cockpit")
@@ -1760,37 +1829,25 @@ def render_view_explorer() -> None:
     c_first, c_prev, c_slider, c_next, c_last, c_reset = st.columns([1, 1, 4, 1, 1, 1])
 
     with c_first:
-        if st.button("⏮ First", use_container_width=True):
-            st.session_state["explorer_step_index"] = 0
-            st.rerun()
+        st.button("⏮ First", on_click=_cb_first, use_container_width=True, key="exp_btn_first")
     with c_prev:
-        if st.button("◀ Prev", use_container_width=True):
-            st.session_state["explorer_step_index"] = max(0, curr_idx - 1)
-            st.rerun()
+        st.button("◀ Prev", on_click=_cb_prev, use_container_width=True, key="exp_btn_prev")
     with c_slider:
-        slider_val = st.slider(
+        st.slider(
             "Step Navigator",
             min_value=0,
             max_value=total_steps - 1,
             value=curr_idx,
             key="exp_slider_widget",
+            on_change=_cb_slider,
             label_visibility="collapsed",
         )
-        if slider_val != curr_idx:
-            st.session_state["explorer_step_index"] = slider_val
-            st.rerun()
     with c_next:
-        if st.button("Next ▶", use_container_width=True):
-            st.session_state["explorer_step_index"] = min(total_steps - 1, curr_idx + 1)
-            st.rerun()
+        st.button("Next ▶", on_click=_cb_next, use_container_width=True, key="exp_btn_next")
     with c_last:
-        if st.button("⏭ Last", use_container_width=True):
-            st.session_state["explorer_step_index"] = total_steps - 1
-            st.rerun()
+        st.button("⏭ Last", on_click=_cb_last, use_container_width=True, key="exp_btn_last")
     with c_reset:
-        if st.button("↺ Reset", use_container_width=True):
-            st.session_state["explorer_step_index"] = 0
-            st.rerun()
+        st.button("↺ Reset", on_click=_cb_reset, use_container_width=True, key="exp_btn_reset")
 
     current_step = steps[st.session_state["explorer_step_index"]]
     step_num = st.session_state["explorer_step_index"] + 1
@@ -1931,6 +1988,7 @@ def render_view_methodology() -> None:
 def main() -> None:
     """Main Streamlit application coordinator."""
     init_session_state()
+    apply_custom_theme()
     active_view = render_sidebar()
 
     st.title("MST vs K-Means Robustness Analysis")

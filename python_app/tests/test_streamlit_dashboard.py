@@ -606,3 +606,113 @@ def test_ui_trial_count_display_and_label_reconciliation():
     # Verify obsolete migration banners are absent
     assert "Migration Phase M5A Active" not in combined
     assert "Phase M5A Research Platform" not in combined
+
+
+# =============================================================================
+# 11. Stage 04A Visual Theming & Playground Stale-State Lifecycle Tests
+# =============================================================================
+def test_design_tokens_and_theme_properties():
+    """Verify canonical design tokens and Matplotlib dark-mode theme export."""
+    from clustering_lab.visualization.theme import (
+        CANVAS_BG,
+        CLUSTER_COLORS,
+        COLOR_CENTROID,
+        COLOR_KMEANS,
+        COLOR_MST,
+        COLOR_OUTLIER,
+        SURFACE_CARD,
+        SURFACE_HOVER,
+        SURFACE_INSET,
+        get_theme_css,
+    )
+    from clustering_lab.visualization.figures import render_clustering_png, render_benchmark_png
+    import numpy as np
+
+    # Token sanity
+    assert CANVAS_BG == "#0b0f19"
+    assert SURFACE_CARD == "#151d30"
+    assert SURFACE_HOVER == "#1e293b"
+    assert SURFACE_INSET == "#0f172a"
+    assert COLOR_KMEANS == "#38bdf8"
+    assert COLOR_MST == "#f97316"
+    assert len(CLUSTER_COLORS) >= 6
+
+    # CSS generator verification
+    css = get_theme_css()
+    assert "--color-canvas-bg" in css
+    assert "--color-entity-kmeans" in css
+    assert "--color-entity-mst" in css
+    assert "stale-warning-banner" in css
+
+    # Matplotlib PNG dark theme export check
+    X = np.array([[0.0, 0.0], [1.0, 1.0]], dtype=np.float64)
+    labels = np.array([0, 1], dtype=np.int32)
+    png_bytes = render_clustering_png(X, labels, title="Dark Mode Test")
+    assert isinstance(png_bytes, bytes)
+    assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_playground_stale_state_non_collapsing_lifecycle():
+    """Verify that adjusting Playground parameters retains previous charts and provides recompute action (ISSUE-06)."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file))
+    at.run()
+
+    # Navigate to Clustering Playground view
+    at.sidebar.radio[0].set_value("Clustering Playground")
+    at.run()
+    assert not at.exception
+
+    # Initially, tabs and metric tables should be rendered for the default dataset
+    initial_tabs_count = len(at.tabs)
+    initial_df_count = len(at.dataframe)
+    assert initial_tabs_count >= 3, "Initial Playground visual tabs must be rendered in DOM"
+    assert initial_df_count >= 2, "Initial Playground metric tables must be rendered in DOM"
+
+    # Adjust a parameter (noise slider) without clicking generate
+    slider_noise = at.slider(key="pg_noise")
+    slider_noise.set_value(0.15).run()
+    assert not at.exception
+
+    # CRITICAL CHECK for ISSUE-06: Tabs and metric tables must NOT collapse/disappear
+    assert len(at.tabs) == initial_tabs_count, (
+        "Playground visualization tabs collapsed upon modifying slider! Non-collapsing state machine violated."
+    )
+    assert len(at.dataframe) == initial_df_count, (
+        "Playground metrics dataframes collapsed upon modifying slider! Non-collapsing state machine violated."
+    )
+
+    # Verify amber warning banner is present
+    warning_texts = [w.value for w in at.warning]
+    assert any("Parameters Modified — Showing Previous Clustering Results" in w for w in warning_texts), (
+        f"Expected stale warning banner not found in: {warning_texts}"
+    )
+
+    # Verify outdated execution caption is present
+    captions = [c.value for c in at.caption]
+    assert any("Showing PREVIOUS Executed Results (Outdated)" in c for c in captions), (
+        f"Expected outdated caption notice not found in: {captions}"
+    )
+
+    # Verify prominent Recompute button is present
+    button_keys = [b.key for b in at.button]
+    assert "pg_recompute_stale" in button_keys, (
+        f"Recompute button 'pg_recompute_stale' missing from buttons: {button_keys}"
+    )
+
+    # Click the Recompute button
+    at.button(key="pg_recompute_stale").click().run()
+    assert not at.exception
+
+    # After recomputing, the stale warning should be cleared
+    refreshed_warning_texts = [w.value for w in at.warning]
+    assert not any("Parameters Modified — Showing Previous Clustering Results" in w for w in refreshed_warning_texts), (
+        "Stale warning banner was not cleared after recomputation!"
+    )
+    assert len(at.tabs) == initial_tabs_count, "Tabs should remain rendered after recomputing"
+    assert len(at.dataframe) == initial_df_count, "Dataframes should remain rendered after recomputing"

@@ -483,3 +483,84 @@ def test_streamlit_apptest_navigates_to_algorithm_explorer_view():
     assert any("Algorithm Explorer" in s for s in subheaders)
     successes = [s.value for s in at.success]
     assert any("Mathematical Parity Verified" in s for s in successes)
+
+
+def test_algorithm_explorer_navigation_synchronization():
+    """Verify bidirectional synchronization across buttons and slider in Algorithm Explorer (ISSUE-05)."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_path = str(APP_DIR / "app.py")
+    at = AppTest.from_file(app_path, default_timeout=30).run()
+    assert not at.exception
+
+    # Select Algorithm Explorer navigation
+    radio = at.sidebar.radio(key="main_navigation")
+    radio.set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    # Initial state assertions: step 0
+    assert at.session_state["explorer_step_index"] == 0
+    assert at.slider(key="exp_slider_widget").value == 0
+
+    total_steps = len(at.session_state["explorer_trace"].steps)
+    assert total_steps > 3
+
+    # 1. Test Next ▶
+    at.button(key="exp_btn_next").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 1
+    assert at.slider(key="exp_slider_widget").value == 1
+
+    # 2. Test Next ▶ again
+    at.button(key="exp_btn_next").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 2
+    assert at.slider(key="exp_slider_widget").value == 2
+
+    # 3. Test ◀ Prev
+    at.button(key="exp_btn_prev").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 1
+    assert at.slider(key="exp_slider_widget").value == 1
+
+    # 4. Test ⏭ Last
+    at.button(key="exp_btn_last").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == total_steps - 1
+    assert at.slider(key="exp_slider_widget").value == total_steps - 1
+
+    # Boundary check: clicking Next at last step must not exceed total_steps - 1
+    at.button(key="exp_btn_next").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == total_steps - 1
+
+    # 5. Test ⏮ First
+    at.button(key="exp_btn_first").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0
+    assert at.slider(key="exp_slider_widget").value == 0
+
+    # Boundary check: clicking Prev at step 0 must not drop below 0
+    at.button(key="exp_btn_prev").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0
+
+    # 6. Test Slider scrubbing
+    at.slider(key="exp_slider_widget").set_value(2).run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 2
+
+    # 7. Test ↺ Reset
+    at.button(key="exp_btn_reset").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0
+    assert at.slider(key="exp_slider_widget").value == 0
+
+    # 8. Switching algorithm resets step to 0 safely
+    at.radio(key="explorer_algo_choice").set_value("Dense Prim's MST").run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0
+    assert at.slider(key="exp_slider_widget").value == 0

@@ -20,25 +20,38 @@ import plotly.graph_objects as go
 from clustering_lab.algorithms.kmeans import KMeansResult
 from clustering_lab.algorithms.mst import MSTClusteringResult
 from clustering_lab.data.dataset import Dataset
+from clustering_lab.visualization.theme import (
+    BORDER_STRONG,
+    BORDER_SUBTLE,
+    CANVAS_BG,
+    CLUSTER_COLORS,
+    COLOR_ACTIVE_EDGE,
+    COLOR_CENTROID,
+    COLOR_CUT_EDGE,
+    COLOR_INLIER,
+    COLOR_KMEANS,
+    COLOR_MST,
+    COLOR_OUTLIER,
+    COLOR_RETAINED_EDGE,
+    COLOR_RETAINED_EDGE_SOLID,
+    FONT_FAMILY_MONO,
+    FONT_FAMILY_SANS,
+    STATUS_ERROR,
+    STATUS_SUCCESS,
+    STATUS_WARNING,
+    SURFACE_CARD,
+    SURFACE_HOVER,
+    SURFACE_INSET,
+    TEXT_ACCENT,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+)
 
-# Scientific color palette for clusters
-CLUSTER_COLORS = [
-    "#38bdf8",  # Sky Blue
-    "#f43f5e",  # Rose Red
-    "#10b981",  # Emerald Green
-    "#f59e0b",  # Amber
-    "#a855f7",  # Purple
-    "#ec4899",  # Pink
-    "#06b6d4",  # Cyan
-    "#eab308",  # Yellow
-    "#6366f1",  # Indigo
-    "#14b8a6",  # Teal
-]
-
-OUTLIER_COLOR = "#ef4444"
-CENTROID_COLOR = "#fbbf24"
-RETAINED_EDGE_COLOR = "rgba(148, 163, 184, 0.45)"  # Slate-400 translucent
-CUT_EDGE_COLOR = "#f43f5e"  # Rose-500 bold dashed
+OUTLIER_COLOR = COLOR_OUTLIER
+CENTROID_COLOR = COLOR_CENTROID
+RETAINED_EDGE_COLOR = COLOR_RETAINED_EDGE
+CUT_EDGE_COLOR = COLOR_CUT_EDGE
 
 
 def _apply_standard_layout(
@@ -52,15 +65,15 @@ def _apply_standard_layout(
     fig.update_layout(
         title=dict(
             text=title,
-            font=dict(size=15, color="#f8fafc", family="Inter, system-ui, sans-serif"),
+            font=dict(size=15, color=TEXT_PRIMARY, family=FONT_FAMILY_SANS),
             x=0.02,
             y=0.96,
         ),
         margin=dict(l=40, r=40, t=50, b=40),
         height=height,
-        paper_bgcolor="#0f172a",  # Slate 900
-        plot_bgcolor="#1e293b",   # Slate 800
-        font=dict(color="#94a3b8", family="Inter, system-ui, sans-serif", size=12),
+        paper_bgcolor=SURFACE_INSET,
+        plot_bgcolor=SURFACE_HOVER,
+        font=dict(color=TEXT_SECONDARY, family=FONT_FAMILY_SANS, size=12),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -69,27 +82,27 @@ def _apply_standard_layout(
             x=0.5,
             font=dict(size=11, color="#cbd5e1"),
             bgcolor="rgba(15, 23, 42, 0.8)",
-            bordercolor="#334155",
+            bordercolor=BORDER_STRONG,
             borderwidth=1,
         ),
         hoverlabel=dict(
-            bgcolor="#1e293b",
+            bgcolor=SURFACE_HOVER,
             font_size=12,
-            font_family="Inter, system-ui, sans-serif",
-            font_color="#f8fafc",
-            bordercolor="#475569",
+            font_family=FONT_FAMILY_SANS,
+            font_color=TEXT_PRIMARY,
+            bordercolor=BORDER_STRONG,
         ),
     )
     # Ensure 1:1 aspect ratio: 1 Euclidean unit in x equals 1 Euclidean unit in y
     fig.update_xaxes(
         title=dict(text=x_label, font=dict(color="#cbd5e1", size=12)),
-        gridcolor="#334155",
+        gridcolor=BORDER_STRONG,
         zerolinecolor="#475569",
         showgrid=True,
     )
     fig.update_yaxes(
         title=dict(text=y_label, font=dict(color="#cbd5e1", size=12)),
-        gridcolor="#334155",
+        gridcolor=BORDER_STRONG,
         zerolinecolor="#475569",
         showgrid=True,
         scaleanchor="x",
@@ -378,8 +391,8 @@ def create_robustness_curve_figure(
     )
 
     algorithms = [
-        ("Lloyd K-Means", "#38bdf8", "circle"),     # Sky blue
-        ("Prim MST", "#10b981", "diamond"),          # Emerald green
+        ("Lloyd K-Means", COLOR_KMEANS, "circle"),
+        ("Prim MST", COLOR_MST, "diamond"),
     ]
 
     n_seeds_reported = 1
@@ -574,7 +587,7 @@ def create_benchmark_runtime_figure(
                 ),
                 mode="lines+markers",
                 name="Lloyd K-Means (O(I · N · k · D))",
-                line=dict(color="#38bdf8", width=3),
+                line=dict(color=COLOR_KMEANS, width=3),
                 marker=dict(size=8, symbol="circle"),
                 hovertemplate=(
                     "<b>Lloyd's K-Means</b><br>"
@@ -597,7 +610,7 @@ def create_benchmark_runtime_figure(
                 ),
                 mode="lines+markers",
                 name="Prim's MST (O(N²))",
-                line=dict(color="#10b981", width=3),
+                line=dict(color=COLOR_MST, width=3),
                 marker=dict(size=8, symbol="diamond"),
                 hovertemplate=(
                     "<b>Prim's MST</b><br>"
@@ -623,7 +636,7 @@ def create_benchmark_runtime_figure(
                     ),
                     mode="lines+markers",
                     name="Lloyd K-Means (O(I · N · k · D))",
-                    line=dict(color="#38bdf8", width=3),
+                    line=dict(color=COLOR_KMEANS, width=3),
                     marker=dict(size=8, symbol="circle"),
                     hovertemplate=(
                         "<b>Lloyd's K-Means</b><br>"
@@ -649,7 +662,7 @@ def create_benchmark_runtime_figure(
                     ),
                     mode="lines+markers",
                     name="Prim's MST (O(N²))",
-                    line=dict(color="#10b981", width=3),
+                    line=dict(color=COLOR_MST, width=3),
                     marker=dict(size=8, symbol="diamond"),
                     hovertemplate=(
                         "<b>Prim's MST</b><br>"
@@ -915,15 +928,19 @@ def render_benchmark_png(
     height_in: float = 5.5,
     dpi: int = 150,
 ) -> bytes:
-    """Render publication-quality benchmark runtime chart to PNG bytes using Matplotlib."""
+    """Render publication-quality benchmark runtime chart to PNG bytes using Matplotlib (dark theme)."""
     import io
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(width_in, height_in), dpi=dpi)
-    fig.patch.set_facecolor("#ffffff")
-    ax.set_facecolor("#f8fafc")
+    fig.patch.set_facecolor(SURFACE_INSET)
+    ax.set_facecolor(SURFACE_HOVER)
+
+    for spine in ax.spines.values():
+        spine.set_color(BORDER_STRONG)
+    ax.tick_params(colors=TEXT_SECONDARY)
 
     df = _normalize_benchmark_df(aggregates_df)
 
@@ -935,7 +952,7 @@ def render_benchmark_png(
                 df_sorted["kmeans_mean_ms"],
                 yerr=df_sorted["kmeans_std_ms"] if "kmeans_std_ms" in df_sorted.columns else None,
                 fmt="-o",
-                color="#2563eb",
+                color=COLOR_KMEANS,
                 capsize=4,
                 linewidth=2,
                 label="Lloyd K-Means (O(I · N · k · D))",
@@ -945,7 +962,7 @@ def render_benchmark_png(
                 df_sorted["mst_mean_ms"],
                 yerr=df_sorted["mst_std_ms"] if "mst_std_ms" in df_sorted.columns else None,
                 fmt="-s",
-                color="#16a34a",
+                color=COLOR_MST,
                 capsize=4,
                 linewidth=2,
                 label="Prim MST (O(N²))",
@@ -958,7 +975,7 @@ def render_benchmark_png(
                     km_sub["mean_ms"],
                     yerr=km_sub["std_ms"],
                     fmt="-o",
-                    color="#2563eb",
+                    color=COLOR_KMEANS,
                     capsize=4,
                     linewidth=2,
                     label="Lloyd K-Means (O(I · N · k · D))",
@@ -971,20 +988,28 @@ def render_benchmark_png(
                     mst_sub["mean_ms"],
                     yerr=mst_sub["std_ms"],
                     fmt="-s",
-                    color="#16a34a",
+                    color=COLOR_MST,
                     capsize=4,
                     linewidth=2,
                     label="Prim MST (O(N²))",
                 )
 
-    ax.set_title("Empirical Runtime Benchmark: K-Means vs Prim's MST", fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel("Sample Size (N)", fontsize=11)
-    ax.set_ylabel("Execution Time (ms)", fontsize=11)
-    ax.grid(True, linestyle="--", alpha=0.5, color="#cbd5e1")
-    ax.legend(frameon=True, facecolor="#ffffff", edgecolor="#cbd5e1")
+    ax.set_title(
+        "Empirical Runtime Benchmark: K-Means vs Prim's MST",
+        fontsize=13,
+        fontweight="bold",
+        pad=12,
+        color=TEXT_PRIMARY,
+    )
+    ax.set_xlabel("Sample Size (N)", fontsize=11, color=TEXT_SECONDARY)
+    ax.set_ylabel("Execution Time (ms)", fontsize=11, color=TEXT_SECONDARY)
+    ax.grid(True, linestyle="--", alpha=0.5, color=BORDER_STRONG)
+    legend = ax.legend(frameon=True, facecolor=SURFACE_CARD, edgecolor=BORDER_STRONG)
+    if legend:
+        plt.setp(legend.get_texts(), color=TEXT_PRIMARY)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
+    plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
@@ -999,49 +1024,54 @@ def render_clustering_png(
     height_in: float = 7.0,
     dpi: int = 150,
 ) -> bytes:
-    """Render publication-quality 2D clustering scatter plot to PNG bytes using Matplotlib."""
+    """Render publication-quality 2D clustering scatter plot to PNG bytes using Matplotlib (dark theme)."""
     import io
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(width_in, height_in), dpi=dpi)
-    fig.patch.set_facecolor("#ffffff")
-    ax.set_facecolor("#f8fafc")
+    fig.patch.set_facecolor(SURFACE_INSET)
+    ax.set_facecolor(SURFACE_HOVER)
+
+    for spine in ax.spines.values():
+        spine.set_color(BORDER_STRONG)
+    ax.tick_params(colors=TEXT_SECONDARY)
 
     unique_labels = np.unique(labels)
-    mpl_colors = ["#38bdf8", "#f43f5e", "#10b981", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4"]
 
     for lbl in unique_labels:
         mask = labels == lbl
         if lbl == -1:
-            ax.scatter(X[mask, 0], X[mask, 1], c="#ef4444", marker="x", s=35, label="Outliers (-1)")
+            ax.scatter(X[mask, 0], X[mask, 1], c=COLOR_OUTLIER, marker="x", s=40, label="Outliers (-1)", zorder=5)
         else:
-            col = mpl_colors[int(lbl) % len(mpl_colors)]
-            ax.scatter(X[mask, 0], X[mask, 1], c=col, s=30, alpha=0.85, label=f"Cluster {lbl}")
+            col = CLUSTER_COLORS[int(lbl) % len(CLUSTER_COLORS)]
+            ax.scatter(X[mask, 0], X[mask, 1], c=col, s=35, alpha=0.9, label=f"Cluster {lbl}", zorder=3)
 
     if centroids is not None and len(centroids) > 0:
         ax.scatter(
             centroids[:, 0],
             centroids[:, 1],
-            c="#f59e0b",
+            c=COLOR_CENTROID,
             marker="*",
-            s=180,
-            edgecolors="#0f172a",
+            s=200,
+            edgecolors=SURFACE_INSET,
             linewidths=1.5,
             label="Centroids",
             zorder=10,
         )
 
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title(title, fontsize=12, fontweight="bold", pad=12)
-    ax.set_xlabel("Feature 1 (x₀)", fontsize=10)
-    ax.set_ylabel("Feature 2 (x₁)", fontsize=10)
-    ax.grid(True, linestyle="--", alpha=0.5, color="#cbd5e1")
-    ax.legend(frameon=True, facecolor="#ffffff", edgecolor="#cbd5e1", fontsize=9)
+    ax.set_title(title, fontsize=12, fontweight="bold", pad=12, color=TEXT_PRIMARY)
+    ax.set_xlabel("Feature 1 (x₀)", fontsize=10, color=TEXT_SECONDARY)
+    ax.set_ylabel("Feature 2 (x₁)", fontsize=10, color=TEXT_SECONDARY)
+    ax.grid(True, linestyle="--", alpha=0.5, color=BORDER_STRONG)
+    legend = ax.legend(frameon=True, facecolor=SURFACE_CARD, edgecolor=BORDER_STRONG, fontsize=9)
+    if legend:
+        plt.setp(legend.get_texts(), color=TEXT_PRIMARY)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
+    plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
