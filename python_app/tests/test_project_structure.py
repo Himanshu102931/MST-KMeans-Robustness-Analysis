@@ -96,3 +96,48 @@ def test_minimal_streamlit_app_smoke():
     # Assert main title is rendered as expected
     assert len(at.title) > 0, "No title elements rendered by Streamlit application"
     assert at.title[0].value == "MST vs K-Means Robustness Analysis"
+
+
+def test_utils_package_exports_canonical_math_helpers():
+    """Verify that clustering_lab.utils exports compute_sample_std and math_helpers exists."""
+    math_helpers_path = APP_DIR / "clustering_lab" / "utils" / "math_helpers.py"
+    assert math_helpers_path.is_file(), f"Expected math_helpers module missing at {math_helpers_path}"
+
+    import clustering_lab.utils as utils
+    assert hasattr(utils, "compute_sample_std"), "clustering_lab.utils must export compute_sample_std"
+    assert callable(utils.compute_sample_std)
+
+
+def test_canonical_math_helper_sample_std_properties():
+    """Verify mathematical properties of canonical compute_sample_std helper."""
+    from clustering_lab.utils import compute_sample_std
+    import numpy as np
+
+    # 1. Known sample with independently calculated expected standard deviation
+    # [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+    # Sum = 40, Mean = 5.0, sum of squared differences = 32, N = 8, ddof = 1 -> variance = 32/7
+    data = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+    expected_std = np.sqrt(32.0 / 7.0)
+    assert compute_sample_std(data) == pytest.approx(expected_std, abs=1e-12)
+
+    # 2. Constant data with zero variance
+    assert compute_sample_std([7.0, 7.0, 7.0, 7.0]) == 0.0
+
+    # 3. Single observation
+    assert compute_sample_std([42.0]) == 0.0
+
+    # 4. Empty observations
+    assert compute_sample_std([]) == 0.0
+
+    # 5. Floating-point data
+    float_data = [1.5, 2.5, 3.5]
+    # mean=2.5, diffs=[-1, 0, 1], sq_sum=2, ddof=1 -> var=2/2=1.0, std=1.0
+    assert compute_sample_std(float_data) == pytest.approx(1.0, abs=1e-12)
+
+    # 6. Appropriate ddof boundary behavior
+    # ddof=0 -> population std
+    pop_std = np.sqrt(2.0 / 3.0)
+    assert compute_sample_std(float_data, ddof=0) == pytest.approx(pop_std, abs=1e-12)
+    # len(data) <= ddof guard: 3 elements with ddof=3 or ddof=4 -> 0.0
+    assert compute_sample_std(float_data, ddof=3) == 0.0
+    assert compute_sample_std(float_data, ddof=4) == 0.0

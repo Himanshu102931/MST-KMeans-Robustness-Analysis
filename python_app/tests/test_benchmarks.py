@@ -388,3 +388,103 @@ def test_render_benchmark_png_valid_header():
     assert len(png_bytes) > 1000
     # Standard PNG magic signature: 0x89 'P' 'N' 'G' '\r' '\n' 0x1A '\n'
     assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+# =============================================================================
+# 6. BenchmarkSummary Dual Constructor & Compatibility Tests
+# =============================================================================
+def test_benchmark_summary_constructor_variations():
+    """Verify BenchmarkSummary constructor behaves identically across supported call styles and catches invalid calls."""
+    from clustering_lab.experiments.benchmarks import BenchmarkSummaryRow
+
+    # Style 1: Legacy keyword arguments (single-item fixture mode)
+    s_legacy_kw = BenchmarkSummary(
+        sample_size=100,
+        repetitions=3,
+        kmeans_mean_ms=2.0,
+        kmeans_median_ms=2.0,
+        kmeans_std_ms=0.2,
+        kmeans_min_ms=1.8,
+        kmeans_max_ms=2.2,
+        mst_mean_ms=6.0,
+        mst_median_ms=6.0,
+        mst_std_ms=0.5,
+        mst_min_ms=5.5,
+        mst_max_ms=6.5,
+        ratio_of_means=3.0,
+    )
+
+    # Style 2: Collection mode via explicit keywords
+    row = BenchmarkSummaryRow(
+        sample_size=100,
+        repetitions=3,
+        kmeans_mean_ms=2.0,
+        kmeans_median_ms=2.0,
+        kmeans_std_ms=0.2,
+        kmeans_min_ms=1.8,
+        kmeans_max_ms=2.2,
+        mst_mean_ms=6.0,
+        mst_median_ms=6.0,
+        mst_std_ms=0.5,
+        mst_min_ms=5.5,
+        mst_max_ms=6.5,
+        ratio_of_means=3.0,
+    )
+    s_collection_kw = BenchmarkSummary(
+        rows=[row],
+        ratio_of_means={100: 3.0},
+        kmeans_mean_by_n={100: 2.0},
+        mst_mean_by_n={100: 6.0},
+        kmeans_std_by_n={100: 0.2},
+        mst_std_by_n={100: 0.5},
+    )
+
+    # Style 3: Collection mode via positional rows parameter
+    s_collection_pos = BenchmarkSummary([row])
+
+    # Verify equivalent attribute values across all three styles
+    for s in (s_legacy_kw, s_collection_kw, s_collection_pos):
+        assert s.sample_size == 100
+        assert s.repetitions == 3
+        assert s.kmeans_mean_ms == pytest.approx(2.0)
+        assert s.kmeans_median_ms == pytest.approx(2.0)
+        assert s.kmeans_std_ms == pytest.approx(0.2)
+        assert s.kmeans_min_ms == pytest.approx(1.8)
+        assert s.kmeans_max_ms == pytest.approx(2.2)
+        assert s.mst_mean_ms == pytest.approx(6.0)
+        assert s.mst_median_ms == pytest.approx(6.0)
+        assert s.mst_std_ms == pytest.approx(0.5)
+        assert s.mst_min_ms == pytest.approx(5.5)
+        assert s.mst_max_ms == pytest.approx(6.5)
+        assert s.ratio_of_means == pytest.approx(3.0)
+        assert len(s) == 1
+        assert s[0].sample_size == 100
+
+        # Export compatibility
+        d = s.to_dict()
+        assert d["sample_size"] == 100
+        assert d["ratio_of_means"] == pytest.approx(3.0)
+        df = s.to_dataframe()
+        assert len(df) == 1
+        assert df.loc[0, "sample_size"] == 100
+
+    # Style 4: Empty defaults constructor
+    s_empty = BenchmarkSummary()
+    assert len(s_empty.rows) == 0
+    assert s_empty.sample_size == 0
+    assert s_empty.ratio_of_means is None
+    assert len(s_empty) == 0
+    assert s_empty.to_dataframe().empty
+
+    # Invalid Combinations Validation
+    # Incomplete single-item: missing kmeans_mean_ms
+    with pytest.raises(ValueError, match="Incomplete single-item arguments"):
+        BenchmarkSummary(sample_size=100)
+
+    # Incomplete single-item: missing sample_size
+    with pytest.raises(ValueError, match="Incomplete single-item arguments"):
+        BenchmarkSummary(kmeans_mean_ms=2.0)
+
+    # Conflicting arguments: both rows and single-item keywords
+    with pytest.raises(ValueError, match="Conflicting arguments"):
+        BenchmarkSummary(rows=[row], sample_size=100, kmeans_mean_ms=2.0)

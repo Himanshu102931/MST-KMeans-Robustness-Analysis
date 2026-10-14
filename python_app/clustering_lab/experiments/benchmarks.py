@@ -42,6 +42,7 @@ import pandas as pd
 from clustering_lab.algorithms.kmeans import KMeansResult, kmeans
 from clustering_lab.algorithms.mst import MSTClusteringResult, mst_clustering
 from clustering_lab.data.synthetic import generate_blobs
+from clustering_lab.utils import compute_sample_std
 
 
 # Benchmark defaults and safety constraints
@@ -401,63 +402,83 @@ class BenchmarkSummary:
         mst_max_ms: Optional[float] = None,
         **kwargs: Any,
     ) -> None:
-        if sample_size is not None and kmeans_mean_ms is not None:
-            # Single-item constructor mode
+        # Validate against conflicting or incomplete constructor parameter usage
+        if rows is not None and (sample_size is not None or kmeans_mean_ms is not None):
+            raise ValueError(
+                "Conflicting arguments: cannot specify both collection 'rows' and single-item arguments (sample_size/kmeans_mean_ms)."
+            )
+
+        if sample_size is not None or kmeans_mean_ms is not None:
+            if sample_size is None or kmeans_mean_ms is None:
+                raise ValueError(
+                    "Incomplete single-item arguments: both 'sample_size' and 'kmeans_mean_ms' are required."
+                )
+            # Single-item constructor mode (used in test fixtures and compact single-size benchmarks)
             r_ratio = ratio_of_means if isinstance(ratio_of_means, (int, float)) else None
+            km_mean = float(kmeans_mean_ms)
+            mst_mean = float(mst_mean_ms) if mst_mean_ms is not None else 0.0
+
             single_row = BenchmarkSummaryRow(
-                sample_size=sample_size,
-                repetitions=repetitions or 1,
-                kmeans_mean_ms=kmeans_mean_ms,
-                kmeans_median_ms=kmeans_median_ms if kmeans_median_ms is not None else kmeans_mean_ms,
-                kmeans_std_ms=kmeans_std_ms if kmeans_std_ms is not None else 0.0,
-                kmeans_min_ms=kmeans_min_ms if kmeans_min_ms is not None else kmeans_mean_ms,
-                kmeans_max_ms=kmeans_max_ms if kmeans_max_ms is not None else kmeans_mean_ms,
-                mst_mean_ms=mst_mean_ms if mst_mean_ms is not None else 0.0,
-                mst_median_ms=mst_median_ms if mst_median_ms is not None else (mst_mean_ms or 0.0),
-                mst_std_ms=mst_std_ms if mst_std_ms is not None else 0.0,
-                mst_min_ms=mst_min_ms if mst_min_ms is not None else (mst_mean_ms or 0.0),
-                mst_max_ms=mst_max_ms if mst_max_ms is not None else (mst_mean_ms or 0.0),
+                sample_size=int(sample_size),
+                repetitions=int(repetitions or 1),
+                kmeans_mean_ms=km_mean,
+                kmeans_median_ms=float(kmeans_median_ms) if kmeans_median_ms is not None else km_mean,
+                kmeans_std_ms=float(kmeans_std_ms) if kmeans_std_ms is not None else 0.0,
+                kmeans_min_ms=float(kmeans_min_ms) if kmeans_min_ms is not None else km_mean,
+                kmeans_max_ms=float(kmeans_max_ms) if kmeans_max_ms is not None else km_mean,
+                mst_mean_ms=mst_mean,
+                mst_median_ms=float(mst_median_ms) if mst_median_ms is not None else mst_mean,
+                mst_std_ms=float(mst_std_ms) if mst_std_ms is not None else 0.0,
+                mst_min_ms=float(mst_min_ms) if mst_min_ms is not None else mst_mean,
+                mst_max_ms=float(mst_max_ms) if mst_max_ms is not None else mst_mean,
                 ratio_of_means=r_ratio,
             )
             self.rows = [single_row]
-            self.sample_size = sample_size
-            self.repetitions = repetitions or 1
-            self.kmeans_mean_ms = kmeans_mean_ms
-            self.kmeans_median_ms = single_row.kmeans_median_ms
-            self.kmeans_std_ms = single_row.kmeans_std_ms
-            self.kmeans_min_ms = single_row.kmeans_min_ms
-            self.kmeans_max_ms = single_row.kmeans_max_ms
-            self.mst_mean_ms = single_row.mst_mean_ms
-            self.mst_median_ms = single_row.mst_median_ms
-            self.mst_std_ms = single_row.mst_std_ms
-            self.mst_min_ms = single_row.mst_min_ms
-            self.mst_max_ms = single_row.mst_max_ms
-            self.ratio_of_means = r_ratio
-            self.aggregates = aggregates or []
-            self.ratio_of_means_dict = {sample_size: r_ratio}
-            self.ratio_of_medians_dict = {}
-            self.platform_info = platform_info or {}
+            self.aggregates = list(aggregates) if aggregates is not None else []
+            self.ratio_of_means_dict = {int(sample_size): r_ratio}
+            self.ratio_of_medians_dict = dict(ratio_of_medians) if isinstance(ratio_of_medians, dict) else {}
+            self.platform_info = dict(platform_info) if platform_info is not None else {}
         else:
-            self.rows = rows or []
-            self.aggregates = aggregates or []
-            self.ratio_of_means_dict = ratio_of_means if isinstance(ratio_of_means, dict) else {}
-            self.ratio_of_medians_dict = ratio_of_medians or {}
-            self.platform_info = platform_info or {}
-            if self.rows:
-                first = self.rows[0]
-                self.sample_size = first.sample_size
-                self.repetitions = first.repetitions
-                self.kmeans_mean_ms = first.kmeans_mean_ms
-                self.kmeans_median_ms = first.kmeans_median_ms
-                self.kmeans_std_ms = first.kmeans_std_ms
-                self.kmeans_min_ms = first.kmeans_min_ms
-                self.kmeans_max_ms = first.kmeans_max_ms
-                self.mst_mean_ms = first.mst_mean_ms
-                self.mst_median_ms = first.mst_median_ms
-                self.mst_std_ms = first.mst_std_ms
-                self.mst_min_ms = first.mst_min_ms
-                self.mst_max_ms = first.mst_max_ms
-                self.ratio_of_means = first.ratio_of_means
+            self.rows = list(rows) if rows is not None else []
+            self.aggregates = list(aggregates) if aggregates is not None else []
+            self.ratio_of_means_dict = dict(ratio_of_means) if isinstance(ratio_of_means, dict) else {}
+            self.ratio_of_medians_dict = dict(ratio_of_medians) if isinstance(ratio_of_medians, dict) else {}
+            self.platform_info = dict(platform_info) if platform_info is not None else {}
+
+        # Unified synchronization of convenience attributes from primary row
+        self._sync_first_row_attributes()
+
+    def _sync_first_row_attributes(self) -> None:
+        """Synchronize top-level convenience attributes from the first summary row."""
+        if self.rows:
+            first = self.rows[0]
+            self.sample_size = first.sample_size
+            self.repetitions = first.repetitions
+            self.kmeans_mean_ms = first.kmeans_mean_ms
+            self.kmeans_median_ms = first.kmeans_median_ms
+            self.kmeans_std_ms = first.kmeans_std_ms
+            self.kmeans_min_ms = first.kmeans_min_ms
+            self.kmeans_max_ms = first.kmeans_max_ms
+            self.mst_mean_ms = first.mst_mean_ms
+            self.mst_median_ms = first.mst_median_ms
+            self.mst_std_ms = first.mst_std_ms
+            self.mst_min_ms = first.mst_min_ms
+            self.mst_max_ms = first.mst_max_ms
+            self.ratio_of_means = first.ratio_of_means
+        else:
+            self.sample_size = 0
+            self.repetitions = 0
+            self.kmeans_mean_ms = 0.0
+            self.kmeans_median_ms = 0.0
+            self.kmeans_std_ms = 0.0
+            self.kmeans_min_ms = 0.0
+            self.kmeans_max_ms = 0.0
+            self.mst_mean_ms = 0.0
+            self.mst_median_ms = 0.0
+            self.mst_std_ms = 0.0
+            self.mst_min_ms = 0.0
+            self.mst_max_ms = 0.0
+            self.ratio_of_means = None
 
     def __iter__(self):
         return iter(self.rows)
@@ -494,29 +515,6 @@ class BenchmarkSummary:
             return pd.DataFrame()
         return pd.DataFrame([r.to_dict() for r in self.rows])
 
-
-def compute_sample_std(values: Sequence[float]) -> float:
-    """Calculate sample standard deviation with Bessel's correction (ddof=1).
-
-    Note on statistical terminology:
-        Dividing the sum of squared deviations by (N - 1) via Bessel's correction
-        (ddof=1) yields an unbiased estimator of population variance (s^2).
-        The sample standard deviation s = sqrt(s^2) applies Bessel's correction
-        to reduce small-sample bias, but due to Jensen's inequality (concavity
-        of the square root function, E[s] <= sigma), s is not strictly an
-        unbiased estimator of population standard deviation sigma.
-
-    Args:
-        values: Sequence of numeric measurements.
-
-    Returns:
-        Sample standard deviation as float. Returns 0.0 if len(values) <= 1.
-    """
-    n = len(values)
-    if n <= 1:
-        return 0.0
-    arr = np.asarray(values, dtype=np.float64)
-    return float(np.std(arr, ddof=1))
 
 
 def run_performance_benchmark(

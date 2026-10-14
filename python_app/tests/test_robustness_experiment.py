@@ -642,3 +642,25 @@ def test_reconciled_trial_counting_dimensions():
     assert summary["n_clustering_executions"] == 144
     assert summary["n_paired_trials"] == 72
     assert summary["n_recorded_result_rows"] == 144
+
+
+def test_compute_sample_std_import_pathways_backward_compatibility():
+    """Verify backward-compatible import pathways for compute_sample_std across all packages."""
+    from clustering_lab.utils import compute_sample_std as std_utils
+    from clustering_lab.utils.math_helpers import compute_sample_std as std_math
+    from clustering_lab.experiments.aggregation import compute_sample_std as std_agg
+    from clustering_lab.experiments import compute_sample_std as std_exp
+
+    # All imports must resolve to the identical canonical function
+    assert std_utils is std_math
+    assert std_agg is std_utils
+    assert std_exp is std_utils
+
+    # Numerical consistency test across all references
+    sample_data = [10.0, 12.0, 23.0, 23.0, 16.0, 23.0, 21.0, 16.0]
+    expected_val = float(np.std(sample_data, ddof=1))
+
+    for fn in (std_utils, std_math, std_agg, std_exp):
+        assert fn(sample_data) == pytest.approx(expected_val, abs=1e-12)
+        assert fn([]) == 0.0
+        assert fn([100.0]) == 0.0

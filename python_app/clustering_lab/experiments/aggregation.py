@@ -27,22 +27,7 @@ import numpy as np
 import pandas as pd
 
 from clustering_lab.experiments.runner import TrialResult
-
-
-def compute_sample_std(values: Sequence[float]) -> float:
-    """Calculate sample standard deviation with Bessel's correction (ddof=1).
-
-    Args:
-        values: Sequence of numeric values.
-
-    Returns:
-        Sample standard deviation as float. Returns 0.0 if len(values) <= 1.
-    """
-    n = len(values)
-    if n <= 1:
-        return 0.0
-    arr = np.asarray(values, dtype=np.float64)
-    return float(np.std(arr, ddof=1))
+from clustering_lab.utils import compute_sample_std
 
 
 @dataclass
