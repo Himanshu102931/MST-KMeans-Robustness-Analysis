@@ -255,6 +255,96 @@ def test_render_clustering_png_valid_signature():
     assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
 
 
+def test_mst_trace_single_observation_mathematical_properties():
+    """Verify N=1 MST trace satisfies graph invariants and exact production parity."""
+    X = np.array([[3.14, 2.71]], dtype=np.float64)
+    k = 1
+
+    trace = run_mst_trace(X=X, k=k)
+    prod = mst_clustering(X=X, k=k)
+
+    # 1. Structural trace properties
+    assert trace.n_steps == 1
+    assert len(trace.steps) == 1
+    assert trace.final_parity_verified is True
+    assert trace.X is not None
+    assert np.array_equal(trace.X, X)
+
+    # 2. Step snapshot properties
+    step0 = trace.steps[0]
+    assert step0.step_index == 0
+    assert step0.step_type == "final_clusters"
+    assert step0.X is not None
+    assert np.array_equal(step0.X, X)
+    assert len(step0.tree_edges) == 0
+    assert step0.total_weight == 0.0
+    assert len(step0.cut_edges) == 0
+    assert len(step0.retained_edges) == 0
+    assert np.array_equal(step0.labels, np.array([0], dtype=np.int32))
+    assert np.array_equal(step0.in_tree_mask, np.ones(1, dtype=bool))
+    assert step0.current_edge is None
+
+    # 3. Final result mathematical parity with production mst_clustering
+    assert trace.final_result.k == 1
+    assert trace.final_result.n_samples == 1
+    assert len(trace.final_result.mst_edges) == 0
+    assert len(trace.final_result.cut_edges) == 0
+    assert trace.final_result.total_mst_weight == 0.0
+    assert trace.final_result.retained_weight == 0.0
+    assert np.array_equal(trace.final_result.labels, prod.labels)
+    assert trace.final_result.total_mst_weight == prod.total_mst_weight
+    assert trace.final_result.retained_weight == prod.retained_weight
+
+
+def test_create_mst_explorer_figure_single_observation():
+    """Verify Plotly and PNG rendering for single-observation MST trace without explicit X."""
+    X = np.array([[4.2, -1.5]], dtype=np.float64)
+    trace = run_mst_trace(X=X, k=1)
+    step = trace.steps[0]
+
+    # Verify Plotly figure rendering when step is passed without explicit X (app.py calling convention)
+    fig = create_mst_explorer_figure(step)
+    assert len(fig.data) >= 1
+    assert fig.layout.yaxis.scaleanchor == "x"
+
+    # Verify also with explicit (X, step) convention
+    fig_explicit = create_mst_explorer_figure(X, step)
+    assert len(fig_explicit.data) >= 1
+
+    # Verify PNG bytes generation
+    png_bytes = render_clustering_png(step.X, step.labels, title="N=1 MST Explorer Step")
+    assert isinstance(png_bytes, bytes)
+    assert len(png_bytes) > 500
+    assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_mst_trace_immutability_and_coordinates_contract():
+    """Verify frozen dataclass immutability and consistent coordinate attachment across all steps."""
+    from dataclasses import FrozenInstanceError
+
+    X = np.array([
+        [0.0, 0.0],
+        [1.0, 0.0],
+        [0.0, 1.0],
+    ], dtype=np.float64)
+    trace = run_mst_trace(X=X, k=2)
+
+    assert trace.X is not None
+    assert np.array_equal(trace.X, X)
+
+    for s in trace.steps:
+        # Coordinates must be attached to every step
+        assert s.X is not None
+        assert np.array_equal(s.X, X)
+
+        # Frozen dataclass must reject attribute modification
+        with pytest.raises(FrozenInstanceError):
+            s.X = np.array([[99.0, 99.0]])
+
+        with pytest.raises(FrozenInstanceError):
+            s.total_weight = 42.0
+
+
 # =============================================================================
 # 4. Streamlit AppTest Navigation Views
 # =============================================================================

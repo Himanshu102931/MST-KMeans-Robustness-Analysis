@@ -506,9 +506,16 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
                 title="Single Vertex (N=1)",
                 description="Single vertex trivially constitutes an uncut spanning forest of weight 0.",
                 math_formula=r"|V|=1 \implies |E|=0",
+                X=X_clean,
             )
         )
-        return MSTTraceResult(steps=steps, final_result=final_res, n_steps=1)
+        return MSTTraceResult(
+            steps=steps,
+            final_result=final_res,
+            n_steps=1,
+            final_parity_verified=True,
+            X=X_clean,
+        )
 
     min_dist = np.full(n_samples, np.inf, dtype=np.float64)
     parent = np.full(n_samples, -1, dtype=np.int32)
@@ -532,6 +539,7 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
             title="Step 0: Prim's Root Initialization (Vertex 0)",
             description=f"Dense Prim's algorithm initialized with vertex 0 as tree root. {n_samples - 1} vertices unvisited.",
             math_formula=r"V_{\text{tree}} = \{v_0\}, \quad d(v_0) = 0",
+            X=X_clean,
         )
     )
 
@@ -574,6 +582,7 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
                         f"Tree contains {len(mst_edges)} of {n_samples - 1} edges."
                     ),
                     math_formula=r"e^* = \arg\min_{u \in V \setminus S, v \in S} w(u, v)",
+                    X=X_clean,
                 )
             )
 
@@ -610,6 +619,7 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
                 f"Total Euclidean MST weight: {total_mst_weight:.3f}."
             ),
             math_formula=r"|E_{\text{MST}}| = N - 1, \quad W_{\text{MST}} = \sum_{e \in E} w(e)",
+            X=X_clean,
         )
     )
 
@@ -662,6 +672,7 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
                 f"Retained forest weight: {retained_weight:.3f}."
             ),
             math_formula=r"\text{Cut } (k - 1) \text{ longest edges} \implies \text{yields } k \text{ connected components}",
+            X=X_clean,
         )
     )
 
@@ -707,6 +718,7 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
                 f"Cluster sizes: {[len(component_members[r]) for r in sorted_roots]}."
             ),
             math_formula=r"C_1, \dots, C_k = \text{ConnectedComponents}(E_{\text{retained}})",
+            X=X_clean,
         )
     )
 
@@ -737,9 +749,6 @@ def run_mst_trace(X: np.ndarray, k: int) -> MSTTraceResult:
         k=k_val,
         n_samples=n_samples,
     )
-
-    for s in steps:
-        object.__setattr__(s, "X", X_clean)
 
     return MSTTraceResult(
         steps=steps,
