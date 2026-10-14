@@ -339,6 +339,13 @@ class KMeans:
             raise RuntimeError("Estimator is not fitted yet. Call 'fit' before 'predict'.")
 
         X_clean, _ = _validate_input_data(X, k=1, max_iter=self.max_iter, tol=self.tol)
+        n_features = self.cluster_centers_.shape[1]
+        if X_clean.shape[1] != n_features:
+            raise ValueError(
+                f"Feature dimension mismatch: model was fitted on {n_features} "
+                f"features, but input X has {X_clean.shape[1]} features."
+            )
+
         diff = X_clean[:, np.newaxis, :] - self.cluster_centers_[np.newaxis, :, :]
         dist_sq = np.sum(diff ** 2, axis=2)
         return np.argmin(dist_sq, axis=1).astype(np.int32)

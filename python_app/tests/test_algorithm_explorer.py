@@ -134,6 +134,99 @@ def test_kmeans_trace_deterministic_reproducibility():
             assert np.array_equal(s1.labels, s2.labels)
 
 
+def test_kmeans_explorer_convergence_parity_zero_tolerance():
+    """Verify exact parity between explorer and production when tol = 0.0 (ISSUE-02)."""
+    X = np.array([
+        [0.0, 0.0],
+        [0.1, 0.0],
+        [10.0, 10.0],
+        [10.1, 10.0],
+    ], dtype=np.float64)
+    k = 2
+    seed = 42
+    max_iter = 5
+
+    trace = run_kmeans_trace(X=X, k=k, max_iter=max_iter, tol=0.0, seed=seed)
+    prod = kmeans(X=X, k=k, max_iter=max_iter, tol=0.0, seed=seed)
+
+    assert trace.final_parity_verified is True
+    assert prod.n_iter == max_iter
+    assert prod.converged is False
+    assert trace.final_result.n_iter == prod.n_iter
+    assert trace.final_result.converged == prod.converged
+    assert np.array_equal(trace.final_result.labels, prod.labels)
+    assert np.allclose(trace.final_result.cluster_centers, prod.cluster_centers)
+    assert np.isclose(trace.final_result.inertia, prod.inertia)
+
+
+def test_kmeans_explorer_convergence_parity_tolerances():
+    """Verify parity across positive, very small, and standard tolerances (ISSUE-02)."""
+    ds = generate_synthetic_dataset(family="blobs", n_samples=30, seed=77, n_clusters=3)
+    X = ds.X
+    k = 3
+    seed = 77
+
+    for tol_val in (1e-6, 1e-4, 1e-2, 1.0):
+        trace = run_kmeans_trace(X=X, k=k, max_iter=50, tol=tol_val, seed=seed)
+        prod = kmeans(X=X, k=k, max_iter=50, tol=tol_val, seed=seed)
+
+        assert trace.final_parity_verified is True
+        assert trace.final_result.n_iter == prod.n_iter
+        assert trace.final_result.converged == prod.converged
+        assert np.array_equal(trace.final_result.labels, prod.labels)
+        assert np.allclose(trace.final_result.cluster_centers, prod.cluster_centers)
+        assert np.isclose(trace.final_result.inertia, prod.inertia)
+
+
+def test_kmeans_explorer_empty_cluster_fallback_parity():
+    """Verify empty-cluster reseeding parity between explorer and production (ISSUE-03)."""
+    # 6 samples at 3 distinct coordinates with k=4 ensures empty cluster reseeding
+    X_dups = np.array([
+        [0.0, 0.0],
+        [0.0, 0.0],
+        [10.0, 10.0],
+        [10.0, 10.0],
+        [20.0, 20.0],
+        [20.0, 20.0],
+    ], dtype=np.float64)
+    k = 4
+    seed = 42
+    max_iter = 50
+
+    trace = run_kmeans_trace(X=X_dups, k=k, max_iter=max_iter, seed=seed)
+    prod = kmeans(X=X_dups, k=k, max_iter=max_iter, seed=seed)
+
+    assert trace.final_parity_verified is True
+    assert np.array_equal(trace.final_result.labels, prod.labels)
+    assert np.allclose(trace.final_result.cluster_centers, prod.cluster_centers)
+    assert np.isclose(trace.final_result.inertia, prod.inertia)
+    assert trace.final_result.n_iter == prod.n_iter
+    assert trace.final_result.converged == prod.converged
+    assert np.isfinite(trace.final_result.cluster_centers).all()
+
+
+def test_kmeans_explorer_max_iter_cutoff_parity():
+    """Verify mathematical parity when max_iter terminates before convergence."""
+    ds = generate_synthetic_dataset(family="moons", n_samples=40, seed=99)
+    X = ds.X
+    k = 2
+    seed = 99
+    # Force premature termination after only 1 iteration
+    max_iter = 1
+
+    trace = run_kmeans_trace(X=X, k=k, max_iter=max_iter, seed=seed)
+    prod = kmeans(X=X, k=k, max_iter=max_iter, seed=seed)
+
+    assert trace.final_parity_verified is True
+    assert prod.n_iter == 1
+    assert prod.converged is False
+    assert trace.final_result.n_iter == 1
+    assert trace.final_result.converged is False
+    assert np.array_equal(trace.final_result.labels, prod.labels)
+    assert np.allclose(trace.final_result.cluster_centers, prod.cluster_centers)
+    assert np.isclose(trace.final_result.inertia, prod.inertia)
+
+
 # =============================================================================
 # 2. Prim's MST Algorithm Explorer Trace & Mathematical Parity
 # =============================================================================

@@ -216,3 +216,89 @@ def test_kmeans_estimator_class_interface():
     # Test fit_predict equivalence
     labels_fp = KMeans(n_clusters=2, seed=42).fit_predict(X)
     assert np.array_equal(labels_fp, km.labels_)
+
+
+def test_kmeans_predict_feature_dimension_validation():
+    """Verify that KMeans.predict strictly validates input feature dimensions (ISSUE-04)."""
+    X_train = np.array([[0.0, 0.0], [0.1, 0.1], [10.0, 10.0], [10.1, 10.1]])
+    km = KMeans(n_clusters=2, seed=42)
+
+    # 1. Prediction before fitting must raise RuntimeError
+    with pytest.raises(RuntimeError, match="Estimator is not fitted yet"):
+        km.predict(X_train)
+
+    km.fit(X_train)
+    assert km.cluster_centers_.shape == (2, 2)
+
+    # 2. Correct 2D shape with matching 2 features must succeed
+    X_valid = np.array([[0.05, 0.05], [10.05, 10.05]])
+    preds = km.predict(X_valid)
+    assert preds.shape == (2,)
+
+    # 3. Input with 1 feature (model expects 2) must raise ValueError with descriptive message
+    X_1d_feat = np.array([[0.0], [10.0]])
+    with pytest.raises(ValueError, match=r"Feature dimension mismatch: model was fitted on 2 features, but input X has 1 features\."):
+        km.predict(X_1d_feat)
+
+    # 4. Input with 3 features (model expects 2) must raise ValueError with descriptive message
+    X_3d_feat = np.array([[0.0, 1.0, 2.0], [10.0, 11.0, 12.0]])
+    with pytest.raises(ValueError, match=r"Feature dimension mismatch: model was fitted on 2 features, but input X has 3 features\."):
+        km.predict(X_3d_feat)
+
+    # 5. Non-finite values in prediction input must raise ValueError
+    X_nan = np.array([[0.0, np.nan], [10.0, 10.0]])
+    with pytest.raises(ValueError, match="non-finite values"):
+        km.predict(X_nan)
+
+    X_inf = np.array([[0.0, np.inf], [10.0, 10.0]])
+    with pytest.raises(ValueError, match="non-finite values"):
+        km.predict(X_inf)
+
+    # 6. Invalid array dimensionality (1D array instead of 2D) must raise ValueError
+    X_1d = np.array([0.0, 1.0])
+    with pytest.raises(ValueError, match="Input X must be a 2D array"):
+        km.predict(X_1d)
+
+    # 7. Invalid array dimensionality (3D array instead of 2D) must raise ValueError
+    X_3d = np.zeros((2, 2, 2))
+    with pytest.raises(ValueError, match="Input X must be a 2D array"):
+        km.predict(X_3d)
+
+
+def test_kmeans_empty_cluster_reseeding_and_finite_centers():
+    """Verify empty-cluster reseeding and finite coordinate invariants under severe duplicates (ISSUE-03)."""
+    # 6 samples situated at only 3 distinct spatial coordinates
+    X_dups = np.array([
+        [0.0, 0.0],
+        [0.0, 0.0],
+        [10.0, 10.0],
+        [10.0, 10.0],
+        [20.0, 20.0],
+        [20.0, 20.0],
+    ])
+    # Request k=4 clusters: at least 1 cluster must become empty and reseed
+    result = kmeans(X_dups, k=4, seed=42)
+
+    assert result.cluster_centers.shape == (4, 2)
+    assert np.isfinite(result.cluster_centers).all()
+    assert np.isfinite(result.inertia)
+    assert result.inertia >= 0.0
+    assert len(result.labels) == 6
+    assert np.all(result.labels >= 0) and np.all(result.labels < 4)
+
+
+def test_kmeans_convergence_boundary_zero_tolerance():
+    """Verify strict < tol behavior when tol = 0.0 vs tol > 0.0 (ISSUE-02)."""
+    X = np.array([[0.0, 0.0], [0.1, 0.0], [10.0, 10.0], [10.1, 10.0]])
+
+    # When tol = 0.0, strict max_shift < 0.0 is impossible (norms are >= 0),
+    # so algorithm must run until max_iter is exhausted and report converged=False.
+    res_zero = kmeans(X, k=2, tol=0.0, max_iter=5, seed=42)
+    assert res_zero.n_iter == 5
+    assert res_zero.converged is False
+    assert np.isfinite(res_zero.cluster_centers).all()
+
+    # With standard positive tolerance, algorithm converges early
+    res_pos = kmeans(X, k=2, tol=1e-4, max_iter=100, seed=42)
+    assert res_pos.converged is True
+    assert res_pos.n_iter < 10

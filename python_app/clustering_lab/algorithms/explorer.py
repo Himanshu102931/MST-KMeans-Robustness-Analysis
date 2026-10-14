@@ -37,6 +37,7 @@ import numpy as np
 from clustering_lab.algorithms.kmeans import (
     KMeansResult,
     _validate_input_data as _validate_kmeans_input,
+    kmeans,
 )
 from clustering_lab.algorithms.mst import (
     MSTClusteringResult,
@@ -372,29 +373,34 @@ def run_kmeans_trace(
 
         for c in range(k_val):
             mask = new_labels == c
-            if np.any(mask):
+            cluster_size = int(np.sum(mask))
+
+            if cluster_size > 0:
                 new_centers[c] = np.mean(X_clean[mask], axis=0)
             else:
-                # Handle empty cluster: reseed to furthest observation
-                assigned_dists = np.empty(n_samples, dtype=np.float64)
-                for i in range(n_samples):
-                    assigned_dists[i] = dist_sq_matrix[i, new_labels[i]]
-                candidate_order = np.argsort(assigned_dists)[::-1]
-                chosen_sample = None
-                for cand_idx in candidate_order:
+                # Handle empty cluster: reseed at sample with maximum distance to its assigned centroid
+                assigned_dists = dist_sq_matrix[np.arange(n_samples), new_labels]
+
+                # Find candidate index not already reseeded in this iteration
+                sorted_candidate_indices = np.argsort(-assigned_dists)
+                farthest_idx = -1
+                for idx in sorted_candidate_indices:
+                    cand_idx = int(idx)
                     if cand_idx not in reseeded_indices:
-                        chosen_sample = cand_idx
+                        farthest_idx = cand_idx
                         break
-                if chosen_sample is None:
-                    chosen_sample = int(candidate_order[0])
-                reseeded_indices.add(chosen_sample)
-                new_centers[c] = X_clean[chosen_sample].copy()
+
+                if farthest_idx == -1:
+                    farthest_idx = c % n_samples
+
+                reseeded_indices.add(farthest_idx)
+                new_centers[c] = X_clean[farthest_idx].copy()
                 force_continue = True
 
         centroid_shifts = np.linalg.norm(new_centers - centers, axis=1)
         max_shift = float(np.max(centroid_shifts))
 
-        if not force_continue and max_shift <= tol:
+        if not force_continue and max_shift < tol:
             converged = True
 
         centers = new_centers.copy()
@@ -420,11 +426,16 @@ def run_kmeans_trace(
             )
         )
 
-    # Final Convergence Step
+    # Final pass to compute exact inertia and final labels matching production kmeans()
+    final_diff = X_clean[:, np.newaxis, :] - centers[np.newaxis, :, :]
+    final_dist_sq = np.sum(final_diff ** 2, axis=2)
+    final_labels = np.argmin(final_dist_sq, axis=1).astype(np.int32)
+    final_inertia = float(np.sum(final_dist_sq[np.arange(n_samples), final_labels]))
+
     final_res = KMeansResult(
-        labels=labels,
+        labels=final_labels,
         cluster_centers=centers,
-        inertia=inertia,
+        inertia=final_inertia,
         n_iter=iteration,
         converged=converged,
         k=k_val,
@@ -436,15 +447,15 @@ def run_kmeans_trace(
             step_type="converged",
             iteration=iteration,
             centroids=centers.copy(),
-            labels=labels.copy(),
-            inertia=inertia,
+            labels=final_labels.copy(),
+            inertia=final_inertia,
             max_shift=0.0,
             converged=converged,
-            cluster_counts={int(c): int(np.sum(labels == c)) for c in range(k_val)},
+            cluster_counts={int(c): int(np.sum(final_labels == c)) for c in range(k_val)},
             title=f"Final Result: {'Converged' if converged else 'Max Iterations Reached'} ({iteration} Iterations)",
             description=(
                 f"Lloyd's algorithm reached termination in {iteration} iterations. "
-                f"Final Within-Cluster Sum of Squares (Inertia): {inertia:.3f}."
+                f"Final Within-Cluster Sum of Squares (Inertia): {final_inertia:.3f}."
             ),
             math_formula=r"\Delta \mu < \text{tol} \implies \text{Convergence achieved}",
         )
@@ -453,11 +464,21 @@ def run_kmeans_trace(
     for s in steps:
         object.__setattr__(s, "X", X_clean)
 
+    # Dynamically verify mathematical parity against production kmeans()
+    prod_check = kmeans(X=X_clean, k=k_val, max_iter=max_iter, tol=tol, seed=seed)
+    parity_ok = bool(
+        np.array_equal(final_res.labels, prod_check.labels)
+        and np.allclose(final_res.cluster_centers, prod_check.cluster_centers)
+        and np.isclose(final_res.inertia, prod_check.inertia)
+        and final_res.n_iter == prod_check.n_iter
+        and final_res.converged == prod_check.converged
+    )
+
     return KMeansTraceResult(
         steps=steps,
         final_result=final_res,
         n_steps=len(steps),
-        final_parity_verified=True,
+        final_parity_verified=parity_ok,
         X=X_clean,
     )
 
