@@ -22,7 +22,7 @@ import io
 import json
 import platform
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
@@ -123,7 +123,9 @@ def export_experiment_metadata(
         ),
         "execution_summary": {
             "n_trials_executed": n_trials,
-            "n_clustering_executions": n_trials * 2,
+            "n_paired_trials": n_trials // 2 if n_trials % 2 == 0 else n_trials,
+            "n_clustering_executions": n_trials,
+            "n_recorded_result_rows": n_trials,
             "config": config.to_dict(),
         },
     }

@@ -12,7 +12,7 @@ geometric distortion of concentric circles, crescent moons, or distances.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go

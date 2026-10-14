@@ -18,9 +18,10 @@ Academic Context:
 from __future__ import annotations
 
 import io
+import json
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -287,7 +288,7 @@ def render_sidebar() -> str:
         st.subheader("System Status")
         st.markdown(
             f"""
-            - **Phase:** `M5C — Public Dashboard Privacy Preparation`
+            - **Platform Status:** `Python Research Platform — Deployed`
             - **Python Runtime:** `{sys.version.split()[0]}`
             - **Streamlit Version:** `{st.__version__}`
             - **Algorithms:** Custom Pure NumPy
@@ -313,9 +314,9 @@ def render_view_overview() -> None:
     st.markdown(
         """
         > [!NOTE]
-        > **Migration Phase M5A Active:** The scientific Python research platform features
-        > pure from-scratch implementations of Lloyd's K-Means and dense Prim's MST clustering,
-        > along with an automated paired robustness sweep engine and Monte Carlo statistics.
+        > **Python Scientific Research Platform:** The laboratory features pure NumPy from-scratch
+        > implementations of Lloyd's K-Means and dense Prim's MST clustering, paired robustness
+        > sweeps across deterministic seeds, execution-time benchmarks, and step-by-step educational explorers.
         """
     )
 
@@ -337,28 +338,25 @@ def render_view_overview() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### Implemented Capabilities (Phases M1–M5A)")
+        st.markdown("#### Core Scientific Engine & Analysis")
         st.markdown(
             r"""
-            - **M1 Foundation:** Standardized Linux CI workflow and modular package architecture.
-            - **M2 Scientific Algorithms:** Pure NumPy Lloyd's K-Means ($k$-means++ seeding) and dense Prim's Euclidean MST ($O(N^2)$ time, $O(N)$ space) with deterministic cut tie-breaking.
-            - **M3 Reproducible Data Layer:** Blobs, Moons, and Circles generators with decoupled noise/outlier contamination; secure CSV loader; versioned JSON schema `1.0.0`.
-            - **M4 Interactive Dashboard:** Real-time parameter controls ($N \le 600$), dual algorithm execution on identical matrices, 1:1 isotropic Plotly visualization, Inlier/Full ARI and safe Silhouette metrics, and bi-directional JSON configuration synchronization.
-            - **M5A Robustness Engine:** Controlled Gaussian noise and uniform outlier sweeps, paired Monte Carlo evaluation across deterministic seeds, matched baseline degradation metrics, and provenance-isolated CSV/JSON exports.
+            - **System Architecture:** Modular Python package architecture, automated Linux CI validation, and strict provenance isolation.
+            - **Scientific Implementations:** Pure NumPy Lloyd's K-Means ($k$-means++ initialization) and dense Prim's Euclidean MST ($O(N^2)$ time, $O(N)$ space) with deterministic cut tie-breaking.
+            - **Reproducible Data Layer:** Synthetic Blobs, Moons, and Circles generators with decoupled noise and outlier streams, secure tabular CSV loader, and versioned JSON schema `1.0.0`.
+            - **Interactive Playground:** Real-time parameter controls, isotropic 1:1 Plotly visualization, ground-truth ARI (Inlier/Full), and safe Silhouette analysis.
+            - **Robustness Sweep Engine:** Automated paired perturbation sweeps (Gaussian jitter and uniform outliers), Monte Carlo aggregation across deterministic seeds, and matched baseline degradation metrics.
             """
         )
 
     with col2:
-        st.markdown("#### Planned Subsequent Phases (Phase M5B+)")
+        st.markdown("#### Advanced Diagnostics & Future Scope")
         st.markdown(
             r"""
-            - **Phase M5B — Computational Scaling & Algorithm Profiler:**
-              - Dense Prim's $O(N^2)$ empirical scaling benchmarks across $N$.
-              - Iteration and convergence diagnostics.
-            - **Extended Metric Framework:**
-              - Normalized Mutual Information (NMI) and multi-seed stability metrics.
-            - **Final Deliverables:**
-              - Complete experimental research report and oral viva demonstration materials.
+            - **Computational Benchmarks:** Empirical wall-clock profiling using high-resolution monotonic timers (`time.perf_counter_ns`), asymptotic complexity validation ($\mathcal{O}(I \cdot N \cdot k \cdot D)$ vs $\mathcal{O}(N^2)$), and sample error bars.
+            - **Algorithm Explorers:** Step-by-step state-trace inspection for Lloyd's K-Means (centroid relocation, Voronoi partitions) and dense Prim's MST (greedy edge selection, tree cuts) with verified production parity.
+            - **Export & Provenance:** Production CSV/JSON trial summaries and environment metadata strictly isolated from legacy benchmarks.
+            - **Future Scientific Scope:** Planned extensions for Normalized Mutual Information (NMI), systematic spatial density variation, and high-dimensional manifolds.
             """
         )
 
@@ -770,7 +768,7 @@ def render_view_playground() -> None:
 
 
 # -----------------------------------------------------------------------------
-# VIEW 3: Robustness Analysis Engine (Phase M5A)
+# VIEW 3: Robustness Analysis Engine
 # -----------------------------------------------------------------------------
 def render_view_robustness() -> None:
     """Render scientific robustness analysis engine with controlled sweeps and Monte Carlo statistics."""
@@ -780,7 +778,7 @@ def render_view_robustness() -> None:
     st.markdown(
         """
         > [!NOTE]
-        > **Phase M5A Research Platform:** This module executes controlled, paired sweeps to evaluate
+        > **Automated Robustness Engine:** This module executes controlled, paired sweeps to evaluate
         > the clustering robustness of **Lloyd's K-Means** against **Prim's MST** under varying
         > Gaussian coordinate jitter and uniform bounding-box outlier contamination.
         > For every trial, both algorithms receive **identical coordinate matrices and ground-truth masks**.
@@ -876,29 +874,34 @@ def render_view_robustness() -> None:
         else:
             active_sweeps = [SweepType.OUTLIER.value]
 
-        # Compute expected execution count
+        # Compute expected execution counts
         n_sweep_points = (len(DEFAULT_NOISE_LEVELS) if SweepType.NOISE.value in active_sweeps else 0) + (
             len(DEFAULT_OUTLIER_RATES) if SweepType.OUTLIER.value in active_sweeps else 0
         )
-        total_trials_calc = len(selected_families) * n_sweep_points * len(active_seeds)
-        total_executions_calc = total_trials_calc * 2
+        total_paired_calc = len(selected_families) * n_sweep_points * len(active_seeds)
+        total_executions_calc = total_paired_calc * 2
+        total_baseline_configs = len(selected_families) * len(active_seeds) * len(active_sweeps)
+        total_baseline_executions = total_baseline_configs * 2
 
         st.markdown(
             f"""
             **Experiment Execution Plan:**
             - Dataset Families: **{len(selected_families)}** ({', '.join(selected_families_ui)})
             - Seeds: **{len(active_seeds)}** (`{active_seeds}`)
-            - Sweep Points per Family/Seed: **{n_sweep_points}**
-            - Total Paired Trials: **{total_trials_calc}** (**{total_executions_calc}** total clustering executions)
+            - Sweep Configurations per Family/Seed: **{n_sweep_points}** points
+            - Matched Baseline Configurations: **{total_baseline_configs}** ({total_baseline_executions} reference executions)
+            - Total Paired Comparisons: **{total_paired_calc}** sweep dataset evaluations
+            - Individual Algorithm Executions (Sweep): **{total_executions_calc}** ({total_paired_calc} Lloyd's K-Means + {total_paired_calc} Prim's MST)
+            - Total Recorded Result Rows: **{total_executions_calc}** rows
             """
         )
 
-        can_run = len(selected_families) > 0 and len(active_seeds) > 0 and total_trials_calc <= 500
+        can_run = len(selected_families) > 0 and len(active_seeds) > 0 and total_paired_calc <= 500
 
         if not selected_families:
             st.error("Please select at least one dataset topology.")
-        elif total_trials_calc > 500:
-            st.error(f"Total trials ({total_trials_calc}) exceeds safety bound of 500. Reduce seeds or families.")
+        elif total_paired_calc > 500:
+            st.error(f"Total paired trials ({total_paired_calc}) exceeds safety bound of 500. Reduce seeds or families.")
 
         run_exp_clicked = st.button(
             "🚀 Execute Robustness Analysis Engine",
@@ -936,10 +939,13 @@ def render_view_robustness() -> None:
         st.session_state["robustness_aggregates"] = agg_results
         st.session_state["robustness_config"] = sweep_cfg.to_dict()
 
+        n_recorded_rows = len(trial_results)
+        n_paired_done = n_recorded_rows // 2
         progress_bar.empty()
         status_box.success(
-            f"✅ Completed robustness sweep: {len(trial_results)} trials ({len(trial_results) * 2} clustering executions) "
-            f"across {len(active_seeds)} seeds."
+            f"✅ **Completed Robustness Sweep:** "
+            f"**{n_paired_done}** paired comparisons (**{n_recorded_rows}** individual algorithm executions / recorded result rows) "
+            f"across **{len(active_seeds)}** seeds."
         )
 
     # Results Display
@@ -1884,7 +1890,7 @@ def render_view_methodology() -> None:
         | **MST Weight** | Total linear Euclidean edge length of the spanning tree / forest. | Sum of edge lengths; decreases as more cut edges are removed. |
         | **Silhouette Score** | Ratio of intra-cluster distance to nearest neighbor cluster distance. | Biased towards convex/spherical clusters; penalizes valid non-convex MST clusters. |
 
-        *(Note: Additional validation metrics such as Normalized Mutual Information (NMI) and systematic density variation tests are planned for Phase M5).*
+        *(Note: Additional validation metrics such as Normalized Mutual Information (NMI) and systematic spatial density variation tests are planned for future research).*
         """
     )
 

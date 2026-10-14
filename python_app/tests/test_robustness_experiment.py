@@ -606,3 +606,39 @@ def test_streamlit_robustness_analysis_view_renders():
     assert "Scientific Robustness Analysis Engine" in combined
     assert "Controlled Gaussian Noise" in combined
     assert "Execution Plan" in combined
+
+
+def test_reconciled_trial_counting_dimensions():
+    """Verify the formal counting convention distinguishing all 5 experimental dimensions."""
+    # Quick mode configuration: 3 families, 3 seeds, 4 noise levels, 4 outlier levels
+    config = SweepConfig(
+        dataset_families=["blobs", "moons", "circles"],
+        seeds=[11, 22, 33],
+        sweep_types=["noise", "outlier"],
+        noise_levels=[0.00, 0.05, 0.10, 0.20],
+        outlier_rates=[0.00, 0.05, 0.10, 0.20],
+    )
+    # 1. Sweep configurations per family/seed = 4 noise + 4 outlier = 8 points
+    n_sweep_points = len(config.noise_levels) + len(config.outlier_rates)
+    assert n_sweep_points == 8
+
+    # 2. Total paired sweep comparisons = 3 families * 8 points * 3 seeds = 72
+    assert config.total_expected_trials() == 72
+
+    # 3. Individual sweep algorithm executions = 72 * 2 = 144
+    assert config.total_expected_executions() == 144
+
+    # 4. Total recorded result rows = 144 (72 Lloyd K-Means + 72 Prim MST)
+    assert config.total_expected_result_rows() == 144
+
+    # 5. Baseline configurations = 3 families * 3 seeds * 2 sweep types = 18
+    assert config.total_baseline_configurations() == 18
+    assert config.total_baseline_executions() == 36
+
+    # Verify execution summary in metadata
+    meta = export_experiment_metadata(config, n_trials=144)
+    summary = meta["execution_summary"]
+    assert summary["n_trials_executed"] == 144
+    assert summary["n_clustering_executions"] == 144
+    assert summary["n_paired_trials"] == 72
+    assert summary["n_recorded_result_rows"] == 144

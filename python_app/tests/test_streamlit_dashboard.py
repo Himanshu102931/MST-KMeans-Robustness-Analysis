@@ -505,3 +505,104 @@ def test_algorithm_input_immutability_during_dual_clustering():
     # Assert outputs have correct length matching input
     assert len(km_res.labels) == len(X_original)
     assert len(mst_res.labels) == len(X_original)
+
+
+# =============================================================================
+# 10. Robustness View Rendering Regression and Provenance Privacy Tests (Stage F1)
+# =============================================================================
+def test_robustness_results_rendering_regression_and_metadata_serialization():
+    """Verify that the robustness view renders without NameError when session results exist.
+
+    Regression test for Stage F1: Previously raised NameError: name 'json' is not defined
+    at line 1132 during tab_export metadata serialization.
+    """
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    import json
+    from clustering_lab.experiments.sweeps import SweepConfig
+    from clustering_lab.experiments.runner import run_robustness_experiment
+    from clustering_lab.experiments.aggregation import aggregate_trials
+    from clustering_lab.experiments.export import export_experiment_metadata
+
+    # Bounded fast workload (1 family, 1 seed, 1 noise level = 1 paired trial, 2 executions)
+    cfg = SweepConfig(
+        dataset_families=["blobs"],
+        n_inliers=50,
+        seeds=[11],
+        sweep_types=["noise"],
+        noise_levels=[0.0],
+        outlier_rates=[0.0],
+    )
+    trials = run_robustness_experiment(cfg)
+    aggregates = aggregate_trials(trials)
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file))
+    at.session_state["robustness_trials"] = trials
+    at.session_state["robustness_aggregates"] = aggregates
+    at.session_state["robustness_config"] = cfg.to_dict()
+    at.run()
+
+    # Switch to Robustness Analysis view
+    at.sidebar.radio[0].set_value("Robustness Analysis")
+    at.run()
+
+    # Assert no exceptions occurred (NameError or other rendering issues)
+    assert not at.exception, f"Robustness view raised exception: {at.exception}"
+
+    # Verify that metadata serialization works and produces valid JSON
+    meta_dict = export_experiment_metadata(cfg, len(trials))
+    meta_json_str = json.dumps(meta_dict, indent=2)
+    parsed_meta = json.loads(meta_json_str)
+    assert isinstance(parsed_meta, dict)
+    assert "execution_summary" in parsed_meta
+    assert parsed_meta["execution_summary"]["n_trials_executed"] == len(trials)
+    assert parsed_meta["execution_summary"]["n_clustering_executions"] == len(trials)
+    assert parsed_meta["execution_summary"]["n_paired_trials"] == len(trials) // 2
+
+    # Privacy verification on serialized JSON
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number 389 leaked in metadata JSON!"
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number 390 leaked in metadata JSON!"
+    student_records = parsed_meta.get("academic_context", {}).get("students", [])
+    names = [s.get("name") for s in student_records]
+    assert "Himanshu Gupta" in names
+    assert "Parth Yadav" in names
+
+
+def test_ui_trial_count_display_and_label_reconciliation():
+    """Verify that the execution plan in app.py clearly distinguishes all counting dimensions."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file))
+    at.run()
+
+    # Navigate to Robustness Analysis view
+    at.sidebar.radio[0].set_value("Robustness Analysis")
+    at.run()
+
+    # Aggregate rendered text
+    rendered_texts = []
+    for elem_list in [at.markdown, at.subheader, at.caption, at.info]:
+        for item in elem_list:
+            if hasattr(item, "value"):
+                rendered_texts.append(str(item.value))
+    combined = " ".join(rendered_texts)
+
+    # Verify that execution plan distinguishes dimensions
+    assert "Experiment Execution Plan:" in combined
+    assert "Sweep Configurations per Family/Seed:" in combined
+    assert "Matched Baseline Configurations:" in combined
+    assert "Total Paired Comparisons:" in combined
+    assert "Individual Algorithm Executions (Sweep):" in combined
+    assert "Total Recorded Result Rows:" in combined
+
+    # Verify obsolete migration banners are absent
+    assert "Migration Phase M5A Active" not in combined
+    assert "Phase M5A Research Platform" not in combined

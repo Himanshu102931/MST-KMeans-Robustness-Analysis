@@ -202,8 +202,20 @@ class SweepConfig:
         return trials
 
     def total_expected_executions(self) -> int:
-        """Calculate total number of clustering executions (2 per trial: K-Means and MST)."""
+        """Calculate total number of clustering executions in sweeps (2 per paired trial: K-Means and MST)."""
         return self.total_expected_trials() * 2
+
+    def total_baseline_configurations(self) -> int:
+        """Calculate total number of matched baseline configurations (1 per active family, seed, and sweep type)."""
+        return len(self.dataset_families) * len(self.seeds) * len(self.sweep_types)
+
+    def total_baseline_executions(self) -> int:
+        """Calculate total clustering executions for matched baseline calibration (2 per baseline config)."""
+        return self.total_baseline_configurations() * 2
+
+    def total_expected_result_rows(self) -> int:
+        """Calculate total recorded result rows across all algorithms in the sweep (equals sweep executions)."""
+        return self.total_expected_executions()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary format."""
