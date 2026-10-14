@@ -11,6 +11,8 @@ streamlit>=1.35.0,<2.0.0
 numpy>=1.26.4,<2.0.0
 pandas>=2.2.0,<3.0.0
 scipy>=1.12.0,<2.0.0
+# pyarrow<26.0.0 maintains runtime compatibility with NumPy 1.x (PyArrow 26.0.0+ requires NumPy 2.x)
+pyarrow>=14.0.0,<26.0.0
 
 # Machine Learning & Clustering Algorithms
 scikit-learn>=1.4.0,<2.0.0
