@@ -488,6 +488,36 @@ def render_view_overview() -> None:
         )
 
 
+def _on_reset_playground_defaults() -> None:
+    """Callback to safely reset Playground widget parameters and baseline results before render."""
+    st.session_state["pg_dataset_family"] = "Gaussian Blobs"
+    st.session_state["pg_n_samples"] = 300
+    st.session_state["pg_seed"] = 42
+    st.session_state["pg_noise"] = 0.0
+    st.session_state["pg_outliers"] = 0.0
+    st.session_state["pg_blobs_k"] = 3
+    st.session_state["pg_blobs_std"] = 0.4
+    st.session_state["pg_blobs_radius"] = 3.5
+    st.session_state["pg_circles_factor"] = 0.45
+    st.session_state["pg_mst_retained"] = True
+    st.session_state["pg_mst_cuts"] = True
+
+    reset_ds = generate_synthetic_dataset(
+        family="blobs",
+        n_samples=300,
+        seed=42,
+        noise=0.0,
+        outlier_rate=0.0,
+        n_clusters=3,
+        cluster_std=0.4,
+        radius=3.5,
+    )
+    st.session_state["current_dataset"] = reset_ds
+    _run_clustering_on_dataset(reset_ds, k=3)
+    st.session_state["executed_config"] = dict(DEFAULT_SYNTHETIC_CONFIG)
+    st.session_state["pg_reset_success_notice"] = True
+
+
 # -----------------------------------------------------------------------------
 # VIEW 2: Clustering Playground
 # -----------------------------------------------------------------------------
@@ -643,9 +673,22 @@ def render_view_playground() -> None:
         # Action Buttons
         btn_col1, btn_col2, _ = st.columns([1.5, 1.2, 3.0])
         with btn_col1:
-            run_clicked = st.button("🚀 Generate & Run Clustering", type="primary", use_container_width=True)
+            run_clicked = st.button(
+                "🚀 Generate & Run Clustering",
+                type="primary",
+                key="pg_btn_run",
+                use_container_width=True,
+            )
         with btn_col2:
-            reset_clicked = st.button("🔄 Reset Defaults", use_container_width=True)
+            st.button(
+                "🔄 Reset Defaults",
+                on_click=_on_reset_playground_defaults,
+                key="pg_btn_reset",
+                use_container_width=True,
+            )
+
+        if st.session_state.pop("pg_reset_success_notice", False):
+            st.success("Configuration reset to Gaussian Blobs baseline.")
 
     # Current controls state dictionary
     current_controls = {
@@ -660,33 +703,6 @@ def render_view_playground() -> None:
         "radius": float(radius) if family == "Gaussian Blobs" else None,
         "factor": float(factor) if family == "Concentric Circles" else None,
     }
-
-    # Process Reset Action
-    if reset_clicked:
-        reset_ds = generate_synthetic_dataset(
-            family="blobs",
-            n_samples=300,
-            seed=42,
-            noise=0.0,
-            outlier_rate=0.0,
-            n_clusters=3,
-            cluster_std=0.4,
-            radius=3.5,
-        )
-        st.session_state["current_dataset"] = reset_ds
-        _run_clustering_on_dataset(reset_ds, k=3)
-        st.session_state["executed_config"] = dict(DEFAULT_SYNTHETIC_CONFIG)
-        # Reset widget session keys to defaults
-        st.session_state["pg_dataset_family"] = "Gaussian Blobs"
-        st.session_state["pg_n_samples"] = 300
-        st.session_state["pg_seed"] = 42
-        st.session_state["pg_noise"] = 0.0
-        st.session_state["pg_outliers"] = 0.0
-        st.session_state["pg_blobs_k"] = 3
-        st.session_state["pg_blobs_std"] = 0.4
-        st.session_state["pg_blobs_radius"] = 3.5
-        st.success("Configuration reset to Gaussian Blobs baseline.")
-        st.rerun()
 
     def _execute_playground_run() -> bool:
         if total_n_calc > MAX_INTERACTIVE_SAMPLES:

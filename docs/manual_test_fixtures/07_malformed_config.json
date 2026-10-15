@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_family": "moons",
+  "n_samples": 200,
+  "broken_syntax": [
+}

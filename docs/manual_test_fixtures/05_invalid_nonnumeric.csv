@@ -1,0 +1,5 @@
+x_coord,y_coord,ground_truth_class
+1.0,1.1,0
+corrupt_string,0.9,0
+5.0,not_a_float,1
+5.1,4.9,1

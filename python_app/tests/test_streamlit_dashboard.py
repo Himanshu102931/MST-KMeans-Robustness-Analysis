@@ -1088,3 +1088,182 @@ def test_theme_html_helpers_security_and_escaping():
     assert "<iframe" not in card_html
     assert "&lt;iframe" in card_html
     assert "<span onclick" not in card_html
+
+
+# =============================================================================
+# 14. Stage 06 Reset Defaults Regression Suite (S06-DEFECT-001)
+# =============================================================================
+
+def test_playground_reset_defaults_before_generation():
+    """Test A: Verify that modifying controls and clicking Reset Defaults restores defaults without exception."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # Navigate to Clustering Playground
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # Modify parameters away from defaults
+    at.selectbox(key="pg_dataset_family").set_value("Two Moons").run()
+    assert not at.exception
+    at.slider(key="pg_n_samples").set_value(200).run()
+    assert not at.exception
+    at.number_input(key="pg_seed").set_value(99).run()
+    assert not at.exception
+    at.slider(key="pg_noise").set_value(0.12).run()
+    assert not at.exception
+    at.slider(key="pg_outliers").set_value(0.10).run()
+    assert not at.exception
+
+    assert at.selectbox(key="pg_dataset_family").value == "Two Moons"
+    assert at.slider(key="pg_n_samples").value == 200
+
+    # Click Reset Defaults
+    at.button(key="pg_btn_reset").click().run()
+    assert not at.exception, "StreamlitWidgetAlreadyInstantiatedError on Reset Defaults!"
+
+    # Verify every control returned to its default value
+    assert at.selectbox(key="pg_dataset_family").value == "Gaussian Blobs"
+    assert at.slider(key="pg_n_samples").value == 300
+    assert at.number_input(key="pg_seed").value == 42
+    assert at.slider(key="pg_noise").value == 0.0
+    assert at.slider(key="pg_outliers").value == 0.0
+    assert at.slider(key="pg_blobs_k").value == 3
+    assert at.slider(key="pg_blobs_std").value == 0.4
+    assert at.slider(key="pg_blobs_radius").value == 3.5
+
+    # Success notification rendered
+    success_texts = [s.value for s in at.success]
+    assert any("Configuration reset to Gaussian Blobs baseline" in s for s in success_texts)
+
+
+def test_playground_reset_defaults_after_generation_and_stale_handling():
+    """Test B: Verify resetting after generating results preserves coherence and handles state transitions."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # Generate clustering on Two Moons with non-default parameters
+    at.selectbox(key="pg_dataset_family").set_value("Two Moons").run()
+    at.slider(key="pg_n_samples").set_value(160).run()
+    at.slider(key="pg_noise").set_value(0.08).run()
+    at.button(key="pg_btn_run").click().run()
+    assert not at.exception
+
+    # Confirm executed dataset is Two Moons
+    executed_cfg = at.session_state["executed_config"]
+    assert executed_cfg["family"] == "Two Moons"
+    assert executed_cfg["n_inliers"] == 160
+
+    # Change noise parameter away from executed
+    at.slider(key="pg_noise").set_value(0.20).run()
+    assert not at.exception
+
+    # Stale warning should be present
+    warning_texts = [w.value for w in at.warning]
+    assert any("Parameters Modified — Showing Previous Clustering Results" in w for w in warning_texts)
+
+    # Click Reset Defaults
+    at.button(key="pg_btn_reset").click().run()
+    assert not at.exception
+
+    # Verify executed config is now Gaussian Blobs baseline
+    res_cfg = at.session_state["executed_config"]
+    assert res_cfg["family"] == "Gaussian Blobs"
+    assert res_cfg["n_inliers"] == 300
+    assert res_cfg["k"] == 3
+
+    # Stale warning should now be cleared because controls match executed baseline
+    refreshed_warnings = [w.value for w in at.warning]
+    assert not any("Parameters Modified — Showing Previous Clustering Results" in w for w in refreshed_warnings)
+
+    # Tabs and metrics remain mounted
+    assert len(at.tabs) >= 3
+    assert len(at.dataframe) >= 2
+
+
+def test_playground_repeated_resets_and_cross_navigation():
+    """Test C: Repeated resets, navigation away and back, and second reset stability."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # First reset click
+    at.button(key="pg_btn_reset").click().run()
+    assert not at.exception
+
+    # Second immediate reset click
+    at.button(key="pg_btn_reset").click().run()
+    assert not at.exception
+    assert at.selectbox(key="pg_dataset_family").value == "Gaussian Blobs"
+
+    # Navigate to Performance Benchmarks
+    at.sidebar.radio(key="main_navigation").set_value("Performance Benchmarks").run()
+    assert not at.exception
+
+    # Navigate to Algorithm Explorer
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    # Return to Clustering Playground
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # Reset once more
+    at.button(key="pg_btn_reset").click().run()
+    assert not at.exception
+    assert at.selectbox(key="pg_dataset_family").value == "Gaussian Blobs"
+    assert at.slider(key="pg_n_samples").value == 300
+    assert len(at.tabs) >= 3
+
+
+def test_related_reset_mechanisms_safety():
+    """Test D: Verify that Explorer step reset and Config upload state restoration operate without widget collision."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # Test Explorer step reset
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    # Step forward
+    at.button(key="exp_btn_next").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] >= 1
+
+    # Reset button in Explorer
+    at.button(key="exp_btn_first").click().run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0

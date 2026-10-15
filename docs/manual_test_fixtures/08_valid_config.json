@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_family": "circles",
+  "n_samples": 200,
+  "n_clusters": 2,
+  "seed": 777,
+  "noise": 0.04,
+  "outlier_rate": 0.06,
+  "dataset_params": {
+    "factor": 0.5
+  }
+}
