@@ -176,6 +176,168 @@ def get_theme_css() -> str:
         font-weight: 600;
         margin-top: 6px;
     }}
+
+    /* Additional Academic & Scientific UI Components */
+    .academic-hero {{
+        background: linear-gradient(135deg, {SURFACE_CARD} 0%, {SURFACE_INSET} 100%);
+        border: 1px solid {BORDER_STRONG};
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+    }}
+    .academic-hero-title {{
+        color: {TEXT_PRIMARY};
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }}
+    .academic-hero-subtitle {{
+        color: {TEXT_SECONDARY};
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }}
+    .academic-hero-badges {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }}
+
+    /* Badges & Pills */
+    .badge-pill {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }}
+    .badge-kmeans {{
+        background: rgba(56, 189, 248, 0.12);
+        color: {COLOR_KMEANS};
+        border: 1px solid rgba(56, 189, 248, 0.35);
+    }}
+    .badge-mst {{
+        background: rgba(249, 115, 22, 0.12);
+        color: {COLOR_MST};
+        border: 1px solid rgba(249, 115, 22, 0.35);
+    }}
+    .badge-neutral {{
+        background: rgba(148, 163, 184, 0.12);
+        color: {TEXT_SECONDARY};
+        border: 1px solid rgba(148, 163, 184, 0.25);
+    }}
+    .badge-success {{
+        background: rgba(16, 185, 129, 0.12);
+        color: {STATUS_SUCCESS};
+        border: 1px solid rgba(16, 185, 129, 0.35);
+    }}
+    .badge-warning {{
+        background: rgba(245, 158, 11, 0.12);
+        color: {STATUS_WARNING};
+        border: 1px solid rgba(245, 158, 11, 0.35);
+    }}
+
+    /* Quick-Start Workflow Cards */
+    .workflow-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }}
+    .workflow-card {{
+        background-color: {SURFACE_CARD};
+        border: 1px solid {BORDER_SUBTLE};
+        border-radius: 8px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+    }}
+    .workflow-card:hover {{
+        border-color: {BORDER_STRONG};
+        background-color: {SURFACE_HOVER};
+    }}
+    .workflow-card-header {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }}
+    .workflow-card-num {{
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(56, 189, 248, 0.15);
+        color: {COLOR_KMEANS};
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }}
+    .workflow-card-title {{
+        color: {TEXT_PRIMARY};
+        font-weight: 600;
+        font-size: 0.9rem;
+    }}
+    .workflow-card-desc {{
+        color: {TEXT_SECONDARY};
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }}
+
+    /* Comparison Cards */
+    .comparison-container {{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }}
+    .comparison-card {{
+        background-color: {SURFACE_CARD};
+        border-radius: 8px;
+        padding: 16px 20px;
+        border: 1px solid {BORDER_SUBTLE};
+    }}
+    .comparison-card-kmeans {{
+        border-top: 3px solid {COLOR_KMEANS};
+    }}
+    .comparison-card-mst {{
+        border-top: 3px solid {COLOR_MST};
+    }}
+    .comparison-card-header {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid {BORDER_SUBTLE};
+    }}
+    .comparison-card-title {{
+        color: {TEXT_PRIMARY};
+        font-size: 1.05rem;
+        font-weight: 700;
+    }}
+
+    /* Accessibility Focus & Overflow Protection */
+    *:focus-visible {{
+        outline: 2px solid {BORDER_FOCUS} !important;
+        outline-offset: 2px !important;
+    }}
+    .stPlotlyChart {{
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }}
+    .stDataFrame {{
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }}
     </style>
     """
 
@@ -183,3 +345,62 @@ def get_theme_css() -> str:
 def apply_custom_theme() -> None:
     """Inject centralized, scoped CSS tokens and styles into current Streamlit view."""
     st.markdown(get_theme_css(), unsafe_allow_html=True)
+
+
+def render_metric_card_html(
+    title: str,
+    value: str,
+    delta: Optional[str] = None,
+    delta_color: str = STATUS_SUCCESS,
+) -> str:
+    """Return safe HTML for a standardized academic metric card."""
+    import html
+    safe_title = html.escape(str(title))
+    safe_value = html.escape(str(value))
+    delta_html = ""
+    if delta:
+        safe_delta = html.escape(str(delta))
+        safe_color = html.escape(str(delta_color))
+        delta_html = f'<div class="academic-metric-delta" style="color: {safe_color};">{safe_delta}</div>'
+
+    return f"""
+    <div class="academic-metric-card">
+        <div class="academic-metric-title">{safe_title}</div>
+        <div class="academic-metric-value">{safe_value}</div>
+        {delta_html}
+    </div>
+    """
+
+
+def render_hero_html(
+    title: str,
+    subtitle: str,
+    badges: Optional[List[tuple[str, str]]] = None,
+) -> str:
+    """Return safe HTML for an academic section hero banner.
+
+    Args:
+        title: Section title text.
+        subtitle: Descriptive explanation.
+        badges: List of (badge_text, badge_style) tuples.
+                badge_style can be 'kmeans', 'mst', 'neutral', 'success', 'warning'.
+    """
+    import html
+    safe_title = html.escape(str(title))
+    safe_subtitle = html.escape(str(subtitle))
+    badges_html = ""
+    if badges:
+        items = []
+        for text, style in badges:
+            safe_text = html.escape(str(text))
+            safe_style = html.escape(str(style))
+            items.append(f'<span class="badge-pill badge-{safe_style}">{safe_text}</span>')
+        badges_html = f'<div class="academic-hero-badges">{" ".join(items)}</div>'
+
+    return f"""
+    <div class="academic-hero">
+        <div class="academic-hero-title">{safe_title}</div>
+        <div class="academic-hero-subtitle">{safe_subtitle}</div>
+        {badges_html}
+    </div>
+    """

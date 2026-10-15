@@ -716,3 +716,106 @@ def test_playground_stale_state_non_collapsing_lifecycle():
     )
     assert len(at.tabs) == initial_tabs_count, "Tabs should remain rendered after recomputing"
     assert len(at.dataframe) == initial_df_count, "Dataframes should remain rendered after recomputing"
+
+
+# =============================================================================
+# 12. Stage 04B Deep View Verification, Sidebar Compactness, & Export Payloads
+# =============================================================================
+def test_all_eight_views_deep_content_and_structure_validation():
+    """Verify that every view renders its unique domain components without unhandled errors."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    views_and_signatures = [
+        ("Overview", ["Quantitative Evaluation of Graph-Theoretic vs Centroid-Based Clustering", "Interactive Laboratory Workflow", "Centroid-Based vs Graph-Theoretic"]),
+        ("Clustering Playground", ["Clustering Playground", "Predicted Voronoi clusters", "Predicted connected components"]),
+        ("Performance Benchmarks", ["Performance Benchmarks", "Empirical Scaling", "Run Benchmarks"]),
+        ("Algorithm Explorer", ["Algorithm Explorer", "Mathematical Parity Verified", "Step-by-Step Educational Visualizer"]),
+        ("Robustness Analysis", ["Scientific Robustness Analysis Engine", "Experiment Execution Plan", "Matched Baseline Configurations"]),
+        ("Dataset & CSV Import", ["Dataset & CSV Import", "Tabular CSV Requirements", "Upload your custom 2D tabular dataset"]),
+        ("Reproducibility & Configuration", ["Reproducibility & Configuration", "Export Current Configuration", "Import & Restore Configuration"]),
+        ("Methodology / Help", ["Methodology & Scientific Reference", "Algorithmic Principles & Inductive Biases", "Perturbation Mechanisms"]),
+    ]
+
+    for view_name, expected_substrings in views_and_signatures:
+        at.sidebar.radio(key="main_navigation").set_value(view_name).run()
+        assert not at.exception, f"Failed rendering view '{view_name}': {at.exception}"
+
+        page_texts = []
+        for elem_list in [at.title, at.subheader, at.caption, at.markdown, at.info, at.success, at.warning]:
+            for item in elem_list:
+                if hasattr(item, "value"):
+                    page_texts.append(str(item.value))
+        page_combined = " ".join(page_texts)
+
+        for sig in expected_substrings:
+            assert sig in page_combined, f"Signature '{sig}' missing from rendered view '{view_name}'"
+
+
+def test_sidebar_compactness_and_navigation_hierarchy():
+    """Verify sidebar compactness, academic identity hierarchy, and privacy compliance."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=30)
+    at.run()
+    assert not at.exception
+
+    # 1. Navigation radio key and destination count
+    nav_radio = at.sidebar.radio(key="main_navigation")
+    assert nav_radio is not None, "Sidebar primary navigation radio missing!"
+    assert len(nav_radio.options) == 8, f"Expected 8 navigation routes, found {len(nav_radio.options)}"
+
+    # 2. Markdown text in sidebar must contain author attribution
+    sidebar_mds = [m.value for m in at.sidebar.markdown]
+    sidebar_combined = " ".join(sidebar_mds)
+
+    assert "Himanshu Gupta" in sidebar_combined
+    assert "Parth Yadav" in sidebar_combined
+    assert "BCS-DS-777" in sidebar_combined
+    assert "Mr. Aman Kumar" in sidebar_combined
+
+    # 3. Privacy compliance
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in sidebar_combined
+    assert "[REDACTED_STUDENT_IDENTIFIER]" not in sidebar_combined
+    assert "Allocation #19" not in sidebar_combined
+
+
+def test_playground_png_download_payloads():
+    """Verify that Playground provides dark-mode publication PNG download buttons with valid binary payloads."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=30)
+    at.run()
+    assert not at.exception
+
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # Check download buttons presence and properties
+    dl_buttons = at.download_button
+    dl_keys = [b.key for b in dl_buttons if b.key is not None]
+
+    assert "pg_dl_gt_png" in dl_keys, f"Ground truth PNG download button missing from: {dl_keys}"
+    assert "pg_dl_km_png" in dl_keys, f"K-Means PNG download button missing from: {dl_keys}"
+    assert "pg_dl_mst_png" in dl_keys, f"MST PNG download button missing from: {dl_keys}"
+
+    # Verify download button labels
+    for b in dl_buttons:
+        if b.key in ("pg_dl_gt_png", "pg_dl_km_png", "pg_dl_mst_png"):
+            assert "Download" in b.label
+            assert "PNG" in b.label

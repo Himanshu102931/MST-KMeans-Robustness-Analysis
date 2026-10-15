@@ -564,3 +564,50 @@ def test_algorithm_explorer_navigation_synchronization():
     assert not at.exception
     assert at.session_state["explorer_step_index"] == 0
     assert at.slider(key="exp_slider_widget").value == 0
+
+
+def test_algorithm_explorer_progress_and_math_expander():
+    """Verify that Algorithm Explorer renders accurate step progress and contextual math invariants."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_path = str(APP_DIR / "app.py")
+    at = AppTest.from_file(app_path, default_timeout=30).run()
+    assert not at.exception
+
+    # Navigate to Algorithm Explorer
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    # 1. Verify progress bar exists at step 0
+    assert len(at.progress) > 0, "Algorithm Explorer must render a progress bar"
+    total_steps_km = len(at.session_state["explorer_trace"].steps)
+    expected_p0 = int(round(1.0 / total_steps_km * 100))
+    assert at.progress[0].value == expected_p0
+
+    # 2. Advance one step and verify progress bar updates
+    at.button(key="exp_btn_next").click().run()
+    assert not at.exception
+    expected_p1 = int(round(2.0 / total_steps_km * 100))
+    assert at.progress[0].value == expected_p1
+
+    # 3. Verify contextual mathematical formulation is present
+    all_md = " ".join([m.value for m in at.markdown if hasattr(m, "value")])
+    assert "Distance Computation" in all_md
+    assert "Voronoi Assignment" in all_md
+
+    # 4. Switch to Dense Prim's MST
+    at.radio(key="explorer_algo_choice").set_value("Dense Prim's MST").run()
+    assert not at.exception
+
+    # Progress bar should reset to step 0
+    total_steps_mst = len(at.session_state["explorer_trace"].steps)
+    expected_mst_p0 = int(round(1.0 / total_steps_mst * 100))
+    assert at.progress[0].value == expected_mst_p0
+
+    # Contextual math should reflect Prim MST invariants
+    all_md_mst = " ".join([m.value for m in at.markdown if hasattr(m, "value")])
+    assert "Greedy Prim Selection" in all_md_mst
+    assert "Cut Edge Removal" in all_md_mst

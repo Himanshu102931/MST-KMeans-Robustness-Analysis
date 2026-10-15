@@ -85,7 +85,22 @@ from clustering_lab.visualization.figures import (
     render_benchmark_png,
     render_clustering_png,
 )
-from clustering_lab.visualization.theme import apply_custom_theme
+from clustering_lab.visualization.theme import (
+    COLOR_KMEANS,
+    COLOR_MST,
+    STATUS_ERROR,
+    STATUS_INFO,
+    STATUS_SUCCESS,
+    STATUS_WARNING,
+    SURFACE_CARD,
+    SURFACE_HOVER,
+    SURFACE_INSET,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    apply_custom_theme,
+    render_hero_html,
+    render_metric_card_html,
+)
 
 
 # Page configuration
@@ -247,15 +262,15 @@ def _run_clustering_on_dataset(
 def render_sidebar() -> str:
     """Render the academic metadata sidebar and navigation selection."""
     with st.sidebar:
-        st.title("🔬 Clustering Lab")
-        st.caption("Pattern Matching Lab (BCS-DS-777)")
-
         st.markdown(
             """
-            **Student Researchers (Equal Attribution):**
-            - **Himanshu Gupta**
-            - **Parth Yadav**
-            """
+            <div class="academic-identity-badge">
+                <div class="academic-identity-title">🔬 MST vs K-Means Lab</div>
+                <div class="academic-identity-subtitle">Pattern Matching Lab (BCS-DS-777)</div>
+                <div class="academic-identity-authors">Himanshu Gupta &amp; Parth Yadav (Equal Attribution)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         with st.expander("Academic Course Details", expanded=False):
@@ -272,8 +287,6 @@ def render_sidebar() -> str:
                 **Course Code:** Pattern Matching Lab (BCS-DS-777)
                 """
             )
-
-        st.divider()
 
         nav_view = st.radio(
             "Navigation Modules",
@@ -293,21 +306,20 @@ def render_sidebar() -> str:
 
         st.divider()
 
-        st.subheader("System Status")
-        st.markdown(
-            f"""
-            - **Platform Status:** `Python Research Platform — Deployed`
-            - **Python Runtime:** `{sys.version.split()[0]}`
-            - **Streamlit Version:** `{st.__version__}`
-            - **Algorithms:** Custom Pure NumPy
-            - **Interactive Limit:** `N ≤ {MAX_INTERACTIVE_SAMPLES}`
-            """
-        )
-
-        st.info(
-            "The Vanilla JavaScript application remains preserved at the repository "
-            "root for static browser-only viva presentation."
-        )
+        with st.expander("System & Environment Status", expanded=False):
+            st.markdown(
+                f"""
+                - **Platform Status:** `Python Research Platform — Deployed`
+                - **Python Runtime:** `{sys.version.split()[0]}`
+                - **Streamlit Version:** `{st.__version__}`
+                - **Algorithms:** Custom Pure NumPy
+                - **Interactive Limit:** `N ≤ {MAX_INTERACTIVE_SAMPLES}`
+                """
+            )
+            st.caption(
+                "The Vanilla JavaScript application remains preserved at the repository "
+                "root for static browser-only viva presentation."
+            )
 
     return nav_view
 
@@ -317,6 +329,21 @@ def render_sidebar() -> str:
 # -----------------------------------------------------------------------------
 def render_view_overview() -> None:
     """Render Project Overview, Research Objectives, and Roadmap."""
+    hero_html = render_hero_html(
+        title="Quantitative Evaluation of Graph-Theoretic vs Centroid-Based Clustering",
+        subtitle=(
+            "Empirical robustness evaluation and topological manifold recovery comparing "
+            "Lloyd's K-Means against dense Prim's Euclidean MST clustering under controlled geometric "
+            "perturbations and uniform bounding-box contamination."
+        ),
+        badges=[
+            ("Pure NumPy Engine", "kmeans"),
+            ("Python 3.12 Pinned", "neutral"),
+            ("BCS-DS-777 Lab", "neutral"),
+            ("Equal Attribution", "mst"),
+        ],
+    )
+    st.markdown(hero_html, unsafe_allow_html=True)
     st.subheader("Quantitative Evaluation of Graph-Theoretic vs Centroid-Based Clustering")
 
     st.markdown(
@@ -341,6 +368,98 @@ def render_view_overview() -> None:
         4. **Quantitative Validation:** Evaluating partition accuracy via ground-truth metrics (Inlier Adjusted Rand Index and Full-Data Adjusted Rand Index), intrinsic clustering structure (Silhouette Coefficient with geometric bias safeguards), and execution runtime profiling. *(Additional metrics such as Normalized Mutual Information are planned for subsequent benchmark sweeps).*
         """
     )
+
+    st.divider()
+
+    st.markdown("### Interactive Laboratory Workflow")
+    workflow_html = f"""
+    <div class="workflow-grid">
+        <div class="workflow-card">
+            <div class="workflow-card-header">
+                <div class="workflow-card-num">1</div>
+                <div class="workflow-card-title">Clustering Playground</div>
+            </div>
+            <div class="workflow-card-desc">
+                Tune manifold topologies, cluster counts, Gaussian jitter, and uniform outliers with live isotropic 1:1 scatter plots and metric cards.
+            </div>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-card-header">
+                <div class="workflow-card-num">2</div>
+                <div class="workflow-card-title">Algorithm Explorer</div>
+            </div>
+            <div class="workflow-card-desc">
+                Step through Lloyd's Voronoi centroid updates and dense Prim's greedy edge cuts with synchronized cockpit controls.
+            </div>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-card-header">
+                <div class="workflow-card-num">3</div>
+                <div class="workflow-card-title">Performance Benchmarks</div>
+            </div>
+            <div class="workflow-card-desc">
+                Profile monotonic wall-clock scaling from N=50 to 600, observing empirical linear 𝒪(N) vs quadratic 𝒪(N²) divergence.
+            </div>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-card-header">
+                <div class="workflow-card-num">4</div>
+                <div class="workflow-card-title">Robustness Sweeps</div>
+            </div>
+            <div class="workflow-card-desc">
+                Execute multi-seed Monte Carlo sweeps measuring Inlier ARI degradation curves with ±1σ uncertainty error bands.
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(workflow_html, unsafe_allow_html=True)
+
+    st.markdown("### Algorithmic Foundations: Centroid-Based vs Graph-Theoretic")
+    comp_col1, comp_col2 = st.columns(2)
+    with comp_col1:
+        st.markdown(
+            f"""
+            <div class="comparison-card comparison-card-kmeans">
+                <div class="comparison-card-header">
+                    <span class="comparison-card-title">Lloyd's K-Means</span>
+                    <span class="badge-pill badge-kmeans">Centroidal</span>
+                </div>
+                <p style="color:{TEXT_SECONDARY}; font-size:0.875rem; margin-bottom:8px;">
+                    <strong>Mathematical Objective:</strong> Iteratively minimizes Within-Cluster Sum of Squares (Inertia):<br>
+                    <code style="color:{COLOR_KMEANS};">J = Σ ||Xᵢ - μ_c(i)||²</code>
+                </p>
+                <ul style="color:{TEXT_SECONDARY}; font-size:0.85rem; padding-left:18px; margin-bottom:0;">
+                    <li><strong>Inductive Bias:</strong> Partitions feature space into convex Voronoi polyhedra; assumes spherical, isotropic clusters.</li>
+                    <li><strong>Complex Topologies:</strong> Fails on non-convex manifolds (circles, moons), bisecting continuous curvilinear structures.</li>
+                    <li><strong>Noise Resilience:</strong> Symmetrically distributed uniform outliers tend to average out across centroids.</li>
+                    <li><strong>Complexity:</strong> 𝒪(I · N · k · D) — highly scalable and linear in observation count.</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with comp_col2:
+        st.markdown(
+            f"""
+            <div class="comparison-card comparison-card-mst">
+                <div class="comparison-card-header">
+                    <span class="comparison-card-title">Prim's MST Clustering</span>
+                    <span class="badge-pill badge-mst">Graph-Theoretic</span>
+                </div>
+                <p style="color:{TEXT_SECONDARY}; font-size:0.875rem; margin-bottom:8px;">
+                    <strong>Mathematical Objective:</strong> Builds Euclidean MST T=(V,E) on complete graph, cuts the k - 1 longest edges:<br>
+                    <code style="color:{COLOR_MST};">Cut = argmax_{'{e₁, ..., e_{k-1}}'} w(e)</code>
+                </p>
+                <ul style="color:{TEXT_SECONDARY}; font-size:0.85rem; padding-left:18px; margin-bottom:0;">
+                    <li><strong>Inductive Bias:</strong> Single-linkage connectivity; clusters are dense connected components separated by spatial gaps.</li>
+                    <li><strong>Complex Topologies:</strong> Perfectly traces non-linear manifolds (circles, moons) under clean separation.</li>
+                    <li><strong>Noise Vulnerability:</strong> Prone to the <em>chaining effect</em> when outliers bridge inter-cluster gaps.</li>
+                    <li><strong>Complexity:</strong> 𝒪(N²) dense Prim — quadratic scaling in observation count.</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.divider()
 
@@ -577,7 +696,7 @@ def render_view_playground() -> None:
             )
             return False
 
-        with st.spinner("Synthesizing dataset and executing dual clustering algorithms..."):
+        with st.spinner("Synthesizing dataset and executing dual clustering algorithms (Lloyd's K-Means & Prim's MST)..."):
             family_key = "blobs" if family == "Gaussian Blobs" else ("moons" if family == "Two Moons" else "circles")
             kwargs: Dict[str, Any] = {}
             if family_key == "blobs":
@@ -682,10 +801,37 @@ def render_view_playground() -> None:
         fig_gt = create_ground_truth_figure(dataset, height=530)
         st.plotly_chart(fig_gt, use_container_width=True)
 
+        png_gt_bytes = render_clustering_png(
+            dataset.X,
+            dataset.labels if dataset.labels is not None else np.zeros(dataset.n_samples, dtype=int),
+            title=f"Ground Truth — {disp_family} (N={disp_n})",
+        )
+        st.download_button(
+            label="📥 Download Ground Truth Plot (Publication PNG)",
+            data=png_gt_bytes,
+            file_name=f"ground_truth_{str(disp_family).lower().replace(' ', '_')}.png",
+            mime="image/png",
+            key="pg_dl_gt_png",
+        )
+
     with viz_tab2:
         st.caption("Predicted Voronoi clusters with centroid positions marked by golden stars.")
         fig_km = create_kmeans_figure(dataset, km_res, height=530)
         st.plotly_chart(fig_km, use_container_width=True)
+
+        png_km_bytes = render_clustering_png(
+            dataset.X,
+            km_res.labels,
+            centroids=km_res.cluster_centers,
+            title=f"Lloyd's K-Means — {disp_family} (k={km_res.k}, Inertia={km_res.inertia:.2f})",
+        )
+        st.download_button(
+            label="📥 Download K-Means Partition Plot (Publication PNG)",
+            data=png_km_bytes,
+            file_name=f"kmeans_clusters_{str(disp_family).lower().replace(' ', '_')}.png",
+            mime="image/png",
+            key="pg_dl_km_png",
+        )
 
     with viz_tab3:
         st.caption("Predicted connected components with Minimum Spanning Tree edge overlays.")
@@ -697,6 +843,19 @@ def render_view_playground() -> None:
             height=530,
         )
         st.plotly_chart(fig_mst, use_container_width=True)
+
+        png_mst_bytes = render_clustering_png(
+            dataset.X,
+            mst_res.labels,
+            title=f"Prim's MST — {disp_family} (k={mst_res.k}, Weight={mst_res.total_mst_weight:.2f})",
+        )
+        st.download_button(
+            label="📥 Download MST Partition Plot (Publication PNG)",
+            data=png_mst_bytes,
+            file_name=f"mst_clusters_{str(disp_family).lower().replace(' ', '_')}.png",
+            mime="image/png",
+            key="pg_dl_mst_png",
+        )
 
     # -------------------------------------------------------------------------
     # Quantitative Metrics Comparison
@@ -724,7 +883,11 @@ def render_view_playground() -> None:
             else "N/A — degenerate cluster count"
         )
 
-        st.metric("Inlier Adjusted Rand Index (ARI)", value=km_inlier_ari_str)
+        sub_km1, sub_km2 = st.columns(2)
+        with sub_km1:
+            st.metric("Inlier Adjusted Rand Index (ARI)", value=km_inlier_ari_str)
+        with sub_km2:
+            st.metric("Silhouette Coefficient", value=km_sil_str)
 
         km_data = {
             "Metric": [
@@ -750,6 +913,7 @@ def render_view_playground() -> None:
         }
         st.dataframe(pd.DataFrame(km_data), use_container_width=True, hide_index=True)
 
+
     with col_m2:
         st.markdown("#### 🌳 Prim's MST Clustering")
         mst_inlier_ari_str = (
@@ -768,7 +932,11 @@ def render_view_playground() -> None:
             else "N/A — degenerate cluster count"
         )
 
-        st.metric("Inlier Adjusted Rand Index (ARI)", value=mst_inlier_ari_str)
+        sub_mst1, sub_mst2 = st.columns(2)
+        with sub_mst1:
+            st.metric("Inlier Adjusted Rand Index (ARI)", value=mst_inlier_ari_str)
+        with sub_mst2:
+            st.metric("Silhouette Coefficient", value=mst_sil_str)
 
         mst_data = {
             "Metric": [
@@ -1017,6 +1185,22 @@ def render_view_robustness() -> None:
 
         agg_df = aggregates_to_dataframe(aggregates)
 
+        # Overview metric cards
+        n_rec = len(trials)
+        n_pairs = n_rec // 2
+        active_s_cnt = len(exec_cfg.get("seeds", active_seeds))
+        fams_tested_cnt = len(exec_cfg.get("dataset_families", selected_families))
+
+        col_r1, col_r2, col_r3, col_r4 = st.columns(4)
+        with col_r1:
+            st.metric("Paired Comparisons", value=f"{n_pairs}", delta=f"{n_rec} result rows")
+        with col_r2:
+            st.metric("Seeds Evaluated", value=f"{active_s_cnt}", delta="Monte Carlo ddof=1")
+        with col_r3:
+            st.metric("Topologies", value=f"{fams_tested_cnt}", delta="Paired baseline")
+        with col_r4:
+            st.metric("Perturbations", value=f"{len(exec_cfg.get('sweep_types', active_sweeps))} sweeps", delta="Jitter & Outliers")
+
         st.divider()
 
         # Tabs for result inspection
@@ -1212,12 +1396,27 @@ def render_view_robustness() -> None:
 
 
 # -----------------------------------------------------------------------------
-# VIEW 4: Dataset & CSV Import
+# VIEW 6: Dataset & CSV Import
 # -----------------------------------------------------------------------------
 def render_view_csv_import() -> None:
     """Render secure CSV file upload, preview, and dual clustering execution."""
     st.subheader("Dataset & CSV Import — Empirical Benchmark Import")
     st.caption("Empirical Benchmark Import via Secure Tabular Parser")
+
+    st.markdown(
+        """
+        <div style="background-color: var(--color-surface-card); border: 1px solid var(--color-border-subtle); border-radius: 8px; padding: 14px 18px; margin-bottom: 16px;">
+            <div style="color: var(--color-text-primary); font-weight: 600; font-size: 0.95rem; margin-bottom: 6px;">📋 Tabular CSV Requirements</div>
+            <ul style="color: var(--color-text-secondary); font-size: 0.85rem; padding-left: 20px; margin-bottom: 0;">
+                <li><strong>Format:</strong> Standard comma-separated values (UTF-8 encoded) with a header row.</li>
+                <li><strong>Coordinates:</strong> Must contain at least two numeric coordinate columns (X and Y features).</li>
+                <li><strong>Ground Truth (Optional):</strong> Optional integer class label column for Adjusted Rand Index validation.</li>
+                <li><strong>Compute Boundary:</strong> Datasets up to 10,000 rows can be parsed for inspection; clustering execution is strictly enforced at <strong>N ≤ 600 observations</strong> for dense Prim O(N²) responsiveness.</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown(
         f"""
@@ -1339,7 +1538,7 @@ def render_view_csv_import() -> None:
 
 
 # -----------------------------------------------------------------------------
-# VIEW 4: Reproducibility & Configuration
+# VIEW 7: Reproducibility & Configuration
 # -----------------------------------------------------------------------------
 def render_view_config() -> None:
     """Render JSON ExperimentConfig import, export, and reproducibility controls."""
@@ -1375,6 +1574,15 @@ def render_view_config() -> None:
                     if k not in {"n_samples", "n_clusters", "noise", "outlier_rate"}
                 },
             )
+
+            p_col1, p_col2, p_col3 = st.columns(3)
+            with p_col1:
+                st.metric("Topology", value=dataset.dataset_family.capitalize())
+            with p_col2:
+                st.metric("Samples (N)", value=str(cfg.n_samples), delta=f"Seed {cfg.seed}")
+            with p_col3:
+                st.metric("Clusters (k)", value=str(cfg.n_clusters), delta=f"Noise σ={cfg.noise:.2f}")
+
             json_str = cfg.to_json(indent=2)
             st.code(json_str, language="json")
 
@@ -1568,7 +1776,7 @@ def render_view_benchmarks() -> None:
             progress_bar.progress(pct)
             status_text.caption(f"Running benchmarks: Size N={n}, Repetition {r}/{repetitions} ({algo})...")
 
-        with st.spinner("Executing custom Python algorithms..."):
+        with st.spinner("Executing wall-clock performance benchmarks across sample sizes..."):
             trials = run_performance_benchmark(bm_config, progress_callback=_bench_cb)
             summary = aggregate_benchmark_trials(trials)
 
@@ -1596,6 +1804,36 @@ def render_view_benchmarks() -> None:
             )
             if current_settings != cached_settings:
                 st.warning("⚠️ Controls have changed since the last benchmark run. Displaying previous results. Click 'Run Benchmarks' to update.")
+
+        # Aggregated performance metric cards for scannability
+        max_s = summary[-1] if summary else None
+        if max_s:
+            col_bm1, col_bm2, col_bm3, col_bm4 = st.columns(4)
+            with col_bm1:
+                st.metric(
+                    label=f"Max Scale (N={max_s.sample_size})",
+                    value=f"{max_s.repetitions} reps",
+                    delta=f"{len(summary)} sample sizes tested",
+                )
+            with col_bm2:
+                st.metric(
+                    label=f"K-Means @ N={max_s.sample_size}",
+                    value=f"{max_s.kmeans_mean_ms:.2f} ms",
+                    delta=f"±{max_s.kmeans_std_ms:.2f} ms",
+                )
+            with col_bm3:
+                st.metric(
+                    label=f"Prim MST @ N={max_s.sample_size}",
+                    value=f"{max_s.mst_mean_ms:.2f} ms",
+                    delta=f"±{max_s.mst_std_ms:.2f} ms",
+                )
+            with col_bm4:
+                ratio_val = f"{max_s.ratio_of_means:.2f}×" if max_s.ratio_of_means else "N/A"
+                st.metric(
+                    label="Ratio of Means (MST / KM)",
+                    value=ratio_val,
+                    delta="Quadratic vs Linear",
+                )
 
         st.divider()
         tab_chart, tab_table, tab_theory, tab_export = st.tabs(
@@ -1765,28 +2003,29 @@ def render_view_explorer() -> None:
     cached_sig = st.session_state.get("explorer_config_hash")
 
     if cached_sig != config_signature or st.session_state.get("explorer_trace") is None:
-        ds = generate_synthetic_dataset(
-            family=fam_code,
-            n_samples=n_samples,
-            seed=int(seed),
-            noise=0.04 if fam_code != "blobs" else 0.0,
-            outlier_rate=0.0,
-            n_clusters=k_val,
-            cluster_std=0.4,
-            radius=3.5,
-        )
-        X = ds.X
+        with st.spinner(f"Computing educational {algo_choice} step trace..."):
+            ds = generate_synthetic_dataset(
+                family=fam_code,
+                n_samples=n_samples,
+                seed=int(seed),
+                noise=0.04 if fam_code != "blobs" else 0.0,
+                outlier_rate=0.0,
+                n_clusters=k_val,
+                cluster_std=0.4,
+                radius=3.5,
+            )
+            X = ds.X
 
-        if algo_choice == "Lloyd's K-Means":
-            trace = run_kmeans_trace(X=X, k=k_val, seed=int(seed))
-        else:
-            trace = run_mst_trace(X=X, k=k_val)
+            if algo_choice == "Lloyd's K-Means":
+                trace = run_kmeans_trace(X=X, k=k_val, seed=int(seed))
+            else:
+                trace = run_mst_trace(X=X, k=k_val)
 
-        st.session_state["explorer_trace"] = trace
-        st.session_state["explorer_step_index"] = 0
-        st.session_state["exp_slider_widget"] = 0
-        st.session_state["explorer_config_hash"] = config_signature
-        st.session_state["explorer_dataset"] = ds
+            st.session_state["explorer_trace"] = trace
+            st.session_state["explorer_step_index"] = 0
+            st.session_state["exp_slider_widget"] = 0
+            st.session_state["explorer_config_hash"] = config_signature
+            st.session_state["explorer_dataset"] = ds
 
     trace = st.session_state["explorer_trace"]
     steps = trace.steps
@@ -1826,6 +2065,10 @@ def render_view_explorer() -> None:
     st.divider()
     st.markdown("#### Step Navigation Cockpit")
 
+    # Step progress indicator
+    pct_progress = float(curr_idx + 1) / float(max(1, total_steps))
+    st.progress(pct_progress)
+
     c_first, c_prev, c_slider, c_next, c_last, c_reset = st.columns([1, 1, 4, 1, 1, 1])
 
     with c_first:
@@ -1855,12 +2098,37 @@ def render_view_explorer() -> None:
     st.markdown(f"### Step {step_num} of {total_steps}: `{current_step.title}`")
     st.info(current_step.description)
 
+    # Contextual mathematical explanation
+    step_type = getattr(current_step, "step_type", "")
+    algo_color = COLOR_KMEANS if algo_choice == "Lloyd's K-Means" else COLOR_MST
+    badge_type = "kmeans" if algo_choice == "Lloyd's K-Means" else "mst"
+
+    with st.expander(f"📐 Mathematical Formulation & Invariants ({current_step.title})", expanded=False):
+        if algo_choice == "Lloyd's K-Means":
+            st.markdown(
+                r"""
+                - **Distance Computation:** Pairwise Euclidean distances $d(x_i, \mu_j) = \|x_i - \mu_j\|_2$.
+                - **Voronoi Assignment:** $c(i) = \arg\min_{j \in \{1,\dots,k\}} \|x_i - \mu_j\|^2$.
+                - **Centroid Update:** $\mu_j^{(t+1)} = \frac{1}{|S_j|} \sum_{x_i \in S_j} x_i$.
+                - **Convergence Criterion:** $\max_j \|\mu_j^{(t+1)} - \mu_j^{(t)}\| < \text{tol}$.
+                """
+            )
+        else:
+            st.markdown(
+                r"""
+                - **Greedy Prim Selection:** At step $t$, select edge $e^* = (u, v) = \arg\min \{w(u, v) : u \in V_{\text{tree}}, v \notin V_{\text{tree}}\}$.
+                - **Cut Edge Removal:** After $N - 1$ edges are added, sort edges descending and remove the $k - 1$ largest edges.
+                - **Disjoint Set Union (DSU):** Traverse remaining forest edges to assign connected-component labels $\{0, \dots, k-1\}$.
+                """
+            )
+
     if algo_choice == "Lloyd's K-Means":
         fig = create_kmeans_explorer_figure(current_step)
     else:
         fig = create_mst_explorer_figure(current_step)
 
     st.plotly_chart(fig, use_container_width=True)
+
 
     ds_exp = st.session_state.get("explorer_dataset")
     if ds_exp is not None:
@@ -1891,10 +2159,24 @@ def render_view_explorer() -> None:
 
 
 # -----------------------------------------------------------------------------
-# VIEW 5: Methodology / Help
+# VIEW 8: Methodology / Help
 # -----------------------------------------------------------------------------
 def render_view_methodology() -> None:
     """Render scientific background, inductive biases, and viva demonstration guide."""
+    hero_html = render_hero_html(
+        title="Methodology & Scientific Reference",
+        subtitle=(
+            "Comprehensive algorithmic foundations, inductive geometric biases, "
+            "perturbation mechanics, metric interpretation, and viva defense walkthrough."
+        ),
+        badges=[
+            ("Mathematical Foundations", "kmeans"),
+            ("Graph-Theoretic Cuts", "mst"),
+            ("Statistical Metrics", "neutral"),
+            ("Viva Defense Guide", "success"),
+        ],
+    )
+    st.markdown(hero_html, unsafe_allow_html=True)
     st.subheader("Methodology & Scientific Reference — Algorithmic Foundations")
     st.caption("Algorithmic Foundations, Inductive Biases, and Viva Walkthrough")
 
