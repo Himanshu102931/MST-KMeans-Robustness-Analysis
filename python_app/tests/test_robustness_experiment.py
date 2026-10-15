@@ -664,3 +664,105 @@ def test_compute_sample_std_import_pathways_backward_compatibility():
         assert fn(sample_data) == pytest.approx(expected_val, abs=1e-12)
         assert fn([]) == 0.0
         assert fn([100.0]) == 0.0
+
+
+# =============================================================================
+# Stage 05 Task 5.2: Computational Safety Bounds & Mathematical Sweep Accounting
+# =============================================================================
+def test_computational_bounds_and_limit_enforcement():
+    """Verify strict validation of MAX_INLIERS=500, MAX_TOTAL_TRIALS=500, and exact accounting."""
+    # 1. Inlier sample boundaries
+    SweepConfig(n_inliers=MIN_INLIERS).validate()
+    SweepConfig(n_inliers=MAX_INLIERS).validate()
+
+    with pytest.raises(ValueError, match="n_inliers"):
+        SweepConfig(n_inliers=MIN_INLIERS - 1).validate()
+
+    with pytest.raises(ValueError, match="n_inliers"):
+        SweepConfig(n_inliers=MAX_INLIERS + 1).validate()
+
+    # 2. Exact trial count limit boundary (MAX_TOTAL_TRIALS = 500)
+    # 1 family * 25 noise levels * 20 seeds = 500 trials exactly
+    cfg_500 = SweepConfig(
+        dataset_families=["blobs"],
+        n_inliers=100,
+        seeds=list(range(20)),
+        sweep_types=["noise"],
+        noise_levels=[float(i) for i in range(25)],
+    )
+    assert cfg_500.total_expected_trials() == 500
+    assert cfg_500.total_expected_executions() == 1000
+    cfg_500.validate()  # Passes at exact 500 boundary
+
+    # Just above 500 boundary: 1 family * 26 noise levels * 20 seeds = 520 trials
+    cfg_520 = SweepConfig(
+        dataset_families=["blobs"],
+        n_inliers=100,
+        seeds=list(range(20)),
+        sweep_types=["noise"],
+        noise_levels=[float(i) for i in range(26)],
+    )
+    assert cfg_520.total_expected_trials() == 520
+    with pytest.raises(ValueError, match="computational safety limit of 500"):
+        cfg_520.validate()
+
+    # 3. Exact mathematical accounting for Quick Mode (All 3 families)
+    cfg_quick = SweepConfig(
+        dataset_families=["blobs", "moons", "circles"],
+        seeds=list(DEFAULT_QUICK_SEEDS),
+        sweep_types=["noise", "outlier"],
+        noise_levels=list(DEFAULT_NOISE_LEVELS),
+        outlier_rates=list(DEFAULT_OUTLIER_RATES),
+    )
+    assert cfg_quick.total_expected_trials() == 72
+    assert cfg_quick.total_expected_executions() == 144
+    assert cfg_quick.total_baseline_configurations() == 18
+    assert cfg_quick.total_baseline_executions() == 36
+    assert cfg_quick.total_expected_executions() + cfg_quick.total_baseline_executions() == 180
+
+    # 4. Exact mathematical accounting for Extended Mode (All 3 families)
+    cfg_extended = SweepConfig(
+        dataset_families=["blobs", "moons", "circles"],
+        seeds=list(DEFAULT_EXTENDED_SEEDS),
+        sweep_types=["noise", "outlier"],
+        noise_levels=list(DEFAULT_NOISE_LEVELS),
+        outlier_rates=list(DEFAULT_OUTLIER_RATES),
+    )
+    assert len(cfg_extended.seeds) == 10
+    assert cfg_extended.total_expected_trials() == 240  # 240 <= 500
+    assert cfg_extended.total_expected_executions() == 480
+    assert cfg_extended.total_baseline_configurations() == 60
+    assert cfg_extended.total_baseline_executions() == 120
+    assert cfg_extended.total_expected_executions() + cfg_extended.total_baseline_executions() == 600
+    cfg_extended.validate()  # Confirms extended mode is safe and valid
+
+    # 5. Exact mathematical accounting for Single-Family selections
+    cfg_single_q = SweepConfig(
+        dataset_families=["moons"],
+        seeds=list(DEFAULT_QUICK_SEEDS),
+        sweep_types=["noise", "outlier"],
+    )
+    assert cfg_single_q.total_expected_trials() == 24
+    assert cfg_single_q.total_expected_executions() == 48
+    assert cfg_single_q.total_baseline_configurations() == 6
+    assert cfg_single_q.total_baseline_executions() == 12
+
+    cfg_single_e = SweepConfig(
+        dataset_families=["circles"],
+        seeds=list(DEFAULT_EXTENDED_SEEDS),
+        sweep_types=["noise", "outlier"],
+    )
+    assert cfg_single_e.total_expected_trials() == 80
+    assert cfg_single_e.total_expected_executions() == 160
+    assert cfg_single_e.total_baseline_configurations() == 20
+    assert cfg_single_e.total_baseline_executions() == 40
+
+    # 6. Invalid seed combinations
+    with pytest.raises(ValueError, match="Seeds must be non-negative"):
+        SweepConfig(seeds=[11, -1]).validate()
+    with pytest.raises(ValueError, match="Seeds must be non-negative"):
+        SweepConfig(seeds=[11, "not_an_int"]).validate()  # type: ignore
+    with pytest.raises(ValueError, match="Maximum allowed seeds"):
+        SweepConfig(seeds=list(range(21))).validate()
+    with pytest.raises(ValueError, match="At least one random seed"):
+        SweepConfig(seeds=[]).validate()

@@ -6,7 +6,7 @@ Controlled experiment design and configuration schema for clustering robustness 
 Academic Context:
     Course: Pattern Matching Lab (BCS-DS-777)
     Project: MST vs K-Means Robustness Analysis
-    Authors: Himanshu Gupta ([REDACTED_STUDENT_IDENTIFIER]) & Parth Yadav ([REDACTED_STUDENT_IDENTIFIER])
+    Authors: Himanshu Gupta & Parth Yadav (Equal Academic Contribution)
     Instructor: Mr. Aman Kumar, Assistant Professor
     Institution: MRIIRS, School of Engineering & Technology (2026–2027)
 

@@ -42,6 +42,12 @@ def generate_blobs(
         - Additional independent Gaussian jitter of standard deviation 'noise' can be applied.
         - Uniform outliers are injected across the padded bounding box at fraction 'outlier_rate'.
 
+    Research Boundary Note (ISSUE-09):
+        Heterogeneous cluster dispersions (individual per-cluster standard deviations)
+        remain an optional future research extension. The current scalar cluster_std
+        provides verified, reproducible isotropic Gaussian clustering benchmarks
+        matching the approved laboratory syllabus without confounding dimensionality.
+
     Args:
         n_samples: Number of inlier observations (>= 3).
         n_clusters: Number of distinct clusters k (>= 1, default 3).

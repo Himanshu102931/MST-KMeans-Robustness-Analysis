@@ -31,6 +31,7 @@ def load_dataset_from_csv(
     label_col: Optional[Union[str, int]] = None,
     dataset_name: str = "custom_csv",
     treat_minus_one_as_outlier: bool = False,
+    has_header: bool = True,
 ) -> Dataset:
     """Parse and validate an external CSV file into a standardized Dataset.
 
@@ -43,6 +44,8 @@ def load_dataset_from_csv(
         treat_minus_one_as_outlier: If True, rows with ground-truth label -1 are
             assigned inlier_mask=False. If False (default), all rows are treated
             as valid inliers with inlier_mask=True.
+        has_header: If True (default), first row is treated as column headers.
+            If False, file is parsed without a header row (integer column indices).
 
     Returns:
         Standardized, immutable Dataset instance.
@@ -97,7 +100,7 @@ def load_dataset_from_csv(
 
     # 2. Parse using pandas with safe options
     try:
-        df = pd.read_csv(stream)
+        df = pd.read_csv(stream, header=0 if has_header else None)
     except Exception as exc:
         raise ValueError(f"Failed to parse CSV tabular data: {exc}") from exc
 
@@ -110,6 +113,9 @@ def load_dataset_from_csv(
             "Downsample the dataset before importing for 2D clustering robustness analysis."
         )
 
+    # Trim whitespace from column headers if they are strings
+    df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
+
     # Check for duplicate column headers
     col_list = list(df.columns)
     if len(col_list) != len(set(col_list)):
@@ -119,16 +125,17 @@ def load_dataset_from_csv(
     if not isinstance(feature_cols, (tuple, list)) or len(feature_cols) != 2:
         raise ValueError(f"'feature_cols' must specify exactly two column identifiers, got {feature_cols}.")
 
-    resolved_feature_names: List[str] = []
+    resolved_feature_names: List[Any] = []
     for col_id in feature_cols:
         if isinstance(col_id, int):
             if col_id < 0 or col_id >= len(df.columns):
                 raise KeyError(f"Feature column index {col_id} is out of bounds for CSV with {len(df.columns)} columns.")
-            resolved_feature_names.append(str(df.columns[col_id]))
+            resolved_feature_names.append(df.columns[col_id])
         elif isinstance(col_id, str):
-            if col_id not in df.columns:
+            col_key = col_id.strip()
+            if col_key not in df.columns:
                 raise KeyError(f"Feature column '{col_id}' not found in CSV. Available columns: {list(df.columns)}.")
-            resolved_feature_names.append(col_id)
+            resolved_feature_names.append(col_key)
         else:
             raise TypeError(f"Column identifier must be str or int, got {type(col_id).__name__}.")
 
@@ -159,11 +166,12 @@ def load_dataset_from_csv(
         if isinstance(label_col, int):
             if label_col < 0 or label_col >= len(df.columns):
                 raise KeyError(f"Label column index {label_col} is out of bounds.")
-            resolved_label_name = str(df.columns[label_col])
+            resolved_label_name = df.columns[label_col]
         elif isinstance(label_col, str):
-            if label_col not in df.columns:
+            lbl_key = label_col.strip()
+            if lbl_key not in df.columns:
                 raise KeyError(f"Label column '{label_col}' not found in CSV. Available columns: {list(df.columns)}.")
-            resolved_label_name = label_col
+            resolved_label_name = lbl_key
         else:
             raise TypeError(f"Label column identifier must be str or int, got {type(label_col).__name__}.")
 

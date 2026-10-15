@@ -255,3 +255,233 @@ def test_experiment_config_validation_rules():
     # Malformed JSON
     with pytest.raises(ValueError, match="Malformed"):
         ExperimentConfig.from_json("{not valid json}")
+
+
+# =============================================================================
+# Stage 05 Task 5.3: Comprehensive CSV Import Regression Tests
+# =============================================================================
+
+def test_csv_loader_comprehensive_edge_cases():
+    """Verify CSV loader handles headers/headerless, whitespace trimming, indices, and size limits."""
+    # 1. Headerless CSV (has_header=False) with integer column positions
+    csv_no_header = (
+        "1.0,2.0,0\n"
+        "3.0,4.0,1\n"
+        "5.0,6.0,1\n"
+    )
+    ds_no_header = load_dataset_from_csv(
+        source=csv_no_header,
+        feature_cols=(0, 1),
+        label_col=2,
+        has_header=False,
+    )
+    assert ds_no_header.X.shape == (3, 2)
+    assert np.allclose(ds_no_header.X[0], [1.0, 2.0])
+    assert ds_no_header.labels is not None
+    assert np.array_equal(ds_no_header.labels, [0, 1, 1])
+
+    # 2. Whitespace-padded column headers trimmed automatically
+    csv_padded_headers = (
+        "   coord_x   ,   coord_y   ,   cluster_id   \n"
+        "10.0, 20.0, alpha\n"
+        "30.0, 40.0, beta\n"
+    )
+    ds_padded = load_dataset_from_csv(
+        source=csv_padded_headers,
+        feature_cols=("coord_x", "coord_y"),
+        label_col="cluster_id",
+    )
+    assert ds_padded.X.shape == (2, 2)
+    assert np.allclose(ds_padded.X[0], [10.0, 20.0])
+    assert ds_padded.labels is not None
+    assert list(ds_padded.labels) == [0, 1]
+
+    # Also test whitespace in the argument tuple itself
+    ds_padded_args = load_dataset_from_csv(
+        source=csv_padded_headers,
+        feature_cols=(" coord_x ", " coord_y "),
+        label_col=" cluster_id ",
+    )
+    assert ds_padded_args.X.shape == (2, 2)
+
+    # 3. Non-contiguous integer column indices
+    csv_non_contiguous = (
+        "id,val1,skip1,val2,skip2,grp\n"
+        "100,1.5,foo,2.5,bar,0\n"
+        "200,3.5,baz,4.5,qux,1\n"
+    )
+    ds_non_contig = load_dataset_from_csv(
+        source=csv_non_contiguous,
+        feature_cols=(1, 3),
+        label_col=5,
+    )
+    assert ds_non_contig.X.shape == (2, 2)
+    assert np.allclose(ds_non_contig.X[0], [1.5, 2.5])
+    assert np.allclose(ds_non_contig.X[1], [3.5, 4.5])
+    assert list(ds_non_contig.labels) == [0, 1]
+
+    # 4. Quoted numeric text conversion
+    csv_numeric_text = (
+        '"feat_a","feat_b","target"\n'
+        '"10.5","20.5","0"\n'
+        '"30.5","40.5","1"\n'
+    )
+    ds_num_text = load_dataset_from_csv(
+        source=csv_numeric_text,
+        feature_cols=("feat_a", "feat_b"),
+        label_col="target",
+    )
+    assert ds_num_text.X.shape == (2, 2)
+    assert np.allclose(ds_num_text.X[0], [10.5, 20.5])
+
+    # 5. Oversized byte stream exceeding MAX_CSV_BYTES (5 MB)
+    oversized_bytes = b"x,y\n" + b"1.0,2.0\n" * ((MAX_CSV_BYTES // 8) + 100)
+    assert len(oversized_bytes) > MAX_CSV_BYTES
+    with pytest.raises(ValueError, match="exceeds safety limit"):
+        load_dataset_from_csv(oversized_bytes, feature_cols=("x", "y"))
+
+    # 6. Completely empty bytes and whitespace-only strings
+    with pytest.raises(ValueError, match="empty"):
+        load_dataset_from_csv(b"", feature_cols=("x", "y"))
+    with pytest.raises(ValueError, match="empty"):
+        load_dataset_from_csv("   \n   \n", feature_cols=("x", "y"))
+
+
+# =============================================================================
+# Stage 05 Task 5.4: Configuration Round-Trip and Preset Restoration Tests
+# =============================================================================
+
+def test_all_presets_json_roundtrip_fidelity():
+    """Verify versioned JSON round-trip fidelity across Blobs, Moons, and Circles presets."""
+    # 1. Blobs Preset
+    cfg_blobs = ExperimentConfig(
+        dataset_family="blobs",
+        n_samples=300,
+        n_clusters=3,
+        seed=42,
+        noise=0.05,
+        outlier_rate=0.05,
+        dataset_params={"cluster_std": 0.4, "radius": 3.5},
+    )
+    json_blobs = cfg_blobs.to_json()
+    restored_blobs = ExperimentConfig.from_json(json_blobs)
+    assert restored_blobs == cfg_blobs
+    ds_b1 = create_dataset_from_config(cfg_blobs)
+    ds_b2 = create_dataset_from_config(restored_blobs)
+    assert np.array_equal(ds_b1.X, ds_b2.X)
+    assert np.array_equal(ds_b1.labels, ds_b2.labels)
+
+    # 2. Moons Preset
+    cfg_moons = ExperimentConfig(
+        dataset_family="moons",
+        n_samples=250,
+        n_clusters=2,
+        seed=123,
+        noise=0.08,
+        outlier_rate=0.04,
+    )
+    json_moons = cfg_moons.to_json()
+    restored_moons = ExperimentConfig.from_json(json_moons)
+    assert restored_moons == cfg_moons
+    ds_m1 = create_dataset_from_config(cfg_moons)
+    ds_m2 = create_dataset_from_config(restored_moons)
+    assert np.array_equal(ds_m1.X, ds_m2.X)
+    assert np.array_equal(ds_m1.labels, ds_m2.labels)
+
+    # 3. Circles Preset
+    cfg_circles = ExperimentConfig(
+        dataset_family="circles",
+        n_samples=200,
+        n_clusters=2,
+        seed=77,
+        noise=0.04,
+        outlier_rate=0.02,
+        dataset_params={"factor": 0.5},
+    )
+    json_circles = cfg_circles.to_json()
+    restored_circles = ExperimentConfig.from_json(json_circles)
+    assert restored_circles == cfg_circles
+    ds_c1 = create_dataset_from_config(cfg_circles)
+    ds_c2 = create_dataset_from_config(restored_circles)
+    assert np.array_equal(ds_c1.X, ds_c2.X)
+    assert np.array_equal(ds_c1.labels, ds_c2.labels)
+
+
+def test_benchmark_and_sweep_config_roundtrips():
+    """Verify JSON round-trip fidelity for BenchmarkConfig and SweepConfig presets."""
+    import json
+    from clustering_lab.experiments.benchmarks import BenchmarkConfig
+    from clustering_lab.experiments.sweeps import SweepConfig
+    from clustering_lab.experiments.export import export_benchmark_config_json, export_config_json
+
+    # 1. BenchmarkConfig Round-Trip
+    bm_cfg = BenchmarkConfig(
+        sample_sizes=[100, 200, 400],
+        n_repetitions=5,
+        seed=42,
+        blobs_k=3,
+        blobs_cluster_std=0.4,
+        blobs_radius=3.5,
+        warmup=True,
+    )
+    bm_json = export_benchmark_config_json(bm_cfg)
+    bm_restored = BenchmarkConfig.from_dict(json.loads(bm_json))
+    assert bm_restored.sample_sizes == bm_cfg.sample_sizes
+    assert bm_restored.n_repetitions == bm_cfg.n_repetitions
+    assert bm_restored.seed == bm_cfg.seed
+    assert bm_restored.blobs_k == bm_cfg.blobs_k
+    assert bm_restored.blobs_cluster_std == pytest.approx(bm_cfg.blobs_cluster_std)
+    assert bm_restored.blobs_radius == pytest.approx(bm_cfg.blobs_radius)
+    assert bm_restored.warmup == bm_cfg.warmup
+
+    # 2. SweepConfig Round-Trip (Noise & Outlier Sweeps)
+    sw_cfg = SweepConfig(
+        dataset_families=["blobs", "moons", "circles"],
+        n_inliers=250,
+        seeds=[11, 22, 33],
+        sweep_types=["noise", "outlier"],
+        noise_levels=[0.0, 0.05, 0.1],
+        outlier_rates=[0.0, 0.05, 0.1],
+        mode="custom",
+    )
+    sw_json = export_config_json(sw_cfg)
+    sw_restored = SweepConfig.from_dict(json.loads(sw_json))
+    assert sw_restored.dataset_families == sw_cfg.dataset_families
+    assert sw_restored.n_inliers == sw_cfg.n_inliers
+    assert sw_restored.seeds == sw_cfg.seeds
+    assert sw_restored.sweep_types == sw_cfg.sweep_types
+    assert sw_restored.noise_levels == sw_cfg.noise_levels
+    assert sw_restored.outlier_rates == sw_cfg.outlier_rates
+    assert sw_restored.mode == sw_cfg.mode
+
+
+def test_config_rejection_boundary_and_corruption_cases():
+    """Verify boundary rejections for corrupted, incompatible, or oversized configs."""
+    from clustering_lab.data.config import MAX_CONFIG_JSON_BYTES
+
+    # Incompatible clusters for Moons/Circles
+    with pytest.raises(ValueError, match="n_clusters=2"):
+        ExperimentConfig(dataset_family="moons", n_clusters=4)
+    with pytest.raises(ValueError, match="n_clusters=2"):
+        ExperimentConfig(dataset_family="circles", n_clusters=5)
+
+    # Missing required key
+    with pytest.raises(ValueError, match="Missing required configuration key"):
+        ExperimentConfig.from_dict({})
+
+    # Non-dictionary input
+    with pytest.raises(TypeError, match="must be a dictionary"):
+        ExperimentConfig.from_dict(["not", "a", "dict"])  # type: ignore
+
+    # Non-string input to from_json
+    with pytest.raises(TypeError, match="must be a JSON string"):
+        ExperimentConfig.from_json(12345)  # type: ignore
+
+    # Empty JSON string
+    with pytest.raises(ValueError, match="empty"):
+        ExperimentConfig.from_json("   ")
+
+    # Oversized JSON string (> 100 KB)
+    huge_json = '{"dataset_family": "blobs", "padding": "' + ("A" * (MAX_CONFIG_JSON_BYTES + 10)) + '"}'
+    with pytest.raises(ValueError, match="exceeds maximum size limit"):
+        ExperimentConfig.from_json(huge_json)

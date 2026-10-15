@@ -11,10 +11,16 @@ Scientifically sound quantitative evaluation metrics for clustering benchmarks:
 3. Runtime Profiling:
    - High-resolution wall-clock execution time (labeled as single-execution measurement).
 
+Research Boundary Note (ISSUE-10):
+    Normalized Mutual Information (NMI) remains an intentional optional future
+    research extension. Adjusted Rand Index (Inlier ARI and Full ARI) paired with
+    Silhouette Coefficient provides comprehensive, chance-corrected clustering validation
+    adhering strictly to the laboratory syllabus.
+
 Academic Context:
     Course: Pattern Matching Lab (BCS-DS-777)
     Project: MST vs K-Means Robustness Analysis
-    Authors: Himanshu Gupta ([REDACTED_STUDENT_IDENTIFIER]) & Parth Yadav ([REDACTED_STUDENT_IDENTIFIER])
+    Authors: Himanshu Gupta & Parth Yadav (Equal Academic Contribution)
     Institution: MRIIRS, School of Engineering & Technology (2026–2027)
 """
 

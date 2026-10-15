@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import io
 import pathlib
+import re
 import sys
 import numpy as np
 import pytest
@@ -819,3 +820,271 @@ def test_playground_png_download_payloads():
         if b.key in ("pg_dl_gt_png", "pg_dl_km_png", "pg_dl_mst_png"):
             assert "Download" in b.label
             assert "PNG" in b.label
+
+
+# =============================================================================
+# Stage 05 Task 5.5 & 5.6: Integration Workflows, Privacy, & Security Gates
+# =============================================================================
+def test_csv_import_to_playground_handoff_workflow():
+    """Verify that importing a CSV dataset hands off cleanly to Playground without state corruption."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # Create an in-memory CSV dataset
+    csv_content = (
+        "dim_one,dim_two,class\n"
+        "1.0,2.0,0\n"
+        "1.2,2.1,0\n"
+        "5.0,5.0,1\n"
+        "5.2,5.1,1\n"
+    )
+    csv_ds = load_dataset_from_csv(
+        source=csv_content,
+        feature_cols=("dim_one", "dim_two"),
+        label_col="class",
+        dataset_name="empirical_handoff.csv",
+    )
+
+    # Emulate CSV loader handoff in session state
+    km_csv = kmeans(csv_ds.X, k=2, seed=42)
+    mst_csv = mst_clustering(csv_ds.X, k=2)
+    km_m_csv = evaluate_clustering(km_csv.labels, csv_ds.labels, csv_ds.inlier_mask, csv_ds.X, runtime_sec=0.001)
+    mst_m_csv = evaluate_clustering(mst_csv.labels, csv_ds.labels, csv_ds.inlier_mask, csv_ds.X, runtime_sec=0.001)
+
+    at.session_state["current_dataset"] = csv_ds
+    at.session_state["kmeans_result"] = km_csv
+    at.session_state["kmeans_metrics"] = km_m_csv
+    at.session_state["mst_result"] = mst_csv
+    at.session_state["mst_metrics"] = mst_m_csv
+    at.session_state["executed_config"] = {
+        "source": "csv",
+        "name": "empirical_handoff.csv",
+        "k": 2,
+        "features": ("dim_one", "dim_two"),
+        "label": "class",
+        "treat_outlier": False,
+    }
+
+    # Navigate to Clustering Playground
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    # Verify tabs and metric tables remain mounted
+    assert len(at.tabs) >= 3
+    assert len(at.dataframe) >= 2
+
+    captions = [c.value for c in at.caption if hasattr(c, "value")]
+    caption_text = " ".join(captions)
+    assert "Total N=4" in caption_text
+
+    infos = [i.value for i in at.info if hasattr(i, "value")]
+    info_text = " ".join(infos)
+    assert "empirical_handoff.csv" in info_text
+
+
+def test_reproducibility_config_restoration_to_playground_workflow():
+    """Verify that restoring an ExperimentConfig updates Playground state and renders fresh results."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    cfg = ExperimentConfig(
+        dataset_family="circles",
+        n_samples=160,
+        n_clusters=2,
+        seed=888,
+        noise=0.03,
+        outlier_rate=0.05,
+        dataset_params={"factor": 0.55},
+    )
+    new_ds = create_dataset_from_config(cfg)
+    km_cfg = kmeans(new_ds.X, k=2, seed=888)
+    mst_cfg = mst_clustering(new_ds.X, k=2)
+    km_m_cfg = evaluate_clustering(km_cfg.labels, new_ds.labels, new_ds.inlier_mask, new_ds.X, runtime_sec=0.001)
+    mst_m_cfg = evaluate_clustering(mst_cfg.labels, new_ds.labels, new_ds.inlier_mask, new_ds.X, runtime_sec=0.001)
+
+    at.session_state["current_dataset"] = new_ds
+    at.session_state["kmeans_result"] = km_cfg
+    at.session_state["kmeans_metrics"] = km_m_cfg
+    at.session_state["mst_result"] = mst_cfg
+    at.session_state["mst_metrics"] = mst_m_cfg
+    at.session_state["pg_dataset_family"] = "Concentric Circles"
+    at.session_state["pg_n_samples"] = 160
+    at.session_state["pg_seed"] = 888
+    at.session_state["pg_noise"] = 0.03
+    at.session_state["pg_outliers"] = 0.05
+    at.session_state["pg_circles_factor"] = 0.55
+    at.session_state["executed_config"] = {
+        "source": "synthetic",
+        "family": "Concentric Circles",
+        "n_inliers": 160,
+        "seed": 888,
+        "noise": 0.03,
+        "outlier_rate": 0.05,
+        "k": 2,
+        "factor": 0.55,
+    }
+
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    captions = [c.value for c in at.caption if hasattr(c, "value")]
+    caption_text = " ".join(captions)
+    assert "Concentric Circles" in caption_text
+    assert "Seed=888" in caption_text
+    assert len(at.tabs) >= 3
+
+
+def test_cross_view_navigation_state_isolation():
+    """Verify that cycling through all 8 views sequentially preserves executed session state."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    initial_dataset = at.session_state["current_dataset"]
+    assert initial_dataset is not None
+
+    views = [
+        "Overview",
+        "Clustering Playground",
+        "Performance Benchmarks",
+        "Algorithm Explorer",
+        "Robustness Analysis",
+        "Dataset & CSV Import",
+        "Reproducibility & Configuration",
+        "Methodology / Help",
+        "Clustering Playground",
+    ]
+
+    for view_name in views:
+        at.sidebar.radio(key="main_navigation").set_value(view_name).run()
+        assert not at.exception, f"Navigation to '{view_name}' caused an exception"
+
+    # Returned to Playground: verify dataset and results are preserved
+    assert at.session_state["current_dataset"] is initial_dataset
+    assert at.session_state["kmeans_result"] is not None
+    assert at.session_state["mst_result"] is not None
+    assert len(at.tabs) >= 3
+
+
+def test_comprehensive_public_privacy_enforcement():
+    """Verify that no institutional student roll numbers or forbidden allocation tags leak anywhere."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # Regex patterns detecting any institutional registration format
+    ROLL_REGEX = re.compile(r"\b\d+/\d+/SET/\w+/\d+\b")
+    STUDENT_ID_REGEX = re.compile(r"1/23/SET/BCS/\d+")
+    ALLOCATION_REGEX = re.compile(r"Allocation\s*#?19|Alloc\s*#?19", re.I)
+
+    # 1. Scan rendered UI elements across all 8 navigation routes
+    views = [
+        "Overview",
+        "Clustering Playground",
+        "Performance Benchmarks",
+        "Algorithm Explorer",
+        "Robustness Analysis",
+        "Dataset & CSV Import",
+        "Reproducibility & Configuration",
+        "Methodology / Help",
+    ]
+
+    for view_name in views:
+        at.sidebar.radio(key="main_navigation").set_value(view_name).run()
+        assert not at.exception
+
+        page_texts = []
+        for elem_list in [at.title, at.subheader, at.caption, at.markdown, at.info, at.success, at.warning, at.error]:
+            for item in elem_list:
+                if hasattr(item, "value"):
+                    page_texts.append(str(item.value))
+        combined_view = " ".join(page_texts)
+
+        assert not ROLL_REGEX.search(combined_view), f"Roll number pattern found in view '{view_name}'!"
+        assert not STUDENT_ID_REGEX.search(combined_view), f"Student ID pattern found in view '{view_name}'!"
+        assert not ALLOCATION_REGEX.search(combined_view), f"Prohibited allocation text found in view '{view_name}'!"
+
+    # 2. Scan export strings and serialized metadata
+    from clustering_lab.experiments.sweeps import SweepConfig
+    from clustering_lab.experiments.benchmarks import BenchmarkConfig
+    from clustering_lab.experiments.export import export_benchmark_config_json
+    from clustering_lab.experiments.export import (
+        export_config_json,
+        export_experiment_metadata,
+        export_benchmark_metadata,
+    )
+    import json
+
+    sw_cfg = SweepConfig()
+    exp_meta_str = json.dumps(export_experiment_metadata(sw_cfg, n_trials=10))
+    assert not ROLL_REGEX.search(exp_meta_str), "Roll number leaked in experiment metadata JSON!"
+    assert not STUDENT_ID_REGEX.search(exp_meta_str), "Student ID leaked in experiment metadata JSON!"
+
+    bm_cfg = BenchmarkConfig()
+    bm_json_str = export_benchmark_config_json(bm_cfg)
+    assert not ROLL_REGEX.search(bm_json_str), "Roll number leaked in benchmark config JSON!"
+
+    bm_meta_str = export_benchmark_metadata()
+    assert not ROLL_REGEX.search(bm_meta_str), "Roll number leaked in benchmark metadata JSON!"
+    assert not STUDENT_ID_REGEX.search(bm_meta_str), "Student ID leaked in benchmark metadata JSON!"
+
+
+def test_theme_html_helpers_security_and_escaping():
+    """Verify that HTML rendering helpers strictly sanitize and escape all dynamic string inputs."""
+    from clustering_lab.visualization.theme import render_hero_html, render_metric_card_html
+
+    # 1. Test render_hero_html with malicious payloads
+    evil_title = '<script>alert("XSS")</script>'
+    evil_sub = '<img src=x onerror=alert(1)>'
+    evil_badges = [
+        ('"><svg onload=alert(1)>', "style<script>"),
+        ("Normal Badge", "neutral"),
+    ]
+
+    hero_html = render_hero_html(evil_title, evil_sub, evil_badges)
+
+    assert "<script>" not in hero_html
+    assert "&lt;script&gt;" in hero_html
+    assert "<img" not in hero_html
+    assert "&lt;img" in hero_html
+    assert "<svg" not in hero_html
+    assert "&lt;svg" in hero_html
+
+    # 2. Test render_metric_card_html with malicious payloads
+    card_html = render_metric_card_html(
+        title="<b onfocus=alert(1)>Label</b>",
+        value="<iframe src=evil.com>99.9%</iframe>",
+        delta='<span onclick="hack()">+5%</span>',
+    )
+
+    assert "<b " not in card_html
+    assert "&lt;b" in card_html
+    assert "<iframe" not in card_html
+    assert "&lt;iframe" in card_html
+    assert "<span onclick" not in card_html
