@@ -1347,12 +1347,12 @@ def render_view_robustness() -> None:
             st.markdown(
                 """
                 #### 1. Globular Distributions (Gaussian Blobs)
-                - **Both Algorithms Perform Robustly:** Under standard spherical clusters with balanced variance, both Lloyd's K-Means and dense Prim's MST achieve high Inlier ARI ($>0.95$) at low-to-moderate noise levels.
+                - **Both Algorithms Perform Robustly:** Under standard spherical clusters with balanced variance, both Lloyd's K-Means and dense Prim's MST generally achieve strong partition agreement (typically high Inlier ARI) at low-to-moderate noise levels.
                 - **Noise Tolerance:** As Gaussian jitter increases to $\\sigma=0.20$, Inlier ARI degrades gracefully for both algorithms.
 
                 #### 2. Non-Convex Curvilinear Manifolds (Two Moons & Concentric Circles)
-                - **Inductive Bias at Baseline:** Under clean zero-noise conditions, Prim's MST recovers the non-linear topologies with near-perfect Inlier ARI ($1.00$), whereas K-Means bisects the manifolds with linear Voronoi hyperplanes (Inlier ARI $\\approx 0.00$ for circles, $\\approx 0.49$ for moons).
-                - **MST Vulnerability to Noise Bridges (The Chaining Effect):** In the Outlier Sweep, injecting uniform random outliers between the crescent moons creates short edges that connect distinct manifolds, causing MST Inlier ARI to drop sharply.
+                - **Inductive Bias at Baseline:** Under clean zero-noise conditions with adequate spatial separation, Prim's MST typically recovers non-linear manifolds with strong Inlier ARI, whereas Lloyd's K-Means bisects the manifolds with linear Voronoi hyperplanes, leading to degraded partition agreement on nested concentric rings or crescent structures.
+                - **MST Vulnerability to Noise Bridges (The Chaining Effect):** In the Outlier Sweep, injecting uniform random outliers between cluster manifolds creates short bridging edges that connect distinct components, causing MST Inlier ARI to drop sharply.
                 - **K-Means Outlier Stability:** While K-Means fails to recover non-convex shapes, its centroid estimates remain relatively stable because uniform bounding-box points symmetrically cancel around cluster centers.
 
                 #### 3. Statistical Sample Size Caution
@@ -1564,7 +1564,7 @@ def render_view_config() -> None:
     st.markdown(
         """
         Export or import validated JSON configuration files compliant with `ExperimentConfig` schema `1.0.0`.
-        Configurations reproduce exact synthetic datasets when generated with identical seeds in matching environments.
+        Configurations record synthetic generation parameters and seeds to support reproducible experiments in compatible runtime environments.
         """
     )
 
@@ -1902,11 +1902,11 @@ def render_view_benchmarks() -> None:
                       $$\mathcal{O}(I \times N \times k \times D)$$
                       where $I$ is iterations until convergence, $N$ is sample size, $k$ is cluster count, and $D$ is dimensionality.
                       Initialization via K-Means++ requires $\mathcal{O}(k \times N \times D)$ distance evaluations.
-                      Runtime scales **linearly** with observation count $N$.
+                      When $k$, $D$, and $I$ are held approximately constant, empirical runtime scales near-linearly with observation count $N$.
                     - **Dense Prim's MST:**
                       $$\mathcal{O}(N^2)$$
                       The implemented dense Prim algorithm maintains a min-distance frontier array across $N$ vertices,
-                      evaluating $N(N-1)/2$ pairwise Euclidean distances.
+                      evaluating $N(N-1)/2$ pairwise Euclidean distances on the fly using $\mathcal{O}(N)$ spatial memory (no dense $N \times N$ distance matrix is materialized).
                       Runtime scales **quadratically** with observation count $N$.
                     """
                 )
@@ -2020,15 +2020,21 @@ def render_view_explorer() -> None:
 
     if cached_sig != config_signature or st.session_state.get("explorer_trace") is None:
         with st.spinner(f"Computing educational {algo_choice} step trace..."):
+            exp_kwargs: Dict[str, Any] = {}
+            if fam_code == "blobs":
+                exp_kwargs["n_clusters"] = k_val
+                exp_kwargs["cluster_std"] = 0.4
+                exp_kwargs["radius"] = 3.5
+            elif fam_code == "circles":
+                exp_kwargs["factor"] = 0.45
+
             ds = generate_synthetic_dataset(
                 family=fam_code,
                 n_samples=n_samples,
                 seed=int(seed),
                 noise=0.04 if fam_code != "blobs" else 0.0,
                 outlier_rate=0.0,
-                n_clusters=k_val,
-                cluster_std=0.4,
-                radius=3.5,
+                **exp_kwargs,
             )
             X = ds.X
 
@@ -2203,11 +2209,12 @@ def render_view_methodology() -> None:
         st.markdown(
             r"""
             #### Lloyd's K-Means Clustering
-            - **Mathematical Nature:** Centroid-based iterative optimization.
+            - **Mathematical Nature:** Centroid-based iterative optimization (Lloyd's heuristic).
             - **Objective Function:** Minimizes Within-Cluster Sum of Squares (Inertia):
-              $$J = \sum_{i=1}^N \| X_i - \mu_{c(i)} \|^2$$
-            - **Inductive Bias:** Assumes isotropic, convex, globular clusters with roughly equal variance.
-            - **Behavior on Complex Topologies:** Tends to fragment non-convex geometries (such as concentric circles or interleaving crescent moons) under standard $k$ settings, because linear Voronoi boundaries are mathematically constrained to convex partition cells.
+              $$J = \sum_{i=1}^N \| X_i - \mu_{c(i)} \|_2^2$$
+            - **Computational Complexity:** $\mathcal{O}(I \times N \times k \times d)$ operations per execution run, where $N$ is sample size, $k$ is cluster count, $d$ is feature dimensions, and $I$ is iterations until convergence. Near-linear empirical scaling with $N$ is observed when $k, d, I$ are held approximately fixed.
+            - **Inductive Bias:** Assumes isotropic, convex, globular clusters with roughly equal dispersion.
+            - **Behavior on Complex Topologies:** Tends to fragment non-convex geometries (such as concentric circles or interleaving crescent moons) under standard $k$ settings, because linear Voronoi boundaries are mathematically constrained to convex partition cells. Well-separated globular Gaussian clusters typically favor centroid-based partitioning.
             """
         )
 
@@ -2216,9 +2223,10 @@ def render_view_methodology() -> None:
             r"""
             #### Prim's MST Clustering
             - **Mathematical Nature:** Graph-theoretic single-linkage partitioning.
-            - **Objective:** Constructs Euclidean Minimum Spanning Tree $T = (V, E)$ on complete graph, then removes the $k - 1$ longest tree edges.
+            - **Objective:** Constructs Euclidean Minimum Spanning Tree $T = (V, E)$ on the complete distance graph, then removes the $k - 1$ longest tree edges to yield $k$ connected components.
+            - **Computational Complexity:** $\mathcal{O}(N^2)$ distance evaluations and edge candidate updates on complete graphs using $\mathcal{O}(N)$ spatial memory via an active min-distance frontier array (evaluating Euclidean distances on the fly without materializing a dense $N \times N$ distance matrix).
             - **Inductive Bias:** Assumes clusters are high-density connected manifolds separated by lower-density spatial gaps.
-            - **Behavior on Complex Topologies:** Effectively traces continuous curvilinear paths and non-convex manifolds when clusters are separated by clear spatial gaps. However, MST is not unconditionally robust: it is vulnerable to the "chaining effect" when noise bridges or uniform outliers span the inter-cluster gap.
+            - **Behavior on Complex Topologies:** Effectively traces continuous curvilinear paths and non-convex manifolds when clusters are separated by clear spatial gaps. However, MST single-linkage is not unconditionally robust: it is vulnerable to the "chaining effect" when noise bridges or uniform outliers span the inter-cluster gap.
             """
         )
 
@@ -2227,8 +2235,8 @@ def render_view_methodology() -> None:
     st.markdown("### 2. Perturbation Mechanisms: Gaussian Jitter vs. Uniform Outliers")
     st.markdown(
         r"""
-        - **Inlier Gaussian Jitter ($\sigma$):** Adds zero-mean Gaussian displacement directly to inlier coordinates along their manifold. Controlled by an independent PRNG stream. Evaluates resilience to localized boundary blurring without altering global cluster topology.
-        - **Uniform Outlier Contamination (Rate):** Injects random noise points distributed uniformly across the 2D bounding box (using a decoupled secondary PRNG stream). These are *random uniform outliers*, not adversarially optimized points. Evaluates algorithm resilience to spurious spatial bridging between separate clusters.
+        - **Inlier Gaussian Jitter ($\sigma$):** Adds zero-mean Gaussian displacement $\mathcal{N}(0, \sigma^2 I)$ directly to inlier coordinates along their manifold via an independent PRNG stream. Evaluates resilience to localized boundary blurring. While moderate noise preserves macro-structure, high jitter can blur inter-manifold boundaries and alter local cluster connectivity.
+        - **Uniform Outlier Contamination (Rate):** Injects noise points sampled uniformly across the 2D bounding box (using a decoupled secondary PRNG stream). These points represent *random uniform outliers*, not adversarially optimized worst-case bridging points. Evaluates algorithm resilience to spurious spatial bridging between separate clusters.
         """
     )
 
@@ -2239,13 +2247,13 @@ def render_view_methodology() -> None:
         r"""
         | Metric | Mathematical Meaning | Key Caution |
         | :--- | :--- | :--- |
-        | **Inlier ARI** | Adjusted Rand Index on true inlier points. Measures manifold recovery. | Range $[-0.5, 1.0]$. $1.0$ is perfect partition recovery. |
-        | **Full-Data ARI** | ARI evaluated across all points including outliers (label $-1$). | Outliers naturally penalize both algorithms since neither assigns an explicit reject class. |
-        | **Inertia** | Sum of squared Euclidean distances to closest centroids. | **Do NOT compare against MST Weight.** They represent completely different mathematical spaces. |
-        | **MST Weight** | Total linear Euclidean edge length of the spanning tree / forest. | Sum of edge lengths; decreases as more cut edges are removed. |
-        | **Silhouette Score** | Ratio of intra-cluster distance to nearest neighbor cluster distance. | Biased towards convex/spherical clusters; penalizes valid non-convex MST clusters. |
+        | **Inlier ARI** | Adjusted Rand Index (Hubert & Arabie, 1985) on true inlier points. Measures partition recovery against ground truth corrected for chance. | Mathematical range $[-1.0, 1.0]$. Expected value for random clustering is $0.0$; $1.0$ indicates perfect agreement up to label permutation. |
+        | **Full-Data ARI** | ARI evaluated across all points including injected outliers (assigned label $-1$). | Outliers naturally penalize both algorithms since neither implements an explicit outlier rejection class. |
+        | **Inertia** | Sum of squared Euclidean distances to closest centroids: $\sum_{i=1}^N \| X_i - \mu_{c(i)} \|_2^2$. | **Do NOT compare against MST Weight.** They represent completely different mathematical dimensions. |
+        | **MST Weight vs. Retained Forest** | Complete tree weight $W(T) = \sum_{e \in T} w(e)$ is invariant for a given dataset. Retained forest weight $W(F_k) = W(T) - \sum_{e \in \text{cuts}} w(e)$ reflects remaining edge lengths. | Complete MST weight is constant; retained forest weight decreases as more cut edges ($k - 1$) are removed. |
+        | **Silhouette Score** | For point $i$: $s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}$, where $a(i)$ is mean intra-cluster distance and $b(i)$ is nearest-cluster mean distance. Range $[-1.0, 1.0]$. | Inherently favors convex/spherical clusters; may penalize valid non-convex MST clusters even under correct recovery. Does not prove algorithmic superiority. |
 
-        *(Note: Additional validation metrics such as Normalized Mutual Information (NMI) and systematic spatial density variation tests are planned for future research).*
+        *(Note: Additional evaluation metrics such as Normalized Mutual Information (NMI) and heterogeneous cluster dispersion/density tests are intentionally deferred extensions for potential future research).*
         """
     )
 
@@ -2254,28 +2262,33 @@ def render_view_methodology() -> None:
     st.markdown("### 4. Step-by-Step Viva Demonstration Walkthrough")
     st.markdown(
         r"""
-        During the laboratory viva or project evaluation, follow this structured demonstration:
+        During laboratory viva or project evaluation, follow this structured demonstration:
 
         1. **Baseline Sanity Check (Gaussian Blobs):**
            - In the **Clustering Playground**, select *Gaussian Blobs* ($k=3$, noise $\sigma=0.0$, outlier rate $0.0$).
-           - Run clustering: Observe that **both** K-Means and MST achieve high Inlier ARI ($>0.95$). Explain to the examiner that on standard globular clusters, both centroidal and graph-theoretic approaches succeed.
+           - Run clustering: Observe that on well-separated globular clusters, both centroidal and graph-theoretic approaches typically achieve high Inlier ARI (often exceeding $0.80$ to $0.90$). Explain to the examiner that well-separated convex clusters satisfy the inductive biases of both algorithms. Note that exact scores depend on the active seed and spatial configuration.
 
         2. **Topological Separation on Clean Manifolds (Two Moons or Concentric Circles):**
            - Switch to *Concentric Circles* or *Two Moons* with zero noise and zero outliers.
-           - Run clustering: Contrast the algorithmic inductive biases.
-             - **K-Means Limitation:** K-Means bisects the nested rings or crescents with linear Voronoi hyperplanes, resulting in low Inlier ARI ($\approx 0.0$ for circles, $\approx 0.49$ for moons at $k=2$).
-             - **MST Advantage:** Because there is an open spatial gap between clean manifolds, Prim's MST single-linkage cut follows the continuous manifold structure (Inlier ARI $= 1.0$).
+           - Run clustering: Contrast the algorithmic inductive biases using real-time execution results:
+             - **Lloyd's K-Means Limitation:** K-Means bisects nested rings or interlocking crescents with linear Voronoi hyperplanes, resulting in low Inlier ARI because linear boundaries cannot partition non-convex geometries.
+             - **Prim's MST Advantage:** Because there is an open spatial gap between clean manifolds, Prim's MST single-linkage cut follows continuous high-density paths, typically yielding high or near-perfect Inlier ARI.
+             - Explain that actual values shown on screen derive from the current execution rather than fixed reference assumptions.
 
         3. **Noise Perturbations & Chaining Degradation:**
-           - On *Two Moons*, introduce Gaussian noise ($\sigma=0.15$) or add $10\%$ random uniform outliers.
+           - On *Two Moons*, introduce Gaussian noise ($\sigma \ge 0.10$) or add $5\text{–}10\%$ random uniform outliers.
            - Observe that MST's advantage on non-linear manifolds is **not unconditional**:
              - Random uniform outliers landing in the inter-cluster gap create short spurious edges.
-             - These noise bridges trigger the classical **chaining effect**, causing MST Inlier ARI to degrade.
+             - These noise bridges trigger the classical **single-linkage chaining effect**, causing MST Inlier ARI to degrade.
              - Clarify that these are random uniform outliers across the bounding box, not adversarially targeted points.
 
-        4. **Scientific Reproducibility:**
-           - Open the **Reproducibility & Configuration** view and download the JSON configuration.
-           - Explain how the versioned JSON schema guarantees exact replication across platforms and seeds.
+        4. **Computational Complexity & Empirical Scaling:**
+           - In **Performance Benchmarks**, run $\{100, 200, 400\}$ observations with warm-up enabled.
+           - Observe empirical scaling trends: K-Means scales near-linearly when $k, d, I$ are roughly fixed, while dense Prim MST displays quadratic $\mathcal{O}(N^2)$ scaling. Emphasize that empirical wall-clock measurements illustrate practical scaling behavior rather than formal asymptotic mathematical proofs.
+
+        5. **Scientific Reproducibility:**
+           - Open the **Reproducibility & Configuration** view and inspect the exported JSON configuration.
+           - Explain how versioned schema `1.0.0` records generative parameters and PRNG seeds to support reproducible experiments in compatible environments. Clarify that exact numerical reproducibility across different platforms depends on runtime environments, BLAS/LAPACK floating-point behavior, and software versions, and that external CSV imports require their original raw source files.
         """
     )
 

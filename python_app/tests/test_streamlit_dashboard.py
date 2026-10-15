@@ -29,6 +29,7 @@ if str(APP_DIR) not in sys.path:
 from clustering_lab.algorithms.kmeans import kmeans
 from clustering_lab.algorithms.mst import mst_clustering
 from clustering_lab.data.config import ExperimentConfig, create_dataset_from_config
+from clustering_lab.data.dataset import Dataset
 from clustering_lab.data.csv_loader import load_dataset_from_csv
 from clustering_lab.data.synthetic import (
     generate_blobs,
@@ -1267,3 +1268,126 @@ def test_related_reset_mechanisms_safety():
     at.button(key="exp_btn_first").click().run()
     assert not at.exception
     assert at.session_state["explorer_step_index"] == 0
+
+
+def test_playground_and_explorer_cross_generation_regression():
+    """Test D (Regression protection): Verify Playground runs on all topologies and transitions seamlessly with Explorer."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=45)
+    at.run()
+    assert not at.exception
+
+    # 1. Playground generation across all 3 topologies
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+
+    for topo in ["Gaussian Blobs", "Two Moons", "Concentric Circles"]:
+        at.selectbox(key="pg_dataset_family").set_value(topo).run()
+        assert not at.exception
+        at.button(key="pg_btn_run").click().run()
+        assert not at.exception, f"Playground execution failed on topology '{topo}': {at.exception}"
+        assert len(at.tabs) >= 3
+        assert at.session_state["current_dataset"] is not None
+
+    # 2. Transition to Algorithm Explorer and run Dense Prim MST on Two Moons (previously crashed)
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+    at.radio(key="explorer_algo_choice").set_value("Dense Prim's MST").run()
+    at.selectbox(key="exp_family").set_value("Two Moons").run()
+    assert not at.exception
+    assert at.session_state["explorer_trace"] is not None
+
+    # 3. Transition back to Playground
+    at.sidebar.radio(key="main_navigation").set_value("Clustering Playground").run()
+    assert not at.exception
+    assert at.session_state["current_dataset"] is not None
+
+
+def test_methodology_view_rendering_and_scientific_accuracy():
+    """Verify that Methodology / Help renders cleanly and enforces scientific accuracy."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # Navigate to Methodology / Help
+    at.sidebar.radio(key="main_navigation").set_value("Methodology / Help").run()
+    assert not at.exception
+
+    md_texts = " ".join([m.value for m in at.markdown])
+
+    # 1. Mathematically correct Silhouette definition
+    assert "b(i) - a(i)" in md_texts
+    assert r"\max(a(i), b(i))" in md_texts
+
+    # 2. Absence of scientifically unsupported absolute ARI guarantees
+    assert "(>0.95)" not in md_texts
+    assert "(Inlier ARI $= 1.0$)" not in md_texts
+    assert r"\approx 0.49" not in md_texts
+
+    # 3. Qualified complexity and reproducibility wording
+    assert "I \\times N \\times k \\times d" in md_texts
+    assert "compatible" in md_texts.lower()
+
+    # 4. Deferred future research extensions are not claimed as implemented
+    assert "Normalized Mutual Information (NMI)" in md_texts
+    assert "deferred" in md_texts.lower()
+
+
+def test_reproducibility_config_csv_notice_and_synthetic_recovery():
+    """Verify that external CSV datasets display intended notice in Config view and recover on synthetic switch."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_file = APP_DIR / "app.py"
+    at = AppTest.from_file(str(app_file), default_timeout=35)
+    at.run()
+    assert not at.exception
+
+    # 1. Mount an external CSV dataset into active session state
+    csv_ds = Dataset(
+        X=np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0]], dtype=np.float64),
+        labels=np.array([0, 0, 1, 1], dtype=np.int32),
+        inlier_mask=np.array([True, True, True, True], dtype=bool),
+        dataset_family="csv_custom",
+        seed=None,
+        params={"filename": "external_data.csv"},
+        n_inliers=4,
+        n_outliers=0,
+        n_samples=4,
+    )
+    at.session_state["current_dataset"] = csv_ds
+
+    # Navigate to Reproducibility & Configuration
+    at.sidebar.radio(key="main_navigation").set_value("Reproducibility & Configuration").run()
+    assert not at.exception
+
+    # Notice must explain that external CSV data cannot be regenerated from synthetic JSON alone
+    info_texts = " ".join([inf.value for inf in at.info if hasattr(inf, "value")])
+    assert "Current active dataset was imported from an external CSV" in info_texts
+    assert "cannot regenerate" in info_texts
+
+    # 2. Switch back to a valid synthetic dataset
+    synth_ds = generate_synthetic_dataset(family="blobs", n_samples=30, seed=42)
+    at.session_state["current_dataset"] = synth_ds
+
+    # Rerun the configuration view
+    at.sidebar.radio(key="main_navigation").set_value("Reproducibility & Configuration").run()
+    assert not at.exception
+
+    # JSON configuration code block must be rendered
+    code_blocks = [c.value for c in at.code if hasattr(c, "value")]
+    assert any("blobs" in c for c in code_blocks)
+    assert any("schema_version" in c for c in code_blocks)

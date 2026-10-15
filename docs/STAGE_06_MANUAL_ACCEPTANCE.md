@@ -1,11 +1,11 @@
 # STAGE 06: USER-LED MANUAL ACCEPTANCE TESTING RECORD
 ## Minimum Spanning Tree (MST) vs. Lloyd's K-Means Robustness Analysis
 
-- **Document Version:** 1.2.0 (User-Verified Fix for S06-DEFECT-001)
-- **Baseline Git Commit:** `74dbc8a` + Local Fix `S06-DEFECT-001`
+- **Document Version:** 1.3.0 (Consolidated User-Verified Acceptance & Methodology Polish)
+- **Baseline Git Commit:** `3cbe6f1` (Stage 06 Batch 1 commit) + Local Fixes `S06-DEFECT-001`, `S06-DEFECT-002`
 - **Active Branch:** `feature/python-streamlit-migration`
 - **Application Framework:** Streamlit 1.42.0 on Python 3.12 (NumPy / SciPy / Plotly / Pandas)
-- **Test Date:** October 15, 2026 (Defect S06-DEFECT-001 Verified by User; Manual Protocols In Progress)
+- **Test Date:** October 15, 2026 (Defects S06-DEFECT-001 & S06-DEFECT-002 Verified by User; M4/M6/M7/M8 Core Workflows Reported Working)
 - **Lead Project Authors:** Himanshu Gupta & Parth Yadav (*Equal Attribution*)
 - **Academic Course:** Pattern Matching Lab (BCS-DS-777), 7th Semester, MRIIRS
 
@@ -17,7 +17,7 @@ This document provides the authoritative, non-technical manual acceptance testin
 
 ### Core Testing Principles
 1. **Mathematical Grounding over Fixed Arbitrary Values:** Clustering outputs depend on stochastic initializations (Lloyd's K-Means) and seed permutations. Verification focuses on mathematical invariants (e.g., $ARI \in [-1.0, 1.0]$, $O(N^2)$ vs. $O(N)$ runtime scaling, single-linkage chaining failure on uniform noise) rather than fabricated fixed decimal numbers.
-2. **Honest Initial Status:** All test items are initialized to `NOT TESTED` (except remediated defects awaiting user retest, marked `AWAITING USER RETEST`). No results, logs, or screenshots are pre-filled or assumed.
+2. **Honest Initial Status:** All test items are initialized to `NOT TESTED` (except remediated defects verified by user or modules reported working). No unverified results, logs, or screenshots are pre-filled or assumed.
 3. **Reproducible Preconditions:** Every protocol lists the exact starting view, widget inputs, and fixtures required.
 4. **Strict Privacy Compliance:** Verifies that no institutional student roll numbers appear anywhere in user-facing text, academic cards, or exported files.
 
@@ -26,7 +26,7 @@ This document provides the authoritative, non-technical manual acceptance testin
 ## 2. Environment Setup & Startup Instructions
 
 ### 2.1 Local Application Startup
-To test local commit `74dbc8a` and the S06-DEFECT-001 remediation before pushing to GitHub or deploying to Streamlit Community Cloud:
+To test local commit `3cbe6f1` and the verified defect remediations before pushing to GitHub or deploying to Streamlit Community Cloud:
 
 1. Open PowerShell in the project root directory (`d:\7th Sem\PM\Mini project\MST-KMeans-Robustness-Analysis`).
 2. Set the Python path and launch the Streamlit server using `uv`:
@@ -43,7 +43,7 @@ To test local commit `74dbc8a` and the S06-DEFECT-001 remediation before pushing
 
 > [!NOTE]
 > **Streamlit Community Cloud Notice:**
-> The public cloud instance at `https://mst-kmeans-robustness-analysis.streamlit.app/` reflects the remote GitHub branch. Commit `74dbc8a` and local defect fixes are currently local. Local manual acceptance testing must be conducted on `http://localhost:8501` prior to the Stage 07 release deployment.
+> The public cloud instance at `https://mst-kmeans-robustness-analysis.streamlit.app/` reflects the remote GitHub branch. Commit `3cbe6f1` and local defect fixes are currently local. Local manual acceptance testing must be conducted on `http://localhost:8501` prior to the Stage 07 release deployment.
 
 ### 2.2 Test Fixtures Directory
 Manual test fixtures are located in:
@@ -96,6 +96,7 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **`FAIL`**: An unhandled exception, visual breakage, calculation error, or broken workflow occurred.
 - **`BLOCKED`**: The test could not be executed due to an issue in an earlier step.
 - **`FIX VERIFIED BY USER`**: Defect remediation has been directly verified and confirmed functional by the project owner in the live browser environment.
+- **`REPORTED WORKING — DETAILED ACCEPTANCE PENDING`**: Core module workflow reported functional in real-browser testing by project owner; formal step-by-step verification checklist pending comprehensive session completion.
 - **`PENDING USER CONFIRMATION`**: Detailed check awaiting explicit manual confirmation during formal acceptance testing.
 - **`NOT TESTED`**: Initial unexecuted state prior to user execution.
 
@@ -186,6 +187,7 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **Target Module:** `Performance Benchmarks`
 - **Goal:** Verify empirical wall-clock timing measurement, sample standard deviation ($ddof=1$), and $O(N)$ vs $O(N^2)$ scaling.
 - **Preconditions:** Navigate to `Performance Benchmarks` via sidebar.
+- **Operational Status:** `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` (Module reported operational by project owner in Brave browser on Oct 15, 2026; formal itemized verification checklist pending user execution).
 
 > [!NOTE]
 > **Implementation Note on Controls:**
@@ -193,20 +195,21 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 
 | Step | UI Action | Expected Result | Actual Result | Status | Screenshot / Notes |
 |:---:|---|---|---|:---:|---|
-| M4.1 | In Sample Sizes multiselect, select exactly `100`, `200`, `400`. | Preflight estimate reports: `3 sizes × 5 repetitions = 15 measured trials (36 total algorithm executions including warm-up)`. | | `NOT TESTED` | |
-| M4.2 | Ensure **Measured Repetitions per Size** = `5` and **Include 1 Warm-up Stage** = Checked. | Warm-up checkbox remains enabled; preflight indicator shows green safe badge. | | `NOT TESTED` | |
-| M4.3 | Click **`🚀 Run Benchmarks`**. | Progress bar increments through trials with status text indicating current size, repetition, and algorithm. | | `NOT TESTED` | |
-| M4.4 | Inspect the metric cards at the top of results. | Displays Max Scale (N=400), K-Means Mean, Prim MST Mean, and Ratio of Means (MST / KM). | | `NOT TESTED` | |
-| M4.5 | Click tab **"📈 Runtime Scaling Curves"**. | Plotly chart displays empirical runtime curves across measured sample sizes. Empirical trends illustrate contrasting computational growth profiles (near-linear centroid iterations vs. dense quadratic edge evaluations). | | `NOT TESTED` | |
-| M4.6 | Click tab **"📊 Summary Statistics Table"**. | Table lists sample size, repetitions, mean, median, and Bessel-corrected sample standard deviation ($ddof=1$). Measured runtimes capture system timing variability across repetitions without assuming strictly monotonic scaling on individual OS runs. | | `NOT TESTED` | |
-| M4.7 | Click tab **"💾 Research Data Export"** and click **`📄 Raw Trials CSV`**. | File `benchmark_trials.csv` downloads with columns: `sample_size, repetition, algorithm, runtime_ms, k, seed, timestamp`. | | `NOT TESTED` | |
+| M4.1 | In Sample Sizes multiselect, select exactly `100`, `200`, `400`. | Preflight estimate reports: `3 sizes × 5 repetitions = 15 measured trials (36 total algorithm executions including warm-up)`. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.2 | Ensure **Measured Repetitions per Size** = `5` and **Include 1 Warm-up Stage** = Checked. | Warm-up checkbox remains enabled; preflight indicator shows green safe badge. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.3 | Click **`🚀 Run Benchmarks`**. | Progress bar increments through trials with status text indicating current size, repetition, and algorithm. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.4 | Inspect the metric cards at the top of results. | Displays Max Scale (N=400), K-Means Mean, Prim MST Mean, and Ratio of Means (MST / KM). | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.5 | Click tab **"📈 Runtime Scaling Curves"**. | Plotly chart displays empirical runtime curves across measured sample sizes. Empirical trends illustrate contrasting computational growth profiles (near-linear centroid iterations vs. dense quadratic edge evaluations). | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.6 | Click tab **"📊 Summary Statistics Table"**. | Table lists sample size, repetitions, mean, median, and Bessel-corrected sample standard deviation ($ddof=1$). Measured runtimes capture system timing variability across repetitions without assuming strictly monotonic scaling on individual OS runs. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M4.7 | Click tab **"💾 Research Data Export"** and click **`📄 Raw Trials CSV`**. | File `benchmark_trials.csv` downloads with columns: `sample_size, repetition, algorithm, runtime_ms, k, seed, timestamp`. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
 
 ---
 
-#### Protocol M5: Algorithm Explorer Step-by-Step Educational Visualizer (ISSUE-05 Remediation)
+#### Protocol M5: Algorithm Explorer Step-by-Step Educational Visualizer (ISSUE-05 & S06-DEFECT-002 Remediation)
 - **Target Module:** `Algorithm Explorer`
-- **Goal:** Verify Prim's MST step trace synchronization between navigation buttons and slider with zero double reruns.
+- **Goal:** Verify Prim's MST and K-Means step trace synchronization between navigation buttons and slider with zero double reruns and no dataset generation crashes on non-blob topologies.
 - **Preconditions:** Navigate to `Algorithm Explorer` via sidebar.
+- **Operational Status:** `FIX VERIFIED BY USER` (S06-DEFECT-002 resolved and verified in Brave browser by project owner on Oct 15, 2026: "yes M5 working"; formal trace navigation checklist pending user execution).
 
 > [!NOTE]
 > **Implementation Note on Controls:**
@@ -214,12 +217,13 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 
 | Step | UI Action | Expected Result | Actual Result | Status | Screenshot / Notes |
 |:---:|---|---|---|:---:|---|
-| M5.1 | Select radio **`Dense Prim's MST`**. | Educational controls expand. Topology defaults to Two Moons / Circles. | | `NOT TESTED` | |
-| M5.2 | Set **Dataset Topology** = `Concentric Circles`, **Observations** = `20`, **Clusters (k)** = `2`. | Trace is automatically generated for $N=20$. Total steps $= 19$ tree growth steps $+ 1$ cut step. | | `NOT TESTED` | |
-| M5.3 | Click **`Next ▶`** button 5 times sequentially. | Step index advances cleanly from 0 to 5; slider updates in lockstep to 5; active candidate edge displays in orange glow. | | `NOT TESTED` | |
-| M5.4 | Drag the **Step Navigation** slider directly back to Step 2. | Plot instantly updates to Step 2 state; exactly 2 edges connected; vertex highlight reflects step 2 frontier. | | `NOT TESTED` | |
-| M5.5 | Click **`Next ▶`** again. | Step index advances cleanly to Step 3 without skipping, page flashing, or jumping to step 6. | | `NOT TESTED` | |
-| M5.6 | Click **`Last ⏭`**. | Step advances to the final cut stage; the longest cut edge is highlighted in red dashes, separating inner and outer rings. | | `NOT TESTED` | |
+| M5.1 | Select radio **`Dense Prim's MST`**. | Educational controls expand. Topology defaults to Two Moons / Circles. | Controls expand cleanly; no unhandled exceptions. | `FIX VERIFIED BY USER` | Confirmed by project owner in Brave on Oct 15, 2026 ("yes M5 working"). |
+| M5.2 | Set **Dataset Topology** = `Concentric Circles`, **Observations** = `20`, **Clusters (k)** = `2`. | Dataset generates cleanly without `TypeError: generate_circles() got an unexpected keyword argument 'radius'`. Trace is automatically generated for $N=20$. Total steps $= 19$ tree growth steps $+ 1$ cut step. | Concentric Circles dataset generated without errors; visualizer renders. | `FIX VERIFIED BY USER` | S06-DEFECT-002 verified resolved by project owner in Brave on Oct 15, 2026. |
+| M5.2b | Set **Dataset Topology** = `Two Moons`, **Observations** = `20`, **Clusters (k)** = `2`. | Dataset generates cleanly without `TypeError: generate_moons() got an unexpected keyword argument 'radius'`. Trace is automatically generated. | Two Moons dataset generated without errors; visualizer renders. | `FIX VERIFIED BY USER` | S06-DEFECT-002 verified resolved by project owner in Brave on Oct 15, 2026. |
+| M5.3 | Click **`Next ▶`** button 5 times sequentially. | Step index advances cleanly from 0 to 5; slider updates in lockstep to 5; active candidate edge displays in orange glow. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Visualizer functional; detailed step-by-step checklist pending user execution. |
+| M5.4 | Drag the **Step Navigation** slider directly back to Step 2. | Plot instantly updates to Step 2 state; exactly 2 edges connected; vertex highlight reflects step 2 frontier. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Visualizer functional; detailed step-by-step checklist pending user execution. |
+| M5.5 | Click **`Next ▶`** again. | Step index advances cleanly to Step 3 without skipping, page flashing, or jumping to step 6. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Visualizer functional; detailed step-by-step checklist pending user execution. |
+| M5.6 | Click **`Last ⏭`**. | Step advances to the final cut stage; the longest cut edge is highlighted in red dashes, separating inner and outer rings. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Visualizer functional; detailed step-by-step checklist pending user execution. |
 
 ---
 
@@ -227,6 +231,7 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **Target Module:** `Robustness Analysis`
 - **Goal:** Execute Quick preset robustness sweep (72 paired trials) and verify degradation error bands.
 - **Preconditions:** Navigate to `Robustness Analysis` via sidebar.
+- **Operational Status:** `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` (Module reported operational by project owner in Brave browser on Oct 15, 2026; formal itemized verification checklist pending user execution).
 
 > [!NOTE]
 > **Implementation Note on Accounting:**
@@ -234,12 +239,12 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 
 | Step | UI Action | Expected Result | Actual Result | Status | Screenshot / Notes |
 |:---:|---|---|---|:---:|---|
-| M6.1 | Verify **Execution Mode Preset** = `Quick Mode (3 Seeds — Fast Demo)`. | Seeds display `[11, 22, 33]`; experiment plan confirms 72 paired comparisons. | | `NOT TESTED` | |
-| M6.2 | Ensure all 3 topologies are selected: Gaussian Blobs, Two Moons, Concentric Circles. | Selected count = 3; sweep type = Both Sweeps (Noise & Outliers). | | `NOT TESTED` | |
-| M6.3 | Click **`🚀 Execute Robustness Analysis Engine`**. | Progress bar displays sweep execution through all 72 trials to completion without unhandled exceptions. | | `NOT TESTED` | |
-| M6.4 | Click tab **"📉 Gaussian Noise Sweep"**. | Dual-panel Plotly figure renders Inlier ARI vs $\sigma$ with shaded $\pm 1\sigma$ standard deviation error bands. | | `NOT TESTED` | |
-| M6.5 | Click tab **"📉 Uniform Outlier Contamination Sweep"**. | Dual-panel Plotly figure displays Inlier ARI response across uniform outlier rates with shaded error bands. Illustrates empirical sensitivity where spurious bridging points can induce single-linkage chaining in MST, alongside centroid shifts in K-Means under diffuse contamination. | | `NOT TESTED` | |
-| M6.6 | Click tab **"💾 Export Sweep Artifacts"** and download **`📄 Raw Trial Observations (CSV)`**. | CSV downloads containing all 144 sweep result rows with complete provenance metadata. | | `NOT TESTED` | |
+| M6.1 | Verify **Execution Mode Preset** = `Quick Mode (3 Seeds — Fast Demo)`. | Seeds display `[11, 22, 33]`; experiment plan confirms 72 paired comparisons. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M6.2 | Ensure all 3 topologies are selected: Gaussian Blobs, Two Moons, Concentric Circles. | Selected count = 3; sweep type = Both Sweeps (Noise & Outliers). | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M6.3 | Click **`🚀 Execute Robustness Analysis Engine`**. | Progress bar displays sweep execution through all 72 trials to completion without unhandled exceptions. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M6.4 | Click tab **"📉 Gaussian Noise Sweep"**. | Dual-panel Plotly figure renders Inlier ARI vs $\sigma$ with shaded $\pm 1\sigma$ standard deviation error bands. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M6.5 | Click tab **"📉 Uniform Outlier Contamination Sweep"**. | Dual-panel Plotly figure displays Inlier ARI response across uniform outlier rates with shaded error bands. Illustrates empirical sensitivity where spurious bridging points can induce single-linkage chaining in MST, alongside centroid shifts in K-Means under diffuse contamination. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
+| M6.6 | Click tab **"💾 Export Sweep Artifacts"** and download **`📄 Raw Trial Observations (CSV)`**. | CSV downloads containing all 144 sweep result rows with complete provenance metadata. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Reported operational by project owner in Brave; detailed checklist pending. |
 
 ---
 
@@ -249,19 +254,20 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **Target Module:** `Dataset & CSV Import`
 - **Goal:** Upload a custom tabular dataset, map coordinates, and hand off to Playground.
 - **Preconditions:** Navigate to `Dataset & CSV Import` via sidebar; ensure test fixture `01_valid_labeled.csv` is accessible.
+- **Operational Status:** `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` (Core tabular workflow confirmed operational by project owner in Brave browser on Oct 15, 2026: "M7 and Supplementary works"; detailed error-boundary checklist pending user execution).
 
 > [!NOTE]
 > **Implementation Note on Headerless CSVs:**
-> The current UI tabular parser always expects standard CSVs with a header row (`pd.read_csv` default). If a headerless CSV (such as fixture `03_headerless.csv`) is uploaded, pandas defaults to treating the first data row as column names. Positional index selection for headerless files is currently an unsupported UI capability.
+> The Python data loader supports headerless CSVs via `load_dataset_from_csv(..., has_header=False)`. However, the current Streamlit UI tabular parser always expects standard CSVs with a header row (`pd.read_csv` default). Positional index selection for headerless files is currently an unsupported UI capability; if a headerless file (e.g. `03_headerless.csv`) is uploaded, the first row is treated as column names.
 
 | Step | UI Action | Expected Result | Actual Result | Status | Screenshot / Notes |
 |:---:|---|---|---|:---:|---|
-| M7.1 | In the file uploader, upload `docs/manual_test_fixtures/01_valid_labeled.csv`. | Green success notification appears: `File parsed successfully: 01_valid_labeled.csv (12 rows, 3 columns)`. | | `NOT TESTED` | |
-| M7.2 | Inspect the preview table. | First 8 rows of CSV render cleanly with numeric coordinate columns. | | `NOT TESTED` | |
-| M7.3 | Set **Feature 1 (X Axis)** = `x_coord`, **Feature 2 (Y Axis)** = `y_coord`, **Ground-Truth Label** = `ground_truth_class`. | Column selectors map cleanly; target clusters $k$ defaults to 3. | | `NOT TESTED` | |
-| M7.4 | Click **`🚀 Load & Run Clustering on CSV`**. | Success message displays: "Successfully processed CSV dataset: 12 points clustered." | | `NOT TESTED` | |
-| M7.5 | Navigate to **Clustering Playground** via the sidebar. | Playground mounts imported data; blue source notice displays: `Currently displaying imported CSV data ('01_valid_labeled.csv')`. | | `NOT TESTED` | |
-| M7.6 | Return to `Dataset & CSV Import` and upload `docs/manual_test_fixtures/05_invalid_nonnumeric.csv`. | Application displays clear error banner stating non-numeric values were detected, without crashing. | | `NOT TESTED` | |
+| M7.1 | In the file uploader, upload `docs/manual_test_fixtures/01_valid_labeled.csv`. | Green success notification appears: `File parsed successfully: 01_valid_labeled.csv (12 rows, 3 columns)`. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Core import confirmed working by project owner; formal step check pending. |
+| M7.2 | Inspect the preview table. | First 8 rows of CSV render cleanly with numeric coordinate columns. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Core import confirmed working by project owner; formal step check pending. |
+| M7.3 | Set **Feature 1 (X Axis)** = `x_coord`, **Feature 2 (Y Axis)** = `y_coord`, **Ground-Truth Label** = `ground_truth_class`. | Column selectors map cleanly; target clusters $k$ defaults to 3. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Core import confirmed working by project owner; formal step check pending. |
+| M7.4 | Click **`🚀 Load & Run Clustering on CSV`**. | Success message displays: "Successfully processed CSV dataset: 12 points clustered." | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Core import confirmed working by project owner; formal step check pending. |
+| M7.5 | Navigate to **Clustering Playground** via the sidebar. | Playground mounts imported data; blue source notice displays: `Currently displaying imported CSV data ('01_valid_labeled.csv')`. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Core import confirmed working by project owner; formal step check pending. |
+| M7.6 | Return to `Dataset & CSV Import` and upload `docs/manual_test_fixtures/05_invalid_nonnumeric.csv`. | Application displays clear error banner stating non-numeric values were detected, without crashing. | | `NOT TESTED` | Negative testing boundary pending explicit user execution. |
 
 ---
 
@@ -269,14 +275,19 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **Target Module:** `Reproducibility & Configuration`
 - **Goal:** Export JSON configuration, modify UI parameters, and restore exact session state from file.
 - **Preconditions:** Navigate to `Reproducibility & Configuration` via sidebar.
+- **Operational Status:** `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` (Synthetic JSON configuration export and restoration confirmed operational by project owner in Brave browser on Oct 15, 2026: "m8 working"; informational notice on CSV-origin dataset verified as intended behavior; detailed checklist pending user execution).
+
+> [!NOTE]
+> **Implementation Note on CSV-Origin Datasets:**
+> When the active dataset originates from an external CSV, the application displays an informational notice: *"Current active dataset was imported from an external CSV. JSON configuration files reproduce synthetic geometries and cannot regenerate external CSV tabular data without the original source file."* The project owner observed and verified this notice in Brave; this is intended application behavior, NOT a defect. When switching back to a synthetic dataset, the JSON export and restoration workflow operates smoothly.
 
 | Step | UI Action | Expected Result | Actual Result | Status | Screenshot / Notes |
 |:---:|---|---|---|:---:|---|
-| M8.1 | Review the **Export Current Configuration** panel on the left. | Displays active topology, sample count, cluster count, and pretty-printed JSON schema `1.0.0`. | | `NOT TESTED` | |
-| M8.2 | Click **`⬇️ Download Configuration (.json)`**. | A valid JSON file (`clustering_config_....json`) downloads to the browser download folder. | | `NOT TESTED` | |
-| M8.3 | In the right panel ("Upload valid configuration JSON"), upload `docs/manual_test_fixtures/08_valid_config.json`. | Success message displays: `Configuration valid: Family circles, N=200, Seed=777`. Parsed dictionary renders in interactive JSON tree. | | `NOT TESTED` | |
-| M8.4 | Click **`Apply Configuration & Regenerate`**. | Application reloads and applies config; navigates to Playground where Concentric Circles ($N=200$, seed 777) is rendered. | | `NOT TESTED` | |
-| M8.5 | Upload `docs/manual_test_fixtures/07_malformed_config.json` to the uploader. | Application displays red error banner: `Invalid experiment configuration: Malformed configuration JSON`, preventing state corruption. | | `NOT TESTED` | |
+| M8.1 | Review the **Export Current Configuration** panel on the left. | Displays active topology, sample count, cluster count, and pretty-printed JSON schema `1.0.0`. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Confirmed working on synthetic datasets by project owner ("m8 working"). |
+| M8.2 | Click **`⬇️ Download Configuration (.json)`**. | A valid JSON file (`clustering_config_....json`) downloads to the browser download folder. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Confirmed working on synthetic datasets by project owner ("m8 working"). |
+| M8.3 | In the right panel ("Upload valid configuration JSON"), upload `docs/manual_test_fixtures/08_valid_config.json`. | Success message displays: `Configuration valid: Family circles, N=200, Seed=777`. Parsed dictionary renders in interactive JSON tree. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Confirmed working on synthetic datasets by project owner ("m8 working"). |
+| M8.4 | Click **`Apply Configuration & Regenerate`**. | Application reloads and applies config; navigates to Playground where Concentric Circles ($N=200$, seed 777) is rendered. | | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Confirmed working on synthetic datasets by project owner ("m8 working"). |
+| M8.5 | Upload `docs/manual_test_fixtures/07_malformed_config.json` to the uploader. | Application displays red error banner: `Invalid experiment configuration: Malformed configuration JSON`, preventing state corruption. | | `NOT TESTED` | Negative testing boundary pending explicit user execution. |
 
 ---
 
@@ -284,22 +295,23 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 
 | ID | Focus Area | Specific Action | Acceptance Standard | Status | Notes |
 |:---:|---|---|---|:---:|---|
-| **S1** | **Methodology / Help View** | Open `Methodology / Help` view. | Full theoretical formulations (Lloyd updates, Prim cut condition, ARI formula) render in LaTeX; Viva defense guide is readable. | `NOT TESTED` | |
-| **S2** | **Publication PNG Exports** | In Playground, click `📥 Download Ground Truth Plot (Publication PNG)`. | A valid, uncorrupted PNG image downloads containing publication-quality high-DPI rendered scatter points. | `NOT TESTED` | |
-| **S3** | **Responsive Viewport** | Resize browser window to mobile width ($<768\text{px}$). | Sidebar collapses to standard mobile hamburger menu; metric cards stack vertically; Plotly charts adapt to container width. | `NOT TESTED` | |
-| **S4** | **Cross-View Session Isolation** | Run clustering in Playground, navigate through all 8 views sequentially, then return to Playground. | Previously computed clustering plots and metric cards remain fully rendered; zero session state loss or recalculation delay. | `NOT TESTED` | |
-| **S5** | **Browser Console Audit** | Open Browser Developer Tools (`F12` $\to$ Console). Perform several runs. | **Zero** unhandled JavaScript errors, missing asset 404s, or broken WebSocket disconnect loops. | `NOT TESTED` | |
-| **S6** | **Keyboard Accessibility** | Use `Tab`, `Shift+Tab`, and `Enter` to navigate controls without mouse. | Focus indicators are visible; buttons and inputs can be triggered via keyboard. | `NOT TESTED` | |
-| **S7** | **Public Privacy Audit** | Perform page text search (`Ctrl + F`) for university roll numbers across all modules. | Exactly **0** matches found across the entire application interface and exports. | `NOT TESTED` | |
-| **S8** | **Plotly Visual Interactivity** | Hover over individual points and edges in Playground and Explorer. | Hover tooltips display exact $(X, Y)$ coordinates, predicted cluster ID, and ground truth label; zoom/pan controls operate smoothly without distortion. | `NOT TESTED` | |
+| **S1** | **Methodology / Help View** | Open `Methodology / Help` view. | Full theoretical formulations (Lloyd updates, Prim cut condition, ARI formula) render in LaTeX; Viva defense guide is readable. | `REPORTED WORKING — DETAILED ACCEPTANCE PENDING` | Rendering verified and confirmed via browser screenshots by project owner on Oct 15, 2026 ("M7 and Supplementary works"). |
+| **S2** | **Publication PNG Exports** | In Playground, click `📥 Download Ground Truth Plot (Publication PNG)`. | A valid, uncorrupted PNG image downloads containing publication-quality high-DPI rendered scatter points. | `NOT TESTED` | Requires manual user verification of downloaded PNG file. |
+| **S3** | **Responsive Viewport** | Resize browser window to mobile width ($<768\text{px}$). | Sidebar collapses to standard mobile hamburger menu; metric cards stack vertically; Plotly charts adapt to container width. | `NOT TESTED` | Requires manual responsive viewport inspection. |
+| **S4** | **Cross-View Session Isolation** | Run clustering in Playground, navigate through all 8 views sequentially, then return to Playground. | Previously computed clustering plots and metric cards remain fully rendered; zero session state loss or recalculation delay. | `NOT TESTED` | Covered by automated AppTest; pending formal manual session pass. |
+| **S5** | **Browser Console Audit** | Open Browser Developer Tools (`F12` $\to$ Console). Perform several runs. | **Zero** unhandled JavaScript errors, missing asset 404s, or broken WebSocket disconnect loops. | `NOT TESTED` | Requires browser developer console inspection. |
+| **S6** | **Keyboard Accessibility** | Use `Tab`, `Shift+Tab`, and `Enter` to navigate controls without mouse. | Focus indicators are visible; buttons and inputs can be triggered via keyboard. | `NOT TESTED` | Requires manual keyboard walkthrough. |
+| **S7** | **Public Privacy Audit** | Perform page text search (`Ctrl + F`) for university roll numbers across all modules. | Exactly **0** matches found across the entire application interface and exports. | `NOT TESTED` | Covered by automated privacy tests; pending formal manual audit. |
+| **S8** | **Plotly Visual Interactivity** | Hover over individual points and edges in Playground and Explorer. | Hover tooltips display exact $(X, Y)$ coordinates, predicted cluster ID, and ground truth label; zoom/pan controls operate smoothly without distortion. | `NOT TESTED` | Requires manual hover/zoom verification in browser. |
 
 ---
 
 ## 7. Defect & Observation Log
 
 | Log ID | Module | Protocol Step | Severity (P1–P4) | Observed Behavior | Steps to Reproduce | Resolution Status |
-|:---:|---|:---:|:---:|---|---|:---:|
+|:---:|---|---|---|---|---|:---:|
 | **S06-DEFECT-001** | Clustering Playground | `Reset Defaults` (M2-R1.2–M2-R1.3) | **P2 — Major** | Clicking `Reset Defaults` button raised `StreamlitWidgetAlreadyInstantiatedError: st.session_state['pg_dataset_family'] cannot be modified after the widget with that key is instantiated.` | In Clustering Playground, adjust sliders or topology, then click `Reset Defaults`. Originally reproduced by project owner on Oct 15, 2026. | **`FIX VERIFIED BY USER`** |
+| **S06-DEFECT-002** | Algorithm Explorer | Prim's MST / Lloyd's K-Means on Two Moons / Circles (M5.2) | **P1 — Critical** | Selecting `Two Moons` or `Concentric Circles` crashed the view with `TypeError: generate_circles() got an unexpected keyword argument 'radius'` or `TypeError: generate_moons() got an unexpected keyword argument 'radius'`. | In Algorithm Explorer, select `Dense Prim's MST` or `Lloyd's K-Means`, then choose `Concentric Circles` or `Two Moons`. Reproduced by project owner in Brave browser on Oct 15, 2026. | **`FIX VERIFIED BY USER`** |
 
 ### Defect S06-DEFECT-001 Technical Remediation Details
 - **Defect ID:** S06-DEFECT-001
@@ -316,6 +328,31 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - **Manual Verification:** Project owner confirms Reset Defaults works in local Brave browser on October 15, 2026 ("yes reset work").
 - **Defect Status:** `FIX VERIFIED BY USER`
 
+### Defect S06-DEFECT-002 Technical Remediation Details
+- **Defect ID:** S06-DEFECT-002
+- **Module:** Algorithm Explorer
+- **Severity:** P1 — Critical (Blocks core Explorer testing)
+- **Environment:** Local Streamlit app, Brave browser, Windows, October 15, 2026
+- **Observed Failures:**
+  - Concentric Circles `generate_circles()` unexpected keyword `'radius'`
+  - Two Moons `generate_moons()` unexpected keyword `'radius'`
+- **Root Cause:**
+  1. In `python_app/app.py` (`render_view_explorer`), dataset generation unconditionally passed `radius=3.5`, `cluster_std=0.4`, and `n_clusters=k_val` to `generate_synthetic_dataset(...)` regardless of the selected topology.
+  2. In `python_app/clustering_lab/data/synthetic.py` (`generate_synthetic_dataset`), the dispatcher whitelist for `moons` and `circles` erroneously included `"radius"` in `moons_valid` and `circles_valid`.
+  3. Consequently, `generate_synthetic_dataset` forwarded `radius` to `generate_moons()` and `generate_circles()`, neither of which accepts a `radius` argument (Two Moons has fixed crescent geometry of radius 1.0; Concentric Circles takes `factor` for inner ring ratio).
+- **Remediation:**
+  1. In `python_app/clustering_lab/data/synthetic.py`, restricted `generate_synthetic_dataset` kwargs filtering strictly to parameters supported by each generator:
+     - `blobs`: `blobs_valid = {"n_clusters", "cluster_std", "radius"}`
+     - `moons`: takes no extra geometry kwargs (`{}`)
+     - `circles`: `circles_valid = {"factor"}`
+  2. In `python_app/app.py` (`render_view_explorer`), structured topology-specific `exp_kwargs` so Explorer only provides applicable geometric parameters (`radius`, `cluster_std`, `n_clusters` for blobs; `factor` for circles; none for moons).
+- **Automated Verification:**
+  - `python_app/tests/test_data.py`: Added `test_direct_generator_dispatch_all_topologies_and_kwargs_filtering` (Test A) and `test_dataset_parameter_boundaries_and_rejection` (Test C).
+  - `python_app/tests/test_algorithm_explorer.py`: Added `test_explorer_all_topologies_kmeans_and_mst` (Test B) and `test_explorer_topology_switching_and_boundaries` (Test C).
+  - `python_app/tests/test_streamlit_dashboard.py`: Added `test_playground_and_explorer_cross_generation_regression` (Test D).
+- **Manual Verification:** Project owner tested and confirmed fix in Brave browser on October 15, 2026 ("yes M5 working"). Two Moons and Concentric Circles generated cleanly without `TypeError`.
+- **Defect Status:** `FIX VERIFIED BY USER`
+
 ---
 
 ## 8. Final User Sign-Off Block
@@ -326,6 +363,7 @@ Testing is divided into three focused sessions to prevent fatigue and ensure tho
 - [ ] **Session B Completed:** Benchmarks, Explorer, and Robustness verified (M4, M5, M6).
 - [ ] **Session C Completed:** CSV Import, Configuration, and Supplementary gates verified (M7, M8, S1–S8).
 - [x] **Defect S06-DEFECT-001 Verified:** Reset Defaults operates cleanly in live browser without errors (Verified by project owner in Brave browser on October 15, 2026; "yes reset work").
+- [x] **Defect S06-DEFECT-002 Verified:** Algorithm Explorer generates Two Moons and Concentric Circles datasets cleanly without `TypeError` (Verified by project owner in Brave browser on October 15, 2026; "yes M5 working").
 - [ ] **Scientific Integrity Confirmed:** Dual algorithm execution and topological biases verified on live browser.
 - [ ] **Privacy Compliance Confirmed:** University roll numbers verified completely absent.
 

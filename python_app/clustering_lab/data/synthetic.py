@@ -288,25 +288,25 @@ def generate_synthetic_dataset(
     """
     family_lower = str(family).strip().lower()
     if family_lower == "blobs":
+        blobs_valid = {"n_clusters", "cluster_std", "radius"}
+        blobs_kwargs = {k: v for k, v in kwargs.items() if k in blobs_valid}
         return generate_blobs(
             n_samples=n_samples,
             noise=noise,
             outlier_rate=outlier_rate,
             seed=seed,
-            **kwargs,
+            **blobs_kwargs,
         )
     elif family_lower == "moons":
-        moons_valid = {"n_samples", "noise", "outlier_rate", "seed", "radius"}
-        moons_kwargs = {k: v for k, v in kwargs.items() if k in moons_valid}
+        # Two Moons topology has fixed k=2 crescent geometry; accepts no extra geometry kwargs
         return generate_moons(
             n_samples=n_samples,
             noise=noise,
             outlier_rate=outlier_rate,
             seed=seed,
-            **moons_kwargs,
         )
     elif family_lower == "circles":
-        circles_valid = {"n_samples", "noise", "outlier_rate", "seed", "factor", "radius"}
+        circles_valid = {"factor"}
         circles_kwargs = {k: v for k, v in kwargs.items() if k in circles_valid}
         return generate_circles(
             n_samples=n_samples,

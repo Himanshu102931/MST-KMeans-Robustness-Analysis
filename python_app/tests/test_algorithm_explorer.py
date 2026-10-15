@@ -611,3 +611,95 @@ def test_algorithm_explorer_progress_and_math_expander():
     all_md_mst = " ".join([m.value for m in at.markdown if hasattr(m, "value")])
     assert "Greedy Prim Selection" in all_md_mst
     assert "Cut Edge Removal" in all_md_mst
+
+
+def test_explorer_all_topologies_kmeans_and_mst():
+    """Test B (S06-DEFECT-002): Verify Algorithm Explorer executes cleanly across all 3 topologies for both algorithms.
+
+    Explicitly verifies that Two Moons and Concentric Circles do not raise unexpected keyword argument errors
+    in both Lloyd's K-Means and Dense Prim's MST.
+    """
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_path = str(APP_DIR / "app.py")
+    at = AppTest.from_file(app_path, default_timeout=35).run()
+    assert not at.exception
+
+    # Navigate to Algorithm Explorer
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    algorithms = ["Lloyd's K-Means", "Dense Prim's MST"]
+    topologies = ["Gaussian Blobs", "Two Moons", "Concentric Circles"]
+
+    for algo in algorithms:
+        at.radio(key="explorer_algo_choice").set_value(algo).run()
+        assert not at.exception, f"Setting algorithm '{algo}' caused exception: {at.exception}"
+
+        for topo in topologies:
+            at.selectbox(key="exp_family").set_value(topo).run()
+            assert not at.exception, f"Selecting topology '{topo}' under '{algo}' raised exception: {at.exception}"
+
+            # Verify trace was generated and populated in session state
+            trace = at.session_state.get("explorer_trace")
+            assert trace is not None, f"Trace missing for {algo} on {topo}"
+            assert len(trace.steps) > 0, f"No steps in trace for {algo} on {topo}"
+
+            # Verify initial step index is 0
+            assert at.session_state.get("explorer_step_index") == 0
+
+            # Verify dataset family matches
+            ds = at.session_state.get("explorer_dataset")
+            assert ds is not None
+            expected_fam = "blobs" if topo == "Gaussian Blobs" else ("moons" if topo == "Two Moons" else "circles")
+            assert ds.dataset_family == expected_fam
+
+            # Verify navigation controls exist and advance
+            at.button(key="exp_btn_next").click().run()
+            assert not at.exception
+            assert at.session_state.get("explorer_step_index") == 1
+
+            # Verify contextual math formulations correspond to algorithm
+            rendered_md = " ".join([m.value for m in at.markdown if hasattr(m, "value")])
+            if algo == "Lloyd's K-Means":
+                assert "Distance Computation" in rendered_md or "Voronoi Assignment" in rendered_md
+            else:
+                assert "Greedy Prim Selection" in rendered_md or "Cut Edge Removal" in rendered_md
+
+
+def test_explorer_topology_switching_and_boundaries():
+    """Test C: Verify switching topologies dynamically resets step index and accommodates parameter boundaries."""
+    try:
+        from streamlit.testing.v1 import AppTest
+    except ImportError:
+        pytest.skip("streamlit.testing.v1.AppTest is not available")
+
+    app_path = str(APP_DIR / "app.py")
+    at = AppTest.from_file(app_path, default_timeout=35).run()
+    assert not at.exception
+
+    at.sidebar.radio(key="main_navigation").set_value("Algorithm Explorer").run()
+    assert not at.exception
+
+    # Select Dense Prim's MST and Concentric Circles
+    at.radio(key="explorer_algo_choice").set_value("Dense Prim's MST").run()
+    at.selectbox(key="exp_family").set_value("Concentric Circles").run()
+    assert not at.exception
+
+    # Change observation boundary: min observations N=10 (or slider min)
+    at.slider(key="exp_n").set_value(20).run()
+    assert not at.exception
+    assert at.session_state["explorer_dataset"].n_samples == 20
+
+    # Advance step
+    at.button(key="exp_btn_next").click().run()
+    assert at.session_state["explorer_step_index"] == 1
+
+    # Switch to Two Moons: step index must reset cleanly to 0
+    at.selectbox(key="exp_family").set_value("Two Moons").run()
+    assert not at.exception
+    assert at.session_state["explorer_step_index"] == 0
+    assert at.session_state["explorer_dataset"].dataset_family == "moons"

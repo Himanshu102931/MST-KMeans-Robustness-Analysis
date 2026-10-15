@@ -258,3 +258,133 @@ def test_input_immutability():
     mst_clustering(d.X, k=2)
 
     assert np.array_equal(d.X, X_original)
+
+
+def test_direct_generator_dispatch_all_topologies_and_kwargs_filtering():
+    """Test A (S06-DEFECT-002): Verify generate_synthetic_dataset dispatches correctly for all topologies.
+
+    Specifically verifies that:
+    1. Blobs forwards n_clusters, cluster_std, radius, and ignores irrelevant kwargs (e.g. factor).
+    2. Moons ignores radius, cluster_std, and n_clusters without raising TypeError.
+    3. Circles forwards factor, and ignores radius, cluster_std, and n_clusters without raising TypeError.
+    4. Two finite coordinate dimensions, correct counts, valid labels, and deterministic reproducibility.
+    """
+    # 1. Blobs with extra kwargs (e.g. factor)
+    ds_blobs = generate_synthetic_dataset(
+        family="blobs",
+        n_samples=40,
+        seed=42,
+        noise=0.0,
+        outlier_rate=0.0,
+        n_clusters=3,
+        cluster_std=0.35,
+        radius=4.0,
+        factor=0.45,  # Irrelevant to blobs, must be filtered safely
+    )
+    assert ds_blobs.X.shape == (40, 2)
+    assert np.all(np.isfinite(ds_blobs.X))
+    assert len(np.unique(ds_blobs.labels)) == 3
+    assert ds_blobs.dataset_family == "blobs"
+    assert ds_blobs.params["radius"] == 4.0
+    assert ds_blobs.params["cluster_std"] == 0.35
+
+    # Seed reproducibility check
+    ds_blobs_rep = generate_synthetic_dataset(
+        family="blobs",
+        n_samples=40,
+        seed=42,
+        n_clusters=3,
+        cluster_std=0.35,
+        radius=4.0,
+    )
+    assert np.array_equal(ds_blobs.X, ds_blobs_rep.X)
+    assert np.array_equal(ds_blobs.labels, ds_blobs_rep.labels)
+
+    # 2. Moons with extra kwargs (radius, cluster_std, n_clusters)
+    ds_moons = generate_synthetic_dataset(
+        family="moons",
+        n_samples=40,
+        seed=42,
+        noise=0.05,
+        outlier_rate=0.0,
+        n_clusters=2,
+        cluster_std=0.4,
+        radius=3.5,  # Must NOT raise TypeError: generate_moons() got unexpected keyword argument 'radius'
+    )
+    assert ds_moons.X.shape == (40, 2)
+    assert np.all(np.isfinite(ds_moons.X))
+    assert len(np.unique(ds_moons.labels)) == 2
+    assert ds_moons.dataset_family == "moons"
+    assert ds_moons.params["n_clusters"] == 2
+
+    ds_moons_rep = generate_synthetic_dataset(
+        family="moons",
+        n_samples=40,
+        seed=42,
+        noise=0.05,
+    )
+    assert np.array_equal(ds_moons.X, ds_moons_rep.X)
+    assert np.array_equal(ds_moons.labels, ds_moons_rep.labels)
+
+    # 3. Circles with extra kwargs (radius, cluster_std, n_clusters) and supported factor
+    ds_circles = generate_synthetic_dataset(
+        family="circles",
+        n_samples=40,
+        seed=42,
+        noise=0.05,
+        outlier_rate=0.0,
+        factor=0.55,
+        radius=3.5,  # Must NOT raise TypeError: generate_circles() got unexpected keyword argument 'radius'
+        cluster_std=0.4,
+        n_clusters=2,
+    )
+    assert ds_circles.X.shape == (40, 2)
+    assert np.all(np.isfinite(ds_circles.X))
+    assert len(np.unique(ds_circles.labels)) == 2
+    assert ds_circles.dataset_family == "circles"
+    assert ds_circles.params["factor"] == 0.55
+
+    ds_circles_rep = generate_synthetic_dataset(
+        family="circles",
+        n_samples=40,
+        seed=42,
+        noise=0.05,
+        factor=0.55,
+    )
+    assert np.array_equal(ds_circles.X, ds_circles_rep.X)
+    assert np.array_equal(ds_circles.labels, ds_circles_rep.labels)
+
+
+def test_dataset_parameter_boundaries_and_rejection():
+    """Test C: Boundary values and error rejection across all synthetic topologies."""
+    # Boundary: Small N=20 (minimum Explorer size)
+    for fam in ["blobs", "moons", "circles"]:
+        ds = generate_synthetic_dataset(family=fam, n_samples=20, seed=100)
+        assert ds.X.shape == (20, 2)
+
+    # Boundary: Max Explorer micro-observations N=60
+    for fam in ["blobs", "moons", "circles"]:
+        ds = generate_synthetic_dataset(family=fam, n_samples=60, seed=100)
+        assert ds.X.shape == (60, 2)
+
+    # Seed changes produce distinct feature matrices on stochastic generators
+    d1 = generate_synthetic_dataset(family="blobs", n_samples=30, seed=11)
+    d2 = generate_synthetic_dataset(family="blobs", n_samples=30, seed=22)
+    assert not np.allclose(d1.X, d2.X)
+
+    # For moons with noise, seed alters the jitter perturbation
+    m1 = generate_synthetic_dataset(family="moons", n_samples=30, noise=0.05, seed=11)
+    m2 = generate_synthetic_dataset(family="moons", n_samples=30, noise=0.05, seed=22)
+    assert not np.allclose(m1.X, m2.X)
+
+    # Invalid family rejection
+    with pytest.raises(ValueError, match="Unsupported dataset family"):
+        generate_synthetic_dataset(family="spiral", n_samples=30)
+
+    # Invalid factor for circles
+    with pytest.raises(ValueError, match="Circle separation factor"):
+        generate_synthetic_dataset(family="circles", n_samples=30, factor=1.5)
+
+    # Invalid n_samples for blobs (n_samples < n_clusters)
+    with pytest.raises(ValueError, match="must be >= n_clusters"):
+        generate_synthetic_dataset(family="blobs", n_samples=2, n_clusters=3)
