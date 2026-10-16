@@ -7,7 +7,7 @@
 - **Institution:** School of Engineering & Technology, Manav Rachna International Institute of Research and Studies (MRIIRS)
 - **Repository:** [https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis](https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis)
 - **Active Branch:** `feature/python-streamlit-migration`
-- **Baseline Git Commit:** `6c194c9` (Stage 06 acceptance synchronized; Stage 07 Batch 1 in progress)
+- **Baseline Git Commit:** `845683e` (Stage 06 acceptance synchronized; Stage 07 Batch 1 in progress)
 - **Target Runtime:** Python 3.12 (Pinned scientific stack)
 - **Public Deployment Target:** [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
 - **Document Version:** 1.2.0 (Stage 07 Batch 1 Progress Synchronization)
@@ -464,7 +464,7 @@ graph LR
   - All eight primary modules (M1–M8) and eight supplementary quality gates (S1–S8) reported passed.
   - Latest GitHub Actions CI baseline: 168 tests passing on Python 3.12 (Ubuntu).
   - Latest verified statement coverage: 86% overall application and approximately 90.92% scientific core (`clustering_lab`).
-  - Remote feature branch `feature/python-streamlit-migration` updated through commit `3e95e82`.
+  - Remote feature branch `feature/python-streamlit-migration` updated through commit `bd2f2a0` (Stage 06 remote checkpoint).
   - Formal project owner acceptance recorded on October 15, 2026 (see `docs/STAGE_06_MANUAL_ACCEPTANCE.md`).
 - **Objectives:**
   Execute comprehensive interactive manual verification in a live browser across all eight views to validate user experience, visual aesthetics, responsiveness, export functionality, and error handling prior to final release.
@@ -495,7 +495,7 @@ graph LR
 - **Expected Deliverables:**
   - Completed Manual Acceptance Testing Record in `docs/STAGE_06_MANUAL_ACCEPTANCE.md` (Delivered & Accepted).
 - **Git Commit Boundaries:**
-  - Commit message: `chore(qa): record completed manual acceptance testing protocol results` (Delivered in commit `3e95e82`).
+  - Commit message: `chore(qa): record completed manual acceptance testing protocol results` (Delivered in commit `bd2f2a0`).
 - **Dependencies and Risks:**
   - Dependency: Stage 05 completion and green CI (Satisfied).
   - Risk: Visual layout quirks on specific browser viewports. Mitigation: Tested on Chrome, Firefox, and Edge; certified in Brave.

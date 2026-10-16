@@ -5,7 +5,7 @@
 * **Department**: Department of Computer Science and Engineering
 * **Institution**: Manav Rachna International Institute of Research and Studies (MRIIRS), Faridabad, India
 * **Student Presenters**:
-  * **Himanshu Gupta** — Roll No. / Allocation No.: **19**
+  * **Himanshu Gupta** — Project Allocation No.: **19**
   * **Parth Yadav** — Project Partner
 * **Faculty Mentor**: [Course Instructor / Faculty Mentor Name]
 * **Aspect Ratio**: 16:9 Widescreen Layout

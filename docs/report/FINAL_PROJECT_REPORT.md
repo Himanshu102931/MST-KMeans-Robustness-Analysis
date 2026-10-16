@@ -12,7 +12,7 @@
 **Academic Session**: 2026–2027  
 
 **Submitted by**:
-* **Himanshu Gupta** — Roll No. / Allocation No.: **19**
+* **Himanshu Gupta** — Project Allocation No.: **19**
 * **Parth Yadav** — Project Partner
 
 **Under the Mentorship of**:

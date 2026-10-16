@@ -125,7 +125,7 @@ All 15 issues cataloged during project finalization are reconciled below based o
 
 | Issue ID | Severity | Category | Description | Final Classification | Exact Implementation & Verification Evidence |
 | :--- | :---: | :--- | :--- | :---: | :--- |
-| **ISSUE-01** | **P1** | Algorithmic / Visual | $N=1$ MST Explorer Figure Dataclass Bug | **Fully Resolved** | Resolved in commit `50b2ae6`. Regression tests `test_mst_trace_single_observation_mathematical_properties` and `test_create_mst_explorer_figure_single_observation` pass. |
+| **ISSUE-01** | **P1** | Algorithmic / Visual | $N=1$ MST Explorer Figure Dataclass Bug | **Fully Resolved** | Resolved in commit `b28eb0f` (F2A Task 1 Milestone). Regression tests `test_mst_trace_single_observation_mathematical_properties` and `test_create_mst_explorer_figure_single_observation` pass. |
 | **ISSUE-02** | **P2** | Algorithmic / Parity | Convergence tolerance condition disparity (`< tol` vs `<= tol`) | **Fully Resolved** | Resolved in `kmeans.py:276` and `explorer.py:403`. Both engines enforce strict `if not force_continue and max_shift < tol:` verified by automated parity tests. |
 | **ISSUE-03** | **P2** | Algorithmic / Parity | Empty-cluster fallback reseeding divergence | **Fully Resolved** | Resolved in `kmeans.py:263` and `explorer.py:394`. Both engines apply deterministic modulo reseeding `c % n_samples`. |
 | **ISSUE-04** | **P2** | Algorithmic / Validation | `KMeans.predict()` missing feature dimension check | **Fully Resolved** | Resolved in `kmeans.py:343-347`. Explicit domain `ValueError` raised on dimension mismatch with descriptive diagnostic message. |
@@ -357,7 +357,7 @@ The public Streamlit Community Cloud application is deployed at:
   - No remote pushes to GitHub origin, merges to `main`, or cloud deployment triggers will be performed without explicit project owner instructions.
 
 > [!NOTE]
-> **Historical Git Privacy Notice:** Active-source sanitization ensures the current working tree and candidate release snapshot contain zero personal student registration identifiers. Historical Git commit objects prior to commit `4adbc8c` remain preserved in repository history per non-destructive Git governance, and do not compromise active runtime or release package privacy.
+> **Historical Git Privacy Notice:** Active-source sanitization ensures the current working tree and candidate release snapshot contain zero personal student registration identifiers. Historical Git commit objects prior to commit `28ae037` (Stage 07 Sanitization Milestone) remain preserved in repository history per non-destructive Git governance, and do not compromise active runtime or release package privacy.
 
 ---
 
