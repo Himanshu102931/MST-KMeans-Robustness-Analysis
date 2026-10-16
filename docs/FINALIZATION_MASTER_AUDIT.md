@@ -514,7 +514,7 @@ Before entering user-led manual acceptance testing, the automated suite will be 
 | Test Suite Statement Coverage (82.1%) | **Automated Test Evidence** | Empirically measured in single unified `pytest-cov` process: 129 passing tests; 88.9% `clustering_lab`, 63.4% `app.py`. | 100% (Verified) |
 | Live Streamlit Cloud Deployment Status | **Empirical Verification** | Public URL live; F1 trial count reconciliation confirmed. | 100% (Verified) |
 | Cloud Worker Execution Latency for 10 Seeds | **Empirical Inference** | Based on synchronous execution of 240 paired trials (600 total clustering executions) at product upper limit $N=500$ (~15–30s on cloud workers). | High |
-| Interactive Control Manual Coverage | **Scope Clarification** | While headless AppTest covers all 8 views, comprehensive manual browser testing across all slider permutations is reserved for Stage 06. | 100% (Planned) |
+| Interactive Control Manual Coverage | **Post-Audit Update — October 15, 2026** | While headless AppTest originally covered all 8 views at audit time, comprehensive manual browser testing across all 8 modules (M1–M8) and supplementary gates (S1–S8) was completed locally and formally accepted by the project owner on October 15, 2026 (see docs/STAGE_06_MANUAL_ACCEPTANCE.md). | 100% (Completed & Accepted) |
 
 ---
 

@@ -7,11 +7,12 @@
 - **Institution:** School of Engineering & Technology, Manav Rachna International Institute of Research and Studies (MRIIRS)
 - **Repository:** [https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis](https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis)
 - **Active Branch:** `feature/python-streamlit-migration`
-- **Confirmed Baseline Commit:** `50b2ae6` (F2A Task 1 verification and fix)
+- **Baseline Git Commit:** `3e95e82` (Stage 06 Batch 2 completed and pushed to `feature/python-streamlit-migration`)
 - **Target Runtime:** Python 3.12 (Pinned scientific stack)
 - **Public Deployment Target:** [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
-- **Document Version:** 1.0.0 (Definitive Execution Roadmap)
-- **Document Date:** October 14, 2026
+- **Document Version:** 1.1.0 (Post-Stage-06 Master Synchronization)
+- **Document Date:** October 15, 2026
+- **Project Execution Status:** Stages 01–06 Completed & Formally Accepted by Project Owner; Stage 07 Not Started (Awaiting Explicit Authorization)
 
 ---
 
@@ -44,7 +45,11 @@ The following core architectural and governance decisions are adopted as immutab
 
 ## 2. Architectural Baseline & Master State Machine
 
-### 2.1 Repository Layout and Module Inventory
+### 2.1 Repository Layout and Module Inventory (Historical Baseline Snapshot)
+
+> [!NOTE]
+> **Historical Baseline vs. Live CI Verification:**
+> The inventory below preserves the historical Stage 00/01 baseline repository layout (129 automated tests across 12 test modules at commit `50b2ae6`). Following the completion and formal project-owner acceptance of Stage 06 (commit `3e95e82`), the live verified CI baseline is **168 passing tests** (unified statement coverage: 86% overall application, ~90.92% scientific core).
 
 The repository enforces strict separation between legacy browser demonstration files, documentation, and the production Python research platform:
 
@@ -54,7 +59,7 @@ MST-KMeans-Robustness-Analysis/
 │   └── devcontainer.json          # Container configuration [Stage 01: Secure & Repair]
 ├── .github/
 │   └── workflows/
-│       └── python-ci.yml          # GitHub Actions CI (Python 3.12 / Ubuntu, 129 tests)
+│       └── python-ci.yml          # GitHub Actions CI (Python 3.12 / Ubuntu; 129 tests at baseline snapshot, 168 tests current)
 ├── README.md                      # Primary repository landing page [Stage 01: Create]
 ├── css/                           # Preserved Vanilla JS styles (Untouched)
 ├── js/                            # Preserved Vanilla JS algorithms & renderers (Untouched)
@@ -69,7 +74,7 @@ MST-KMeans-Robustness-Analysis/
     ├── requirements-dev.txt       # Pinned QA & test dependencies (pytest, pytest-cov)
     ├── README.md                  # Comprehensive Python technical documentation
     ├── docs/                      # Scientific algorithm & experiment specifications
-    ├── tests/                     # 12 Pytest test modules (129 unit/integration/UI tests)
+    ├── tests/                     # 12 Pytest test modules (129 tests at baseline snapshot, 168 tests current)
     └── clustering_lab/            # Modular Scientific Python Package
         ├── __init__.py
         ├── algorithms/            # Pure NumPy Clustering Engines & Tracers
@@ -452,6 +457,15 @@ graph LR
 
 ### STAGE 06: Comprehensive User-Led Manual Acceptance Testing
 
+- **Stage Status:** **`COMPLETED — ACCEPTED BY PROJECT OWNER (October 15, 2026)`**
+- **Execution Summary:**
+  - Comprehensive user-led manual acceptance testing completed locally in the Brave browser on Windows 11.
+  - Two browser defects discovered, remediated, and verified: `S06-DEFECT-001` (Playground reset crash) and `S06-DEFECT-002` (Explorer generator dispatch crash).
+  - All eight primary modules (M1–M8) and eight supplementary quality gates (S1–S8) reported passed.
+  - Latest GitHub Actions CI baseline: 168 tests passing on Python 3.12 (Ubuntu).
+  - Latest verified statement coverage: 86% overall application and approximately 90.92% scientific core (`clustering_lab`).
+  - Remote feature branch `feature/python-streamlit-migration` updated through commit `3e95e82`.
+  - Formal project owner acceptance recorded on October 15, 2026 (see `docs/STAGE_06_MANUAL_ACCEPTANCE.md`).
 - **Objectives:**
   Execute comprehensive interactive manual verification in a live browser across all eight views to validate user experience, visual aesthetics, responsiveness, export functionality, and error handling prior to final release.
 - **Relevant Issue IDs:**
@@ -460,37 +474,43 @@ graph LR
   - None expected (Testing and verification stage).
   - Minor defect remediation in `app.py` only if manual testing uncovers regressions.
 - **Exact Tasks in Dependency Order:**
-  - `Task 6.1` [MANDATORY]: Launch application locally via `streamlit run python_app/app.py` in Python 3.12.
-  - `Task 6.2` [MANDATORY]: Execute Test Protocol `M1` (Overview View): verify dark theme, runtime badge, equal student attribution, absence of roll numbers.
-  - `Task 6.3` [MANDATORY]: Execute Test Protocol `M2` (Playground Execution): verify dual algorithm execution on Two Moons ($N=300$, noise $0.05$, outliers $0.05$), isotropic 1:1 scatter plots, and metrics table.
-  - `Task 6.4` [MANDATORY]: Execute Test Protocol `M3` (Playground Stale State): adjust noise slider without clicking generate; verify plots remain visible with amber stale badge; click recompute and verify refresh.
-  - `Task 6.5` [MANDATORY]: Execute Test Protocol `M4` (Performance Benchmarks): execute benchmark sweep ($N \in \{100, 200, 400\}$, $R=5$); verify progress spinner, scaling curves, and CSV export.
-  - `Task 6.6` [MANDATORY]: Execute Test Protocol `M5` (Algorithm Explorer): step through Prim's MST on Concentric Circles ($N=20$) using buttons and slider; verify zero double reruns or desync.
-  - `Task 6.7` [MANDATORY]: Execute Test Protocol `M6` (Robustness Analysis): execute Quick Preset (72 paired trials); verify multi-series Plotly charts with $\pm 1\sigma$ error bands; test CSV/JSON downloads.
-  - `Task 6.8` [MANDATORY]: Execute Test Protocol `M7` (CSV Dataset Import): upload test CSV; map columns; preview scatter plot; hand off to Playground.
-  - `Task 6.9` [MANDATORY]: Execute Test Protocol `M8` (Reproducibility & Config): export JSON configuration; modify sliders; re-import JSON; verify exact state restoration.
-  - `Task 6.10` [MANDATORY]: Complete and sign off the Manual Acceptance Testing Checklist (Section 7).
+  - `Task 6.1` [COMPLETED]: Launch application locally via `streamlit run python_app/app.py` in Python 3.12.
+  - `Task 6.2` [COMPLETED]: Execute Test Protocol `M1` (Overview View): verify dark theme, runtime badge, equal student attribution, absence of roll numbers.
+  - `Task 6.3` [COMPLETED]: Execute Test Protocol `M2` (Playground Execution): verify dual algorithm execution on Two Moons ($N=300$, noise $0.05$, outliers $0.05$), isotropic 1:1 scatter plots, and metrics table.
+  - `Task 6.4` [COMPLETED]: Execute Test Protocol `M3` (Playground Stale State): adjust noise slider without clicking generate; verify plots remain visible with amber stale badge; click recompute and verify refresh.
+  - `Task 6.5` [COMPLETED]: Execute Test Protocol `M4` (Performance Benchmarks): execute benchmark sweep ($N \in \{100, 200, 400\}$, $R=5$); verify progress spinner, scaling curves, and CSV export.
+  - `Task 6.6` [COMPLETED]: Execute Test Protocol `M5` (Algorithm Explorer): step through Prim's MST on Concentric Circles ($N=20$) using buttons and slider; verify zero double reruns or desync.
+  - `Task 6.7` [COMPLETED]: Execute Test Protocol `M6` (Robustness Analysis): execute Quick Preset (72 paired trials); verify multi-series Plotly charts with $\pm 1\sigma$ error bands; test CSV/JSON downloads.
+  - `Task 6.8` [COMPLETED]: Execute Test Protocol `M7` (CSV Dataset Import): upload test CSV; map columns; preview scatter plot; hand off to Playground.
+  - `Task 6.9` [COMPLETED]: Execute Test Protocol `M8` (Reproducibility & Config): export JSON configuration; modify sliders; re-import JSON; verify exact state restoration.
+  - `Task 6.10` [COMPLETED]: Complete and sign off the Manual Acceptance Testing Checklist (Section 7).
 - **Required vs Optional Work:**
-  All Tasks 6.1 through 6.10 are **MANDATORY**.
+  All Tasks 6.1 through 6.10 are **COMPLETED**.
 - **Regression Tests and Automated Checks:**
-  - All automated tests must remain green during and after manual acceptance testing.
+  - All automated tests remain green (168 passed in GitHub Actions CI).
 - **Acceptance Criteria:**
-  - All 8 manual test protocols (M1–M8) pass with confirmed expected user experience.
+  - All 8 manual test protocols (M1–M8) passed with confirmed expected user experience.
   - Zero browser console errors or unhandled Streamlit exceptions.
-  - User sign-off recorded in project log.
+  - User sign-off recorded in `docs/STAGE_06_MANUAL_ACCEPTANCE.md`.
 - **Expected Deliverables:**
-  - Completed Manual Acceptance Testing Record in `docs/`.
+  - Completed Manual Acceptance Testing Record in `docs/STAGE_06_MANUAL_ACCEPTANCE.md` (Delivered & Accepted).
 - **Git Commit Boundaries:**
-  - Commit message: `chore(qa): record completed manual acceptance testing protocol results` (if documentation updated).
+  - Commit message: `chore(qa): record completed manual acceptance testing protocol results` (Delivered in commit `3e95e82`).
 - **Dependencies and Risks:**
-  - Dependency: Stage 05 completion and green CI.
-  - Risk: Visual layout quirks on specific browser viewports. Mitigation: Tested on Chrome, Firefox, and Edge.
+  - Dependency: Stage 05 completion and green CI (Satisfied).
+  - Risk: Visual layout quirks on specific browser viewports. Mitigation: Tested on Chrome, Firefox, and Edge; certified in Brave.
 - **What Must Remain Untouched:**
   Core scientific algorithms and data contracts.
 
 ---
 
 ### STAGE 07: Final Release and Academic Handoff
+
+- **Stage Status:** **`NOT STARTED / AWAITING EXPLICIT PROJECT OWNER AUTHORIZATION`**
+
+> [!IMPORTANT]
+> **Stage 07 Authorization & Scope Boundary:**
+> Stage 07 is **NOT STARTED** and is strictly quarantined awaiting explicit project owner authorization. No automatic merge to `main`, GitHub release tagging, production deployment synchronization, or cloud acceptance certification is authorized by the current workflow. Furthermore, academic deliverables (academic report, PowerPoint presentation, research paper, and viva defense slide deck) remain **STRICTLY ON HOLD** until expressly requested and authorized by the project owner. They must not be generated automatically.
 
 - **Objectives:**
   Verify live cloud deployment, perform release tagging, assemble final academic handoff documentation, and confirm instructor demonstration readiness.
@@ -500,13 +520,13 @@ graph LR
   - `docs/RELEASE_NOTES.md` (New release summary)
   - `python_app/README.md` (Final version badge update)
 - **Exact Tasks in Dependency Order:**
-  - `Task 7.1` [MANDATORY]: Perform final Git working tree check (`git status`, `git diff --check`) confirming clean state, zero untracked scratch files, and zero whitespace violations.
-  - `Task 7.2` [MANDATORY]: Verify live deployment on Streamlit Community Cloud: confirm public URL boots cleanly, passes health checks, and reflects all Stage 01–05 updates.
-  - `Task 7.3` [MANDATORY]: Verify offline viva defense readiness: confirm both Python Streamlit application and legacy JavaScript application boot and operate without active internet access.
-  - `Task 7.4` [MANDATORY]: Create `docs/RELEASE_NOTES.md` detailing the complete finalization changelog, issue resolutions (ISSUE-01 through ISSUE-15), performance benchmarks, and viva defense guidance.
-  - `Task 7.5` [MANDATORY]: Tag release version `v1.0.0-final` on GitHub and prepare instructor demonstration checklist.
+  - `Task 7.1` [MANDATORY — PENDING AUTHORIZATION]: Perform final Git working tree check (`git status`, `git diff --check`) confirming clean state, zero untracked scratch files, and zero whitespace violations.
+  - `Task 7.2` [MANDATORY — PENDING AUTHORIZATION]: Verify live deployment on Streamlit Community Cloud: confirm public URL boots cleanly, passes health checks, and reflects all Stage 01–05 updates.
+  - `Task 7.3` [MANDATORY — PENDING AUTHORIZATION]: Verify offline viva defense readiness: confirm both Python Streamlit application and legacy JavaScript application boot and operate without active internet access.
+  - `Task 7.4` [MANDATORY — PENDING AUTHORIZATION]: Create `docs/RELEASE_NOTES.md` detailing the complete finalization changelog, issue resolutions (ISSUE-01 through ISSUE-15), performance benchmarks, and viva defense guidance.
+  - `Task 7.5` [MANDATORY — PENDING AUTHORIZATION]: Tag release version `v1.0.0-final` on GitHub and prepare instructor demonstration checklist.
 - **Required vs Optional Work:**
-  Tasks 7.1 through 7.5 are **MANDATORY**. Generating external slide decks or academic papers is deferred until explicitly authorized by the project owner.
+  Tasks 7.1 through 7.5 are **MANDATORY** upon authorization. Generating external slide decks, PowerPoint files, or academic papers remains **STRICTLY ON HOLD** until explicitly authorized by the project owner.
 - **Regression Tests and Automated Checks:**
   - Full CI workflow passes on GitHub Actions (Python 3.12 / Ubuntu).
   - Clean `git status`.
@@ -516,12 +536,12 @@ graph LR
   - Equal student attribution confirmed; zero roll numbers in public artifacts.
   - Release tag created.
 - **Expected Deliverables:**
-  - `docs/RELEASE_NOTES.md` (Created)
+  - `docs/RELEASE_NOTES.md` (Created upon authorization)
   - Tagged commit `v1.0.0-final`
 - **Git Commit Boundaries:**
   - Commit message: `release: v1.0.0 production finalization and academic handoff`
 - **Dependencies and Risks:**
-  - Dependency: Stage 06 user sign-off.
+  - Dependency: Stage 06 user sign-off (Completed). Explicit project owner authorization to proceed to Stage 07 (Awaiting).
   - Risk: Streamlit Community Cloud reboot delay. Mitigation: Manual app reboot trigger via Streamlit admin dashboard.
 - **What Must Remain Untouched:**
   Everything outside documentation and release notes.
@@ -807,32 +827,32 @@ Before proceeding to manual acceptance testing, the automated test suite must sa
 
 ## 6. User-Led Manual Acceptance Protocol (Stage 06)
 
-*To be conducted by the user/project owner in an active browser session prior to final release:*
+*(Conducted and formally accepted by project owner on October 15, 2026; see [STAGE_06_MANUAL_ACCEPTANCE.md](file:///d:/7th%20Sem/PM/Mini%20project/MST-KMeans-Robustness-Analysis/docs/STAGE_06_MANUAL_ACCEPTANCE.md) for complete verification record.)*
 
 ### Protocol Checklist
 
-- [ ] **M1: Overview & Academic Identity**
+- [x] **M1: Overview & Academic Identity**
   - **Action:** Open application at root URL.
   - **Expected Result:** Dashboard loads cleanly in dark mode. Sidebar displays **Himanshu Gupta & Parth Yadav** with equal academic prominence. University roll numbers are completely absent. System runtime badge displays `Python 3.12`.
-- [ ] **M2: Playground Dual Execution & Topological Bias**
+- [x] **M2: Playground Dual Execution & Topological Bias**
   - **Action:** In Clustering Playground, select "Two Moons", $N=300$, noise $\sigma=0.05$, outliers $\epsilon=0.05$, $k=2$. Click "Generate Dataset & Run Dual Clustering".
   - **Expected Result:** Side-by-side isotropic scatter plots render. Mathematical invariants hold: ARIs $\in [-1.0, 1.0]$. Qualitative topological failure is demonstrated: Prim MST connects the non-convex crescent manifolds (high inlier ARI $> 0.85$), while K-Means bisects the crescents with a linear Voronoi boundary (low inlier ARI).
-- [ ] **M3: Playground Stale-State Persistence (ISSUE-06 Verification)**
+- [x] **M3: Playground Stale-State Persistence (ISSUE-06 Verification)**
   - **Action:** Adjust the noise slider from $0.05$ to $0.08$ without clicking Generate.
   - **Expected Result:** **Visualizations do not disappear or unmount.** Previous plots, Voronoi boundaries, and metric tables remain visible. A prominent amber warning banner appears: `⚠️ Parameters Modified — Showing Previous Clustering Results`. Clicking `⚡ Recompute / Update Visualizations` refreshes plots with new parameters.
-- [ ] **M4: Performance Benchmarks & Scaling Trends**
+- [x] **M4: Performance Benchmarks & Scaling Trends**
   - **Action:** In Performance Benchmarks, select $N = \{100, 200, 400\}$, repetitions $R=5$. Click "Run Empirical Benchmark Suite".
   - **Expected Result:** Computation spinner displays. Scaling chart renders showing empirical runtime growth. Summary table reports mean runtime $\pm$ sample standard deviation ($ddof=1$). Prim MST shows $O(N^2)$ distance growth; K-Means runs significantly faster at small $k$. CSV export downloads cleanly.
-- [ ] **M5: Algorithm Explorer Synchronization (ISSUE-05 Verification)**
+- [x] **M5: Algorithm Explorer Synchronization (ISSUE-05 Verification)**
   - **Action:** In Algorithm Explorer, select "Prim's Euclidean MST", "Concentric Circles", $N=20$. Click `Next ▶` 5 times, then drag the slider back to step 2, then click `Next ▶`.
   - **Expected Result:** Slider and button step index remain 100% synchronized. No page flashing, double reruns, or step skips occur. Active candidate edge displays in orange glow; cut edges display in dashed red.
-- [ ] **M6: Robustness Sweep & Failure Modes**
+- [x] **M6: Robustness Sweep & Failure Modes**
   - **Action:** In Robustness Analysis, select "Quick Preset (3 seeds, 72 paired trials)" across all three manifolds. Click "Execute Robustness Analysis Sweeps".
   - **Expected Result:** Progress bar tracks execution through all 72 paired trials. Dual Plotly charts render with shaded $\pm 1\sigma$ error bands. Visualizes the steep drop in MST Inlier ARI under uniform outliers vs K-Means stability under bounded Gaussian noise. Raw trial CSV downloads with full provenance.
-- [ ] **M7: CSV Ingestion Workflow**
+- [x] **M7: CSV Ingestion Workflow**
   - **Action:** In Dataset & CSV Import, upload a custom 2D numerical CSV file. Map $X_1$, $X_2$, and ground truth labels.
   - **Expected Result:** Data preview renders cleanly. Distribution histograms display. Click "Transfer Dataset to Clustering Playground" and verify instant loading in Playground without errors.
-- [ ] **M8: Configuration Persistence & Round-Trip**
+- [x] **M8: Configuration Persistence & Round-Trip**
   - **Action:** In Reproducibility & Config, click "Download Experiment Config (JSON)". Adjust several sliders in the UI. Upload the saved JSON file and click "Apply Config & Restore Session State".
   - **Expected Result:** Confirmation notification appears. All UI sliders and dropdowns instantly restore to their exact saved values.
 
@@ -858,19 +878,19 @@ Before proceeding to manual acceptance testing, the automated test suite must sa
 
 A rigorous count of all tasks defined across Stages 00 through 07:
 
-| Stage Identifier | Stage Title | Mandatory Tasks | Optional Tasks | Total Tasks |
-| :--- | :--- | :---: | :---: | :---: |
-| **Stage 00** | Audit Corrections & Scope Freeze | 6 | 0 | **6** |
-| **Stage 01** | Project Foundation & Security | 7 | 0 | **7** |
-| **Stage 02** | Algorithmic & Scientific Parity | 5 | 0 | **5** |
-| **Stage 03** | Code Architecture & Deduplication | 6 | 0 | **6** |
-| **Stage 04** | Complete Professional UI/UX Redesign | 8 | 0 | **8** |
-| **Stage 05** | Feature Completion & Automated QA | 7 | 2 | **9** |
-| **Stage 06** | User-Led Manual Acceptance Testing | 10 | 0 | **10** |
-| **Stage 07** | Final Release & Academic Handoff | 5 | 0 | **5** |
-| **TOTAL** | **Full Project Backlog** | **54** | **2** | **56** |
+| Stage Identifier | Stage Title | Mandatory Tasks | Optional Tasks | Total Tasks | Execution Status |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **Stage 00** | Audit Corrections & Scope Freeze | 6 | 0 | **6** | Completed |
+| **Stage 01** | Project Foundation & Security | 7 | 0 | **7** | Completed |
+| **Stage 02** | Algorithmic & Scientific Parity | 5 | 0 | **5** | Completed |
+| **Stage 03** | Code Architecture & Deduplication | 6 | 0 | **6** | Completed |
+| **Stage 04** | Complete Professional UI/UX Redesign | 8 | 0 | **8** | Completed |
+| **Stage 05** | Feature Completion & Automated QA | 7 | 2 | **9** | Completed (168 tests, 86% cov) |
+| **Stage 06** | User-Led Manual Acceptance Testing | 10 | 0 | **10** | **Completed & Accepted by Project Owner** |
+| **Stage 07** | Final Release & Academic Handoff | 5 | 0 | **5** | **Not Started (Awaiting Authorization)** |
+| **TOTAL** | **Full Project Backlog** | **54** | **2** | **56** | **49 / 54 Mandatory Completed (90.7%)** |
 
-- **Mandatory Tasks:** **54**
+- **Mandatory Tasks:** **54** (49 completed, 5 pending Stage 07 authorization)
 - **Optional Tasks:** **2** (`Task 5.1a`: Normalized Mutual Information implementation; `Task 5.1b`: Heterogeneous blob cluster dispersions)
 - **Total Backlog Tasks:** **56**
 
@@ -888,4 +908,4 @@ A rigorous count of all tasks defined across Stages 00 through 07:
 
 ---
 
-*Definitive development blueprint established. Awaiting project owner review and formal authorization before initiating Stage 01 implementation.*
+*Definitive development blueprint synchronized. Stages 01–06 completed and accepted; Stage 07 awaiting explicit project owner authorization.*
