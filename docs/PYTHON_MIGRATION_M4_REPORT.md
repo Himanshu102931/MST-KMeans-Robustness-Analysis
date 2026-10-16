@@ -5,9 +5,9 @@
 - **Course:** Pattern Matching Lab (`BCS-DS-777`)
 - **Institution:** Manav Rachna International Institute of Research and Studies (MRIIRS), School of Engineering & Technology
 - **Degree:** B.Tech Computer Science & Engineering (AIML), 7th Semester (2026–2027)
-- **Student Researchers:**
-  - Himanshu Gupta (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
-  - Parth Yadav (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
+- **Student Researchers (Equal Academic Contribution):**
+  - Himanshu Gupta
+  - Parth Yadav
 - **Course Instructor:** Mr. Aman Kumar, Assistant Professor
 - **Active Branch:** `feature/python-streamlit-migration`
 - **Baseline Checkpoint:** `49faf1e` (Phase M3 Verified CI: 65 tests passing on Python 3.12/Ubuntu)
@@ -69,7 +69,7 @@ All legacy assets (Vanilla JavaScript web dashboard, HTML/CSS, research reports,
 ### 3.1 Module 1: Overview
 - Displays official research title: `"MST vs K-Means Robustness Analysis"`.
 - Displays course details: *Pattern Matching Lab (BCS-DS-777)*, institution, and department.
-- Displays student researchers: *Himanshu Gupta (`[REDACTED_STUDENT_IDENTIFIER]`)* and *Parth Yadav (`[REDACTED_STUDENT_IDENTIFIER]`)*.
+- Displays student researchers: *Himanshu Gupta* and *Parth Yadav* (Equal Academic Contribution; personal registration identifiers redacted for repository privacy).
 - Displays course instructor: *Mr. Aman Kumar, Assistant Professor*.
 - Formally states the officially allocated research objective while accurately distinguishing currently implemented functionality (inlier Gaussian jitter, random uniform bounding-box outliers, Inlier/Full ARI, safe Silhouette) from planned subsequent work (heterogeneous density variations, NMI metrics, Monte Carlo parameter sweeps in Phase M5).
 - Nuances algorithmic inductive biases without making unconditional claims of categorical failure or unconditional success on nonlinear datasets.

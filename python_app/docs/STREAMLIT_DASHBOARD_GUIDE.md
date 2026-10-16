@@ -25,15 +25,18 @@ Streamlit will automatically open the dashboard in your default browser at `http
 
 ## 2. Dashboard Architecture & Navigation
 
-The dashboard is structured into five cohesive academic modules accessible via the sidebar:
+The dashboard is structured into eight cohesive academic modules accessible via the sidebar:
 
 | Module | Purpose |
 | :--- | :--- |
-| **Overview** | Official research objective, university metadata, student information, and project roadmap. |
-| **Clustering Playground** | Interactive parameter tweaking, simultaneous dual-algorithm execution on identical feature arrays, 2D Plotly scatter plots with 1:1 isotropic scaling, and side-by-side metric tables. |
-| **Dataset & CSV Import** | Secure parser for external 2D tabular CSV benchmarks with column mapping and boundary validation guards. |
-| **Reproducibility & Configuration** | Bi-directional JSON configuration import and export adhering to `ExperimentConfig` version `1.0.0`. |
-| **Methodology / Help** | Algorithmic fundamentals, inductive biases, metric glossary, and oral examination walkthrough. |
+| **Overview** | Research abstract, inductive bias comparison cards, institutional credentials, and system architecture. |
+| **Clustering Playground** | Interactive parameter tweaking, simultaneous dual-algorithm execution on identical feature arrays, 2D Plotly scatter plots with 1:1 isotropic Euclidean scaling, Voronoi/MST overlays, side-by-side metric tables, and publication PNG downloads. |
+| **Performance Benchmarks** | Monotonic wall-clock profiling across sample sizes ($N \in \{100, 200, 400, 600\}$), warmup exclusion, ratio of means table ($\bar{t}_{\text{MST}} / \bar{t}_{\text{KM}}$), scaling curves with sample std error bars, preflight execution guards, and CSV exports. |
+| **Algorithm Explorer** | Step-by-step visual pedagogical traces for Lloyd's K-Means and dense Prim's MST with interactive step cockpit (First, Prev, Slider, Next, Last, Reset), step descriptions with LaTeX math, and guaranteed 100% mathematical parity against production algorithms. |
+| **Robustness Analysis** | Paired Monte Carlo sweeps across Gaussian coordinate jitter ($\sigma$) and uniform bounding-box outlier contamination ($\epsilon$), isolating topological inlier ARI degradation from full-data ARI, statistical aggregation ($ddof=1$), and raw/summary CSV exports. |
+| **Dataset & CSV Import** | Secure tabular CSV parser (comma, semicolon, tab) supporting custom 2D coordinates and ground-truth labels, interactive preview, column mapping, boundary guards ($N \le 600$), non-fabrication of ARI for unlabeled data, and playground handoff. |
+| **Reproducibility & Configuration** | Bidirectional versioned JSON configuration export and import adhering to `ExperimentConfig` schema `1.0.0`, validating uploaded configurations against bounds, session state restoration, and deterministic dual clustering regeneration. |
+| **Methodology / Help** | Formal mathematical formulations (LaTeX), algorithmic inductive bias deep dive, metric definitions, and oral examination viva defense model Q&A. |
 
 ---
 
@@ -106,6 +109,33 @@ Navigate to the **Overview** tab to display the official research objective and 
 3. Click **⬇️ Download Configuration (.json)**.
 4. **Viva Talking Point:**
    > *"Every synthetic benchmark is deterministic. By exporting and importing this versioned configuration, any researcher running this code on any platform will reproduce the exact coordinate matrix, noise jitter, and clustering outcome down to floating-point precision."*
+
+---
+
+### Stage 7: Empirical Performance Benchmarking & Asymptotic Scaling
+1. Select **Performance Benchmarks** from the sidebar.
+2. Select benchmark sample sizes ($N \in \{100, 200, 400, 600\}$) with $R=5$ repetitions.
+   *(Recommendation for live viva: evaluating $N \in \{100, 200, 400\}$ completes within seconds while clearly demonstrating asymptotic divergence; the maximum individual sample size supported is $N \le 600$.)*
+3. Show the examiner:
+   - The preflight workload execution safety guard ($\le 200$ total algorithm executions across sizes and repetitions) protecting interactive responsiveness.
+   - The ratio of means table ($\bar{t}_{\text{MST}} / \bar{t}_{\text{KM}}$) showing empirical growth rates.
+   - The Plotly scaling curves with Bessel-corrected sample standard deviation error bars.
+4. **Viva Talking Point:**
+   > *"While Lloyd's K-Means scales as $\mathcal{O}(I \cdot N \cdot k \cdot D)$ and dense Prim's MST scales as $\mathcal{O}(N^2)$, empirical wall-clock timings illustrate that vectorization overhead, CPU cache locality, and iteration counts strongly influence real-world performance at moderate sample sizes."*
+
+---
+
+### Stage 8: Algorithm Explorer Step-by-Step Mechanics
+1. Select **Algorithm Explorer** from the sidebar.
+2. Select **Dense Prim's MST** on Gaussian Blobs ($N=20, k=3$).
+3. Use the navigation cockpit (`First`, `Next`, `Slider`, `Last`) to step through:
+   - Step 0: Root vertex initialization at index 0.
+   - Steps 1 to $N-1$: Greedy minimum-cut edge additions to the growing tree.
+   - Cut phase: Deterministic removal of the $k-1$ longest tree edges.
+   - Partition phase: Connected component extraction via Disjoint Set Union (DSU).
+4. Switch algorithm to **Lloyd's K-Means** ($k=3$) to demonstrate K-Means++ $D(x)^2$ centroid seeding and Voronoi assignment relocation.
+5. **Viva Talking Point:**
+   > *"The Algorithm Explorer exposes every discrete mathematical state of both clustering processes, guaranteeing 100% mathematical parity with our production algorithms on identical coordinate matrices and random seeds."*
 
 ---
 

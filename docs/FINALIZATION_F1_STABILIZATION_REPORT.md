@@ -125,7 +125,7 @@ The deployed UI previously contained obsolete progress labels that gave the impr
    - Completion message now states: `✅ Completed Robustness Sweep: 72 paired comparisons (144 individual algorithm executions / recorded result rows) across 3 seeds.`
 6. **Student Privacy Protection:**
    - Both student names (**Himanshu Gupta** and **Parth Yadav**) remain prominently displayed on the sidebar and in academic metadata.
-   - Student roll numbers (`[REDACTED_STUDENT_IDENTIFIER]` and `[REDACTED_STUDENT_IDENTIFIER]`) remain strictly excluded from rendered UI and exported JSON metadata.
+   - Institutional student roll numbers ([REDACTED_STUDENT_IDENTIFIER]) remain strictly excluded from rendered UI and exported JSON metadata.
 
 ---
 
@@ -140,7 +140,7 @@ Three dedicated automated regression tests were authored and validated:
   - Verifies that no exception (`NameError` or rendering crash) occurs across any of the 6 tabs.
   - Verifies that `export_experiment_metadata` and `json.dumps(...)` succeed without errors.
   - Confirms serialized JSON parses cleanly with `json.loads(...)`.
-  - Enforces privacy: asserts student roll numbers `[REDACTED_STUDENT_IDENTIFIER]` and `[REDACTED_STUDENT_IDENTIFIER]` are absent from the JSON string.
+  - Enforces privacy: asserts institutional student registration numbers are absent from the JSON string.
   - Confirms student names `Himanshu Gupta` and `Parth Yadav` are present.
 
 ### 5.2 `test_ui_trial_count_display_and_label_reconciliation`

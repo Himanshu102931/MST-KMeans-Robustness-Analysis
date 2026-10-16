@@ -22,7 +22,7 @@ Phase M5C establishes the approved **Public Dashboard Privacy Policy** for the P
 
 ### Approved Public-Display Policy:
 1. **Preserve Student Full Names:** Both student researchers' full names (**Himanshu Gupta** and **Parth Yadav**) remain prominently displayed on the public dashboard.
-2. **Remove University Roll Numbers from Public UI:** Neither student's university roll number (`[REDACTED_STUDENT_IDENTIFIER]` or `[REDACTED_STUDENT_IDENTIFIER]`) is rendered anywhere on the public-facing Streamlit application.
+2. **Remove University Roll Numbers from Public UI:** Neither student's institutional registration number ([REDACTED_STUDENT_IDENTIFIER]) is rendered anywhere on the public-facing Streamlit application.
 3. **Preserve Academic Metadata:** The official project title, course code (`BCS-DS-777`), institution ("Manav Rachna International Institute of Research and Studies (MRIIRS)"), department ("School of Engineering & Technology"), degree, semester, and instructor ("Mr. Aman Kumar, Assistant Professor") are completely preserved.
 4. **Preserve Academic Documents:** Existing academic reports, LaTeX/HTML printable documentation, and presentation materials outside the public dashboard retain official university roll numbers for viva and examination compliance.
 5. **Preserve Full Scientific Capabilities:** All core features—Clustering Playground, Performance Benchmarks, Algorithm Explorer, Robustness Sweeps, CSV Import, JSON Configuration, Plotly interactive graphics, and in-memory PNG exports—remain completely operational and unaffected.
@@ -87,8 +87,7 @@ Automated regression and UI testing was expanded to enforce privacy invariants a
   - Asserts `"Himanshu Gupta"` in rendered text.
   - Asserts `"Parth Yadav"` in rendered text.
   - Asserts `"BCS-DS-777"` and `"Mr. Aman Kumar"` in rendered text.
-  - Asserts `"[REDACTED_STUDENT_IDENTIFIER]"` **NOT** in rendered text.
-  - Asserts `"[REDACTED_STUDENT_IDENTIFIER]"` **NOT** in rendered text.
+  - Asserts institutional student registration identifiers **NOT** in rendered text.
 - `test_navigation_across_all_modules`:
   - Navigates through all 8 modules (`Overview`, `Clustering Playground`, `Performance Benchmarks`, `Algorithm Explorer`, `Robustness Analysis`, `Dataset & CSV Import`, `Reproducibility & Configuration`, `Methodology / Help`).
   - At every step, scrapes all rendered text elements (`title`, `subheader`, `caption`, `markdown`, `info`) and asserts that neither roll number appears in any element of any view.

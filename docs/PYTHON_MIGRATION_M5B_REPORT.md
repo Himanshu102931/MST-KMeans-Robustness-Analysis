@@ -5,9 +5,9 @@
 - **Course:** Pattern Matching Lab (`BCS-DS-777`)
 - **Institution:** Manav Rachna International Institute of Research and Studies (MRIIRS), School of Engineering & Technology (SET)
 - **Degree:** B.Tech Computer Science & Engineering (AIML), 7th Semester (Academic Session: 2026–2027)
-- **Student Researchers:**
-  - Himanshu Gupta (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
-  - Parth Yadav (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
+- **Student Researchers (Equal Academic Contribution):**
+  - Himanshu Gupta
+  - Parth Yadav
 - **Course Instructor:** Mr. Aman Kumar, Assistant Professor
 - **Active Git Branch:** `feature/python-streamlit-migration`
 - **Baseline Verified Checkpoint:** `06582d6` (Phase M5A verified commit; 96 tests passed in 4.34s on Python 3.12 / Ubuntu CI)

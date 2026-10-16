@@ -162,8 +162,8 @@ The campaign verified all eight application modules across eight primary protoco
 ### Supplementary Checks (S1–S8) and Defect Verification
 - **Supplementary Checks S1–S8:** Covered dark-mode contrast tokens, responsive layouts, CSV delimiter handling, mathematical boundary conditions ($N=1$, collinear points), Bessel $ddof=1$ variance checks, clean error boundaries, and uncorrupted file export downloads.
 - **Defects Resolved & Formally Verified:**
-  - `S06-DEFECT-001` (P2): Session state key desync on Playground default reset — resolved and re-verified in Protocol M2-R1.
-  - `S06-DEFECT-002` (P2): Algorithm Explorer step synchronization kwargs type error — resolved and re-verified in Protocol M5.
+  - `S06-DEFECT-001` (P2): `StreamlitWidgetAlreadyInstantiatedError` on Playground default reset — resolved via safe pre-render callback `on_click=_on_reset_playground_defaults` executing prior to widget instantiation, re-verified in Protocol M2-R1.
+  - `S06-DEFECT-002` (P1): `TypeError: unexpected keyword argument 'radius'` on Algorithm Explorer dataset generation for Concentric Circles and Two Moons — resolved via topology-specific keyword argument dispatch and filtering, re-verified in Protocol M5.
 - **Distinction Notice:** The 8 manual acceptance protocols (M1–M8) and 8 supplementary checks (S1–S8) are distinct from the 10 engineering blueprint milestones that comprised Stage 06 execution. All 8 protocols and 8 checks received unconditional sign-off.
 
 *Acceptance Record:* Formally signed off and documented in [docs/STAGE_06_MANUAL_ACCEPTANCE.md](STAGE_06_MANUAL_ACCEPTANCE.md).
@@ -233,7 +233,7 @@ $env:PYTHONPATH="python_app"
 # Verify Python version:
 uv run --python 3.12 python --version
 
-# Run the complete test suite (168 tests):
+# Run the complete test suite (169 tests):
 uv run --python 3.12 --with-requirements python_app/requirements-dev.txt pytest python_app/tests -v
 
 # Launch the interactive Streamlit dashboard:
@@ -326,7 +326,7 @@ This checklist is provided for the lead student researchers (**Himanshu Gupta & 
 - [ ] **Step 8 (Robustness Sweep):** In Robustness Analysis, run Quick Preset across all 3 manifolds. Show MST performance drop under uniform outliers versus K-Means stability under Gaussian noise.
 - [ ] **Step 9 (Artifact Export):** Download a high-res PNG and summary CSV, verifying clean in-memory export.
 
-*Airgap Status:* Verified zero-network code architecture and 168 in-memory tests. Physical airgap execution by project owner: **PENDING AT VIVA TIME**.
+*Airgap Status:* Verified zero-network code architecture and 169 in-memory tests. Physical airgap execution by project owner: **PENDING AT VIVA TIME**.
 
 ---
 
@@ -356,6 +356,9 @@ The public Streamlit Community Cloud application is deployed at:
   - Creation of Git release tag `v1.0.0-final` is **STRICTLY ON HOLD** pending final QA review and explicit written authorization from the project owner.
   - No remote pushes to GitHub origin, merges to `main`, or cloud deployment triggers will be performed without explicit project owner instructions.
 
+> [!NOTE]
+> **Historical Git Privacy Notice:** Active-source sanitization ensures the current working tree and candidate release snapshot contain zero personal student registration identifiers. Historical Git commit objects prior to commit `4adbc8c` remain preserved in repository history per non-destructive Git governance, and do not compromise active runtime or release package privacy.
+
 ---
 
-*Draft Release Notes consolidated for Stage 07 Batch 1, Prompt 3 of 3. Full quality gates validated; staged for Commit 2 of 3.*
+*Draft Release Notes finalized for Stage 07 Batch 2, Prompt 3 of 3. Historical milestone privacy sanitized; quality gates validated.*
