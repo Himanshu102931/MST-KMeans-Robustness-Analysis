@@ -22,6 +22,10 @@ import sys
 import numpy as np
 import pytest
 
+# Generalized pattern matching institutional student registration numbers
+# without hardcoding personal identifiers.
+STUDENT_REGISTRATION_PATTERN = re.compile(r"\b\d+/\d+/SET/[A-Z]+/\d+\b", re.IGNORECASE)
+
 APP_DIR = pathlib.Path(__file__).resolve().parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
@@ -97,8 +101,7 @@ def test_academic_metadata_and_forbidden_strings():
     assert "Mr. Aman Kumar" in combined_text, "Instructor Mr. Aman Kumar missing"
 
     # Privacy Enforcement (Phase M5C): Student roll numbers must NOT appear on public dashboard
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] should not be displayed in UI!"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in combined_text, "Roll number [REDACTED_STUDENT_IDENTIFIER] should not be displayed in UI!"
+    assert not STUDENT_REGISTRATION_PATTERN.search(combined_text), "Institutional student registration pattern displayed in UI!"
 
     # Strictly forbidden allocation text
     assert "Allocation #19" not in combined_text, "Prohibited string 'Allocation #19' found!"
@@ -139,8 +142,7 @@ def test_navigation_across_all_modules():
                 if hasattr(item, "value"):
                     page_texts.append(str(item.value))
         page_combined = " ".join(page_texts)
-        assert "[REDACTED_STUDENT_IDENTIFIER]" not in page_combined, f"Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in view '{view_name}'"
-        assert "[REDACTED_STUDENT_IDENTIFIER]" not in page_combined, f"Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in view '{view_name}'"
+        assert not STUDENT_REGISTRATION_PATTERN.search(page_combined), f"Institutional student registration pattern leaked in view '{view_name}'"
 
 
 # =============================================================================
@@ -566,8 +568,7 @@ def test_robustness_results_rendering_regression_and_metadata_serialization():
     assert parsed_meta["execution_summary"]["n_paired_trials"] == len(trials) // 2
 
     # Privacy verification on serialized JSON
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number 389 leaked in metadata JSON!"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number 390 leaked in metadata JSON!"
+    assert not STUDENT_REGISTRATION_PATTERN.search(meta_json_str), "Institutional student registration pattern leaked in metadata JSON!"
     student_records = parsed_meta.get("academic_context", {}).get("students", [])
     names = [s.get("name") for s in student_records]
     assert "Himanshu Gupta" in names
@@ -788,8 +789,7 @@ def test_sidebar_compactness_and_navigation_hierarchy():
     assert "Mr. Aman Kumar" in sidebar_combined
 
     # 3. Privacy compliance
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in sidebar_combined
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in sidebar_combined
+    assert not STUDENT_REGISTRATION_PATTERN.search(sidebar_combined), "Institutional student registration pattern leaked in sidebar!"
     assert "Allocation #19" not in sidebar_combined
 
 
@@ -1000,8 +1000,7 @@ def test_comprehensive_public_privacy_enforcement():
     assert not at.exception
 
     # Regex patterns detecting any institutional registration format
-    ROLL_REGEX = re.compile(r"\b\d+/\d+/SET/\w+/\d+\b")
-    STUDENT_ID_REGEX = re.compile(r"1/23/SET/BCS/\d+")
+    ROLL_REGEX = STUDENT_REGISTRATION_PATTERN
     ALLOCATION_REGEX = re.compile(r"Allocation\s*#?19|Alloc\s*#?19", re.I)
 
     # 1. Scan rendered UI elements across all 8 navigation routes
@@ -1028,7 +1027,6 @@ def test_comprehensive_public_privacy_enforcement():
         combined_view = " ".join(page_texts)
 
         assert not ROLL_REGEX.search(combined_view), f"Roll number pattern found in view '{view_name}'!"
-        assert not STUDENT_ID_REGEX.search(combined_view), f"Student ID pattern found in view '{view_name}'!"
         assert not ALLOCATION_REGEX.search(combined_view), f"Prohibited allocation text found in view '{view_name}'!"
 
     # 2. Scan export strings and serialized metadata
@@ -1045,7 +1043,6 @@ def test_comprehensive_public_privacy_enforcement():
     sw_cfg = SweepConfig()
     exp_meta_str = json.dumps(export_experiment_metadata(sw_cfg, n_trials=10))
     assert not ROLL_REGEX.search(exp_meta_str), "Roll number leaked in experiment metadata JSON!"
-    assert not STUDENT_ID_REGEX.search(exp_meta_str), "Student ID leaked in experiment metadata JSON!"
 
     bm_cfg = BenchmarkConfig()
     bm_json_str = export_benchmark_config_json(bm_cfg)
@@ -1053,7 +1050,16 @@ def test_comprehensive_public_privacy_enforcement():
 
     bm_meta_str = export_benchmark_metadata()
     assert not ROLL_REGEX.search(bm_meta_str), "Roll number leaked in benchmark metadata JSON!"
-    assert not STUDENT_ID_REGEX.search(bm_meta_str), "Student ID leaked in benchmark metadata JSON!"
+
+
+def test_privacy_detection_regex_behavior():
+    """Verify that STUDENT_REGISTRATION_PATTERN catches synthetic institutional IDs without false-positives."""
+    synthetic_id = "9/99/SET/XYZ/999"
+    assert STUDENT_REGISTRATION_PATTERN.search(f"Author info: {synthetic_id}") is not None
+    assert STUDENT_REGISTRATION_PATTERN.search("Course code: BCS-DS-777") is None
+    assert STUDENT_REGISTRATION_PATTERN.search("Institution: MRIIRS") is None
+    assert STUDENT_REGISTRATION_PATTERN.search("Guide: Mr. Aman Kumar") is None
+    assert STUDENT_REGISTRATION_PATTERN.search("Student: Himanshu Gupta & Parth Yadav") is None
 
 
 def test_theme_html_helpers_security_and_escaping():

@@ -7,7 +7,7 @@ with K-Means++ initialization and deterministic tie-breaking.
 Academic Context:
     Course: Pattern Matching Lab (BCS-DS-777)
     Project: MST vs K-Means Robustness Analysis
-    Authors: Himanshu Gupta ([REDACTED_STUDENT_IDENTIFIER]) & Parth Yadav ([REDACTED_STUDENT_IDENTIFIER])
+    Authors: Himanshu Gupta & Parth Yadav (Equal Academic Contribution)
     Institution: MRIIRS, School of Engineering & Technology (2026–2027)
 
 Design & Implementation Principles:

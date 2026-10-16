@@ -117,7 +117,7 @@ MST-KMeans-Robustness-Analysis/
     ├── requirements-dev.txt       # Development & QA testing dependencies
     ├── README.md                  # Detailed Python technical documentation
     ├── docs/                      # Scientific algorithm & experiment specifications
-    ├── tests/                     # 12 Pytest test modules (129 unit/integration/UI tests)
+    ├── tests/                     # 12 Pytest test modules (168 unit/integration/UI tests)
     └── clustering_lab/            # Modular Scientific Python Package
         ├── algorithms/            # Pure NumPy K-Means, Prim MST, and Explorer tracers
         ├── data/                  # Synthetic generators, noise pipelines, CSV parser, config
@@ -142,7 +142,7 @@ From the repository root:
 # Verify Python version
 uv run --python 3.12 python --version
 
-# Run the complete test suite (129 passing tests)
+# Run the complete test suite (168 passing tests)
 uv run --python 3.12 --with-requirements python_app/requirements-dev.txt pytest python_app/tests -v
 
 # Launch the interactive Streamlit dashboard
@@ -242,8 +242,11 @@ The original client-side Vanilla JavaScript and HTML5 Canvas implementation crea
 
 ## 11. Project Status & Documentation
 
-The laboratory platform is deployed and currently undergoing structured finalization according to the approved engineering roadmap:
+The laboratory research platform has successfully completed Stage 06 user-led acceptance testing and is currently undergoing Stage 07 release finalization:
 
+- **Release Status:** **Stage 07 — Release Candidate Under Verification (Draft)**
+- **Draft Release Notes:** [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md) — Comprehensive release summary, issue resolution register, benchmarks, and viva checklist.
+- **Stage 06 Acceptance Record:** [docs/STAGE_06_MANUAL_ACCEPTANCE.md](docs/STAGE_06_MANUAL_ACCEPTANCE.md) — Formally approved and accepted by project owner on October 15, 2026.
 - **Master Audit Report:** [docs/FINALIZATION_MASTER_AUDIT.md](docs/FINALIZATION_MASTER_AUDIT.md) — Comprehensive code, scientific, security, and UI/UX audit.
 - **Finalization Blueprint:** [docs/FINALIZATION_MASTER_BLUEPRINT.md](docs/FINALIZATION_MASTER_BLUEPRINT.md) — Approved 8-stage finalization work breakdown structure.
 - **Python Technical Guide:** [python_app/README.md](python_app/README.md) — Deep-dive architecture and API specifications for the scientific engine.

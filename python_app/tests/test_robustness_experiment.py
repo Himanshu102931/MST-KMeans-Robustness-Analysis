@@ -23,11 +23,16 @@ from __future__ import annotations
 import io
 import json
 import pathlib
+import re
 import sys
 from typing import List
 import numpy as np
 import pandas as pd
 import pytest
+
+# Generalized pattern matching institutional student registration numbers
+# without hardcoding personal identifiers.
+STUDENT_REGISTRATION_PATTERN = re.compile(r"\b\d+/\d+/SET/[A-Z]+/\d+\b", re.IGNORECASE)
 
 APP_DIR = pathlib.Path(__file__).resolve().parent.parent
 if str(APP_DIR) not in sys.path:
@@ -489,8 +494,9 @@ def test_export_csv_and_json_with_provenance():
 
     # Student privacy assertions
     meta_json_str = json.dumps(metadata)
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in experiment metadata"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json_str, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in experiment metadata"
+    assert not STUDENT_REGISTRATION_PATTERN.search(meta_json_str), (
+        "Institutional student registration pattern leaked in experiment metadata JSON!"
+    )
     students = metadata.get("academic_context", {}).get("students", [])
     student_names = [s.get("name") for s in students]
     assert "Himanshu Gupta" in student_names

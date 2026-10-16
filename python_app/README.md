@@ -1,15 +1,18 @@
 # Python Clustering Laboratory (`python_app`)
-## MST vs K-Means Robustness Analysis — Phase M1: Foundation
+## MST vs K-Means Robustness Analysis — Stage 07: Academic Handoff
+### Status: Stage 07 — Release Candidate Under Verification (Draft)
 
 ### Academic Information
 - **Course:** Pattern Matching Lab (`BCS-DS-777`)
 - **Institution:** Manav Rachna International Institute of Research and Studies (MRIIRS), School of Engineering & Technology
 - **Degree:** B.Tech Computer Science & Engineering (AIML), 7th Semester (2026–2027)
-- **Student Researchers:**
-  - Himanshu Gupta (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
-  - Parth Yadav (Roll No: `[REDACTED_STUDENT_IDENTIFIER]`)
+- **Student Researchers (Equal Academic Contribution):**
+  - Himanshu Gupta
+  - Parth Yadav
+- **Faculty Guide / Course Instructor:** Mr. Aman Kumar, Assistant Professor
 - **Repository Branch:** `feature/python-streamlit-migration`
 - **Preserved Main Checkpoint:** `0864323`
+- **Draft Release Notes:** [docs/RELEASE_NOTES.md](../docs/RELEASE_NOTES.md)
 
 ---
 
@@ -243,10 +246,15 @@ To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
     - Dedicated "Performance Benchmarks" view with preflight workload estimate (enforcing safety bound of $\le 200$ executions), live progress bar, scaling curves with sample std error bars, and theoretical complexity discussion ($\mathcal{O}(I \cdot N \cdot k \cdot D)$ vs $\mathcal{O}(N^2)$).
     - Dedicated "Algorithm Explorer" view with topology controls ($N \le 60$), interactive step cockpit (First, Prev, Slider, Next, Last, Reset), step descriptions with LaTeX math, isotropic 1:1 Plotly figure, and production parity verification card.
   - Automated test suite:
-    - 27 new tests across `test_benchmarks.py` and `test_algorithm_explorer.py`.
-    - Total test suite: 123 tests passing with 0 failures in 11.89 seconds.
+    - 168 passing automated tests across 12 Pytest modules verified on Python 3.12 (0 failures, 0 skips).
+    - Measured statement coverage: 86.0% overall application line coverage (2,711 statements) and ~90.92% scientific core library coverage (1,995 statements).
   - Formal documentation specifications:
     - Performance Benchmark Specification (`docs/PERFORMANCE_BENCHMARK_SPECIFICATION.md`).
     - Algorithm Explorer Guide (`docs/ALGORITHM_EXPLORER_GUIDE.md`).
-- **Scheduled for Subsequent Phases:**
-  - Phase M5C: Final project consolidation, clean-up, and pre-deployment verification.
+- **Completed in Stage 06:**
+  - Comprehensive user-led manual acceptance testing campaign across all eight application modules.
+  - Successfully verified in Brave browser on Windows 11; formally approved and accepted by project owner on October 15, 2026.
+- **Stage 07: Final Release & Academic Handoff (In Progress):**
+  - Read-only release readiness audit completed (Prompt 1).
+  - Documentation synchronization, privacy remediation, and draft release notes preparation under way (Prompt 2).
+  - Final QA validation and release packaging in progress (Prompt 3). Release tagging (`v1.0.0-final`) and GitHub push pending explicit owner authorization.

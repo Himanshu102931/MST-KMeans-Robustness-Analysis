@@ -9,9 +9,9 @@ Institution:
     School of Engineering & Technology
     B.Tech Computer Science & Engineering (AIML)
 
-Student Researchers:
-    - Himanshu Gupta (Roll No: [REDACTED_STUDENT_IDENTIFIER])
-    - Parth Yadav (Roll No: [REDACTED_STUDENT_IDENTIFIER])
+Student Researchers (Equal Academic Contribution):
+    - Himanshu Gupta
+    - Parth Yadav
 """
 
 __version__ = "0.1.0-alpha.m1"

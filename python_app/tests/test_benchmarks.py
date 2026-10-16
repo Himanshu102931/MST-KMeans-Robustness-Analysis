@@ -19,10 +19,15 @@ from __future__ import annotations
 import io
 import json
 import pathlib
+import re
 import sys
 import numpy as np
 import pandas as pd
 import pytest
+
+# Generalized pattern matching institutional student registration numbers
+# without hardcoding personal identifiers.
+STUDENT_REGISTRATION_PATTERN = re.compile(r"\b\d+/\d+/SET/[A-Z]+/\d+\b", re.IGNORECASE)
 
 APP_DIR = pathlib.Path(__file__).resolve().parent.parent
 if str(APP_DIR) not in sys.path:
@@ -318,8 +323,9 @@ def test_export_benchmark_config_and_metadata_json():
     assert parsed_cfg["seed"] == 777
 
     meta_json = export_benchmark_metadata()
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in benchmark metadata"
-    assert "[REDACTED_STUDENT_IDENTIFIER]" not in meta_json, "Roll number [REDACTED_STUDENT_IDENTIFIER] leaked in benchmark metadata"
+    assert not STUDENT_REGISTRATION_PATTERN.search(meta_json), (
+        "Institutional student registration pattern leaked in benchmark metadata JSON!"
+    )
 
     parsed_meta = json.loads(meta_json)
     assert "python_version" in parsed_meta
