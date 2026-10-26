@@ -3,6 +3,7 @@ name: Python CI - Streamlit Lab
 on:
   push:
     branches:
+      - main
       - feature/python-streamlit-migration
   pull_request:
     branches:

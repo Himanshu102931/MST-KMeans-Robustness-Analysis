@@ -1,166 +1,197 @@
 # User Testing Guide: MST vs K-Means Robustness Analysis
 
-**Student:** Himanshu Gupta (Allocation #19)  
-**Partner:** Parth Yadav  
-**Course:** Pattern Matching Lab (BCS-DS-777)  
-**Institution:** Manav Rachna International Institute of Research and Studies (MRIIRS)  
+**Student Researchers:** Himanshu Gupta (Allocation #19) & Parth Yadav
+**Faculty Guide / Course Instructor:** Mr. Aman Kumar, Assistant Professor
+**Course:** Pattern Matching Lab (`BCS-DS-777`)
+**Institution:** Manav Rachna International Institute of Research and Studies (MRIIRS), Faridabad
+**Platform:** Python 3.12 & Streamlit Web Application (`python_app/app.py`)
+**Live URL:** [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
 
-This guide provides simple, step-by-step instructions for testing every major feature of the **MST vs K-Means Robustness Analysis** dashboard. No programming knowledge or command-line tools are required.
+This guide provides structured, step-by-step instructions for testing every major feature of the **MST vs K-Means Robustness Analysis** laboratory.
 
 ---
 
 ## Prerequisites & Launching
 
-The application is completely self-contained and runs in any modern web browser (Google Chrome, Microsoft Edge, Mozilla Firefox, or Safari).
+The application can be run locally using Python 3.12 or accessed directly through the live cloud deployment.
 
-1. Locate the project folder on your computer:
-   `d:\7th Sem\PM\Mini project\MST-KMeans-Robustness-Analysis`
-2. Double-click **`index.html`** to open the main dashboard in your browser.
-3. (Optional) To open the automated test suite directly, double-click **`tests/test_runner.html`**, or click the **"🧪 Run Unit Tests"** button in the top-right corner of the dashboard header.
+### Option 1: Running Locally (Recommended)
+1. Open PowerShell or Terminal at the repository root:
+   ```powershell
+   $env:PYTHONPATH = "python_app"
+   streamlit run python_app/app.py
+   ```
+2. Your browser will automatically open to `http://localhost:8501`.
 
----
-
-## Feature 1: Automated Unit Test Runner
-
-**Goal:** Verify that all 63 algorithmic and scientific unit tests pass.
-
-1. In the top-right header, click **"🧪 Run Unit Tests"**.
-2. A new tab will open showing the **Automated Algorithm Test Suite**.
-3. **What to observe:**
-   - Look at the top summary card: It should display **`63 / 63`** in bright green with an execution time under `100 ms`.
-   - Scroll through the test list: Each test should display a green **PASSED** badge.
-4. Click the blue **"🔄 Re-run Tests"** button to confirm determinism.
-5. Click **"← Back to Dashboard"** to return to the main platform.
+### Option 2: Accessing Live Cloud Deployment
+- Open [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/) in Google Chrome, Microsoft Edge, Mozilla Firefox, or Brave.
 
 ---
 
-## Feature 2: Overview & Academic Credentials
+## Feature 1: Automated Quality Assurance Test Suite
 
-**Goal:** Inspect the research objective and student credentials.
+**Goal:** Verify that all 169 algorithmic, statistical, and UI AppTest assertions pass.
 
-1. On the left sidebar menu, click **"Overview"**.
+1. In your terminal at the repository root, execute:
+   ```powershell
+   $env:PYTHONPATH = "python_app"
+   pytest python_app/tests -v
+   ```
 2. **What to observe:**
-   - Notice the header badge: **`PHASE 5: VERIFIED ACADEMIC PLATFORM`**.
-   - Review student credentials: **Himanshu Gupta (Alloc #19)**, **Parth Yadav**, **MRIIRS**, **BCS-DS-777**.
-   - Read the **Official Research Objective** comparing graph-theoretic single-linkage clustering with centroidal partitioning.
-3. Click the blue **"Open Interactive Playground →"** button to jump directly into clustering experiments.
+   - Pytest executes 169 automated test cases across 12 test modules.
+   - Look at the final summary line: It should display **`169 passed`** with zero failures, errors, or warnings.
+   - Key modules verified:
+     - `test_kmeans.py` & `test_mst.py`: Core algorithm invariants, DSU cuts, and K-Means++ convergence.
+     - `test_reference_validation.py`: Mathematical parity against SciPy and scikit-learn.
+     - `test_robustness_experiment.py`: Paired coordinate isolation, inlier masking, and Bessel-corrected sample standard deviations.
+     - `test_streamlit_dashboard.py`: AppTest UI navigation, state persistence, and reset handling.
 
 ---
 
-## Feature 3: Interactive Clustering Playground
+## Feature 2: Overview & Academic Credentials (Module 1)
+
+**Goal:** Inspect research objectives, mathematical formulations, and academic accreditation.
+
+1. In the sidebar radio navigation, select **1. Overview**.
+2. **What to observe:**
+   - Review institutional credentials: **Pattern Matching Lab (`BCS-DS-777`)**, **MRIIRS**, **Mr. Aman Kumar**, **Himanshu Gupta (Alloc #19)**, **Parth Yadav**.
+   - Read the core inductive bias cards comparing centroid-based Voronoi hyperplanes against graph-theoretic single-linkage connectivity.
+   - Check the **System Status** card confirming Python 3.12 runtime and pure NumPy package architecture.
+
+---
+
+## Feature 3: Interactive Clustering Playground (Module 2)
 
 **Goal:** Interactively generate synthetic datasets and observe side-by-side clustering in real time.
 
-1. On the left sidebar, click **"Playground"**.
+1. In the sidebar, select **2. Clustering Playground**.
 2. **Test 1: Convex Gaussian Blobs**
-   - Under **Dataset Parameters**, keep **Dataset Geometry** as `Gaussian Blobs (Convex)`.
-   - Drag **Sample Size (N)** to `300`.
-   - Drag **Gaussian Noise (σ)** to `0.15`.
-   - Drag **Outlier Fraction** to `6%`.
-   - Click the blue **"▶ Run Comparison"** button.
+   - Under **Dataset Topology**, select `Gaussian Blobs`.
+   - Set **Sample Size ($N$)**: `300`.
+   - Set **Clusters ($K$)**: `3`.
+   - Set **Noise ($\sigma$)**: `0.05`.
+   - Set **Outlier Rate**: `0%`.
+   - Click **Generate & Cluster Data**.
    - **What to observe:**
-     - **Panel 1 (Ground Truth):** Points are colored by their true cluster. Injected outliers are marked with distinct red outer halos.
-     - **Panel 2 (K-Means):** Shows spherical partitions with white crosshair markers (`+`) at the computed centroids.
-     - **Panel 3 (MST Clustering):** Shows the Euclidean Minimum Spanning Tree with solid green lines for retained edges and red dashed lines for cut edges.
+     - Left Plotly viewport shows K-Means Voronoi partitions with crosshair centroid markers.
+     - Right Plotly viewport shows Prim's MST with green solid tree edges and severed inter-cluster cut edges.
+     - Metrics table confirms both models achieve an Adjusted Rand Index of $pprox 1.0000$.
 3. **Test 2: Non-Convex Concentric Circles (The Acid Test)**
-   - Change **Dataset Geometry** to `Concentric Circles (Non-Convex)`.
-   - Click **"▶ Run Comparison"**.
+   - Change **Dataset Topology** to `Concentric Circles`.
+   - Set **Clusters ($K$)**: `2`.
+   - Click **Generate & Cluster Data**.
    - **What to observe:**
-     - **MST:** Correctly separates the inner circle from the outer ring ($\text{Inlier ARI} \approx 100\%$).
-     - **K-Means:** Slices through the rings like a pie ($\text{Inlier ARI} \approx 0\%$), visually demonstrating its geometric limitation.
-4. **Test 3: Reset to Defaults**
-   - Click the **"↺ Reset to Defaults"** button at the top right.
-   - Verify that all sliders and geometries reset to their initial default values ($N=300$, Blobs, $\sigma=0.05$, $0\%$ outliers).
+     - **MST:** Correctly follows the non-linear manifold, isolating the inner circle from the outer ring ($	ext{Inlier ARI} = 1.0000$).
+     - **K-Means:** Bisects both rings with a linear hyperplane ($	ext{Inlier ARI} pprox 0.0000$), visually demonstrating its fundamental geometric limitation.
+4. **Test 3: The 5% Outlier Stress Test**
+   - On `Two Moons` ($K=2$), set **Outlier Rate** to `5%` ($15$ ambient points).
+   - Click **Generate & Cluster Data**.
+   - **What to observe:**
+     - MST cuts are consumed isolating a lone distant outlier, merging both distinct crescents together. Inlier ARI plummets to $0.0000$ (Pendant Edge Cut Misallocation).
+5. **Test 4: Reset to Defaults**
+   - Click **Reset to Defaults**. Verify all controls return to default values ($N=300$, Blobs, $\sigma=0.05$, $0\%$ outliers).
 
 ---
 
-## Feature 4: Robustness Analysis & Stress Testing
+## Feature 4: Performance Benchmarks (Module 3)
 
-**Goal:** Run automated sweeps to observe how noise and outliers degrade clustering accuracy.
+**Goal:** Profile empirical execution times across sample sizes ($N \in \{100, 200, 400, 600\}$).
 
-1. On the left sidebar, click **"Robustness"**.
-2. Under **Sweep Experiment**, select `Dual Sweep (Noise & Outliers)`.
-3. Under **Trial Repetitions**, select `Quick Demo (3 seeds: 11, 22, 33)`.
-4. Click the blue **"▶ Run Robustness Experiments"** button.
-5. **What to observe:**
-   - A progress bar appears showing live execution progress.
-   - Notice the **"■ Cancel"** button becomes active; clicking it will safely halt experiments mid-run.
-   - **Chart 1 (Inlier ARI vs Noise):** Plots accuracy degradation curves for both algorithms as Gaussian noise increases.
-   - **Chart 2 (Inlier ARI vs Outliers):** Plots accuracy degradation as uniform outliers are injected.
-   - **Chart 3 (Matched Baseline Loss ΔARI):** Compares how much accuracy was lost compared to the clean baseline.
-   - **Observation Table:** Displays numerical Mean $\pm 1\sigma$ standard deviation for each trial condition.
+1. In the sidebar, select **3. Performance Benchmarks**.
+2. Keep sample sizes `100, 200, 400, 600` and repetitions at `5`.
+3. Click **Run Benchmarks**.
+4. **What to observe:**
+   - A live progress bar tracks execution with monotonic high-resolution timing (`time.perf_counter`) and warm-up exclusion.
+   - **Scaling Curves:** Interactive Plotly curves display empirical runtimes with sample standard deviation error bars.
+   - **Complexity Comparison:** Dense Prim's MST curves upward quadratically ($\Theta(N^2)$), while Lloyd's K-Means scales linearly ($\mathcal{O}(I \cdot N \cdot K \cdot D)$).
+   - **Export CSV:** Click the download button to export `benchmark_summary.csv`.
 
 ---
 
-## Feature 5: Computational Performance Benchmarking
+## Feature 5: Step-by-Step Algorithm Explorer (Module 4)
 
-**Goal:** Measure empirical execution times across dataset sizes ($N = 100, 200, 400, 600$).
+**Goal:** Step through each algorithmic phase (centroid updates or Prim's edge additions) with interactive controls.
 
-1. On the left sidebar, click **"Benchmarks"**.
-2. **What to observe before running:**
-   - The **Client Runtime Environment & Hardware Profile** card automatically detects your Operating System, CPU Core count, browser User Agent, and timer resolution (`performance.now()`).
-3. Click the blue **"▶ Run Performance Benchmarks"** button.
-4. **What to observe during & after run:**
-   - The status bar indicates JIT compiler warm-up followed by repeated timing loops.
-   - **Scaling Chart:** Displays empirical runtimes alongside theoretical $O(N)$ vs $O(N^2)$ asymptotic curves.
-   - **Benchmark Table:** Shows Mean and Median runtimes for K-Means vs MST, along with the measured speedup ratio ($T_{\text{MST}} / T_{\text{KM}}$).
-   - Notice that while K-Means scales near-linearly, MST runtime grows quadratically ($O(N^2)$) due to all-pairs Euclidean distance calculations.
-
----
-
-## Feature 6: Step-by-Step Algorithm Explorer
-
-**Goal:** Step through each algorithmic phase (centroid updates or Prim's edge additions) with playback controls.
-
-1. On the left sidebar, click **"Algorithm Explorer"**.
-2. **Test 1: K-Means Lloyd Exploration**
-   - Click the **"⦿ K-Means Step-by-Step"** pill button.
-   - Select **Points (N):** `20 Points (Recommended)`.
-   - Click **"Next Step →"** repeatedly:
-     - **Step 1:** Shows initial K-Means++ centroids.
-     - **Step 2:** Shows points assigned to their nearest centroid with voronoi-style colored lines.
-     - **Step 3:** Centroids shift to the arithmetic mean of their assigned cluster points.
-     - Notice the readouts on the right update live: `Iteration`, `Inertia (WCSS)`, and `Centroid Shift`.
-   - Click **"Play"** to watch the automated animation at selected speed (`1.0x`, `2.0x`).
-   - Click **"↺ Restart"** to return to Step 1.
-3. **Test 2: MST Prim Exploration**
-   - Click the **"✂ MST Prim's Step-by-Step"** pill button.
-   - Click **"Next Step →"**:
-     - **Step 1:** Root vertex is selected and seeded into the tree.
-     - **Steps 2 to N-1:** Dotted candidate edges appear; at each step, the shortest frontier edge turns solid green and joins the tree.
-     - **Cut Phase:** The longest $K-1$ edges turn red dashed lines and are cut, splitting the tree into $K$ colored components.
-     - Notice the explanation text box on the right provides pedagogical commentary for each step.
+1. In the sidebar, select **4. Algorithm Explorer**.
+2. **K-Means Lloyd Exploration:**
+   - Select `K-Means Centroid Migration` and set $N=20$.
+   - Step through iterations using **Next Step**:
+     - **Step 1:** Initial K-Means++ centroids selected proportional to squared distance.
+     - **Step 2:** Points assigned to nearest centroid.
+     - **Step 3:** Centroids shift to arithmetic means of assigned clusters.
+     - Readouts display live `Iteration`, `Inertia (WCSS)`, and `Centroid Shift`.
+3. **MST Prim Exploration:**
+   - Select `Prim's Minimum Spanning Tree`.
+   - Step forward:
+     - **Tree Growth:** Active candidate cut edges are evaluated; minimum-weight edge is committed to the tree.
+     - **Cut Phase:** The $K-1$ longest edges are severed, partitioning the Disjoint Set Union into colored components.
 
 ---
 
-## Feature 7: Scientific Export Hub
+## Feature 6: Robustness Analysis & Stress Testing (Module 5)
 
-**Goal:** Download publication-ready datasets (CSV), reproducibility recipes (JSON), and chart figures (PNG).
+**Goal:** Execute paired Monte Carlo sweeps to quantify degradation under noise and outlier perturbations.
 
-1. On the left sidebar, click **"Results & Export"**.
-2. **Download Dataset CSV:**
-   - Click **"⬇ Download Dataset CSV"**.
-   - Your browser will download a file named `mst_kmeans_dataset_playground_....csv`.
-   - Open it in Excel or Notepad: Verify that coordinates $(x, y)$, ground truth labels, outlier tags, and predicted labels are formatted cleanly without corrupted characters.
-3. **Download Metrics CSV:**
-   - Click **"⬇ Download Metrics CSV"**.
-   - Verify that session metrics (Inlier ARI, Overall ARI, runtime) download cleanly.
-4. **Download Reproducibility Recipe (JSON):**
-   - Click **"⬇ Download Reproducibility Recipe (JSON)"**.
-   - Open the JSON file: It contains complete academic credentials (Himanshu Gupta, Allocation #19, MRIIRS), PRNG seeds, algorithm parameters, and hardware specifications.
-5. **Export Canvas PNG Figures:**
-   - Scroll down to the **Publication-Ready Canvas Figures** section.
-   - Click any **"Export PNG"** button (e.g., *Playground: Side-by-Side Canvas*).
-   - Your browser will download a crisp high-DPI image with legends and titles suitable for academic report embedding.
+1. In the sidebar, select **5. Robustness Analysis**.
+2. Select **Sweep Regime**: `Quick Mode (3 Seeds: 11, 22, 33)`.
+3. Click **Run Robustness Experiment**.
+4. **What to observe:**
+   - The engine generates paired trials where both algorithms evaluate identical coordinates.
+   - **Chart 1 (Inlier ARI vs Gaussian Noise):** Demonstrates coordinate jitter degradation curves with $\pm 1\sigma$ error bands.
+   - **Chart 2 (Inlier ARI vs Outliers):** Demonstrates steep graph-theoretic breakdown under uniform outlier contamination.
+   - **Degradation Summary:** Quantitative baseline delta metrics ($\Delta	ext{ARI} = \max(0, 	ext{ARI}_{	ext{base}} - 	ext{ARI}_{	ext{pert}})$).
+   - **Export Artifacts:** Download raw trials (`robustness_trials.csv`) or aggregated summaries.
+
+---
+
+## Feature 7: Dataset & CSV Import (Module 6)
+
+**Goal:** Ingest custom user datasets and test validation guards with boundary fixtures.
+
+1. In the sidebar, select **6. Dataset & CSV Import**.
+2. **Valid Labeled CSV Test:**
+   - Upload `docs/manual_test_fixtures/01_valid_labeled.csv`.
+   - Notice the green success banner confirms 12 rows and 3 columns parsed.
+   - Click **Send to Clustering Playground** to cluster the custom file.
+3. **Negative Boundary Validation:**
+   - Upload `docs/manual_test_fixtures/05_invalid_nonnumeric.csv`.
+   - Verify the application displays a clear error banner stating non-numeric coordinate values were detected, without crashing.
+
+---
+
+## Feature 8: Reproducibility & Configuration (Module 7)
+
+**Goal:** Test round-trip export and restoration of JSON experiment configuration payloads.
+
+1. In the sidebar, select **7. Reproducibility & Configuration**.
+2. **Valid JSON Configuration Import:**
+   - In the upload panel, upload `docs/manual_test_fixtures/08_valid_config.json`.
+   - Notice the green banner confirms: `Configuration valid: Family circles, N=200, Seed=777`.
+   - Inspect the interactive JSON tree showing schema version `1.0.0`.
+3. **Malformed JSON Configuration Rejection:**
+   - Upload `docs/manual_test_fixtures/07_malformed_config.json`.
+   - Verify the application safely displays a red rejection banner preventing state corruption.
+
+---
+
+## Feature 9: Methodology & Help (Module 8)
+
+**Goal:** Review theoretical foundations and viva defense preparation materials.
+
+1. In the sidebar, select **8. Methodology / Help**.
+2. **What to observe:**
+   - Review formal mathematical definitions of Inertia ($\mathcal{J}$), Total MST Weight, Adjusted Rand Index (Hubert & Arabie 1985), and Silhouette Coefficient.
+   - Review algorithmic complexity comparisons and viva examination defense questions.
 
 ---
 
 ## Verification Summary Checklist
 
-- [x] Test suite reports **63 / 63 passed** with 0 errors.
-- [x] All 6 navigation sidebar tabs switch views instantly.
-- [x] Sliders and inputs update parameters dynamically.
+- [x] Pytest suite reports **169 passed** with 0 errors or warnings.
+- [x] All 8 Streamlit sidebar navigation views transition smoothly without exceptions.
 - [x] Concentric circles demonstrate MST manifold recovery vs K-Means geometric slicing.
-- [x] Robustness and benchmark experiments run smoothly with cancel buttons active.
-- [x] Algorithm Explorer steppers animate centroid movements and Prim edge growth.
-- [x] CSV, JSON, and PNG exports download with valid file structures.
+- [x] Robustness sweeps execute with paired coordinate guarantees and $\pm 1\sigma$ error bands.
+- [x] Performance benchmarks profile wall-clock scaling using monotonic nanosecond timers.
+- [x] Algorithm Explorer steppers animate centroid movements and Prim edge growth with LaTeX commentary.
+- [x] CSV dataset uploader validates numeric boundaries and safely rejects non-numeric input.
+- [x] JSON configuration export and restoration maintain strict schema v1.0.0 fidelity.

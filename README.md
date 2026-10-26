@@ -34,7 +34,9 @@ In unsupervised pattern recognition and machine learning, clustering algorithms 
 
 The primary research platform is deployed as an interactive multi-module Streamlit laboratory:
 
-**Live Application URL:** [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
+- **Live Application URL:** [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
+- **GitHub Repository URL:** [https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis](https://github.com/Himanshu102931/MST-KMeans-Robustness-Analysis)
+- **Application Entrypoint:** python_app/app.py
 
 The application provides real-time dual-algorithm clustering, parameter manipulation, wall-clock performance benchmarking, step-by-step educational trace visualizers, paired robustness sweeps, and CSV/JSON provenance exports.
 
@@ -103,21 +105,24 @@ MST-KMeans-Robustness-Analysis/
 ├── .github/
 │   └── workflows/
 │       └── python-ci.yml          # GitHub Actions CI workflow (Python 3.12 / Ubuntu)
-├── README.md                      # This primary repository landing page
-├── index.html                     # Preserved legacy Vanilla JS entrypoint
-├── css/                           # Preserved Vanilla JS styling
-├── js/                            # Preserved Vanilla JS algorithms and Canvas renderers
-├── tests/                         # Preserved Vanilla JS client-side test runner
-├── docs/                          # Comprehensive Academic Reports, Audits & Blueprints
+├── .gitignore                     # Repository ignore rules
+├── README.md                      # Primary repository landing page
+├── docs/                          # Comprehensive Academic Reports, Audits & Presentation
+│   ├── manual_test_fixtures/      # Boundary test CSV & JSON files for Streamlit upload
+│   ├── presentation/              # Academic presentation slides (.pptx, .html)
+│   ├── report/                    # Full academic project report (.md, printable HTML)
 │   ├── FINALIZATION_MASTER_AUDIT.md      # Comprehensive scientific and code audit
-│   └── FINALIZATION_MASTER_BLUEPRINT.md  # Definitive 8-stage finalization roadmap
+│   ├── FINALIZATION_MASTER_BLUEPRINT.md  # Definitive 8-stage finalization roadmap
+│   ├── RELEASE_NOTES.md           # Release history and issue resolution register
+│   ├── STAGE_06_MANUAL_ACCEPTANCE.md     # Owner acceptance record
+│   └── VIVA_PREPARATION.md        # Comprehensive viva defense questions & answers
 └── python_app/                    # Core Python Research Platform
     ├── app.py                     # Streamlit multi-module application entrypoint
     ├── requirements.txt           # Pinned production dependencies
     ├── requirements-dev.txt       # Development & QA testing dependencies
     ├── README.md                  # Detailed Python technical documentation
     ├── docs/                      # Scientific algorithm & experiment specifications
-    ├── tests/                     # 12 Pytest test modules (168 unit/integration/UI tests)
+    ├── tests/                     # 12 Pytest test modules (169 unit/integration/UI tests)
     └── clustering_lab/            # Modular Scientific Python Package
         ├── algorithms/            # Pure NumPy K-Means, Prim MST, and Explorer tracers
         ├── data/                  # Synthetic generators, noise pipelines, CSV parser, config
@@ -125,6 +130,13 @@ MST-KMeans-Robustness-Analysis/
         ├── experiments/           # Paired robustness sweeps, benchmarks, and export engines
         ├── utils/                 # Mathematical helpers and sample standard deviation
         └── visualization/         # Plotly isotropic renderers and Matplotlib dark exporter
+└── results/                       # Verified Scientific Evidence Artifacts (15 files)
+    ├── figures/                   # 7 empirical figures (Blobs, Moons, Circles, Noise, Outliers, etc.)
+    ├── raw/                       # 144 paired robustness trials & 40 benchmark trials (CSV)
+    ├── summaries/                 # 48 robustness conditions & 8 scaling summaries (CSV)
+    ├── reproducibility/           # Protocol configuration & environment telemetry (JSON)
+    ├── EXPERIMENTAL_EVIDENCE_REPORT.md  # Scientific findings report
+    └── EVIDENCE_MANIFEST.md       # Evidence inventory & reproduction guide
 ```
 
 ---
@@ -142,7 +154,7 @@ From the repository root:
 # Verify Python version
 uv run --python 3.12 python --version
 
-# Run the complete test suite (168 passing tests)
+# Run the complete test suite (169 passing tests)
 uv run --python 3.12 --with-requirements python_app/requirements-dev.txt pytest python_app/tests -v
 
 # Launch the interactive Streamlit dashboard
@@ -230,15 +242,14 @@ While the platform achieves strong mathematical rigor, the following scientific 
 
 ---
 
-## 10. Preserved Legacy JavaScript Implementation
+## 10. Repository Transition History
 
-The original client-side Vanilla JavaScript and HTML5 Canvas implementation created for initial viva presentation remains fully preserved in the repository root:
+This repository previously maintained a dual implementation consisting of an initial client-side Vanilla JavaScript prototype and the authoritative scientific Python/Streamlit laboratory.
 
-- **Entrypoint:** [index.html](file:///d:/7th%20Sem/PM/Mini%20project/MST-KMeans-Robustness-Analysis/index.html)
-- **Zero Installation:** Can be opened directly in any web browser (`file:///.../index.html`) without a backend server or dependencies.
-- **Algorithms:** Independent JavaScript implementations of Lloyd's K-Means and Prim's MST with canvas-based visual step progression.
-
----
+As of the current Python-only transition:
+- The legacy JavaScript files (index.html, js/, css/, root 	ests/) have been formally retired from the active development tree.
+- The release tag 1.0.0 remains permanently anchored to commit d8c8cac817b89336390aa63cef0ce2b1da3e5192, immutably preserving the historical state of the initial release.
+- All primary research, algorithm implementations, educational visualizers, and interactive dashboards are maintained exclusively in python_app/.
 
 ## 11. Project Status & Documentation
 

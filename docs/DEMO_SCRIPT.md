@@ -5,154 +5,172 @@
 * **Project**: MST vs K-Means Robustness Analysis
 * **Lead Demonstrator**: Himanshu Gupta (Allocation No. 19)
 * **Co-Demonstrator**: Parth Yadav
+* **Faculty Guide / Instructor**: Mr. Aman Kumar, Assistant Professor
+* **Institution**: Manav Rachna International Institute of Research and Studies (MRIIRS), Faridabad
 * **Target Duration**: 5:00 to 7:00 Minutes
-* **Application URL**: Local `index.html` (or GitHub Pages live deployment)
+* **Application Platform**: Interactive Streamlit Research Laboratory (`python_app/app.py`)
+* **Live Deployment URL**: [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/)
 
 ---
 
 ## Demonstration Checklist & Setup Pre-Flight
 
-Before calling the examiners over to the screen:
-1. Ensure `index.html` is open in **Google Chrome** or **Microsoft Edge** at full screen (`F11`).
-2. Have a second browser tab open to `tests/test_runner.html` to quickly verify algorithm unit tests.
-3. Set browser zoom to **100%** (or **90%** if on a 1080p laptop display) so canvases and controls are fully visible.
-4. Keep the Windows `Downloads` folder empty or clean to make exported files immediately apparent.
+Before inviting the examiners to the screen:
+1. Ensure the Streamlit application is running locally:
+   ```powershell
+   $env:PYTHONPATH = "python_app"
+   streamlit run python_app/app.py
+   ```
+   *(Or have the live Streamlit Cloud URL loaded in Google Chrome or Microsoft Edge at full screen (`F11`)).*
+2. Have a second terminal window prepared to demonstrate the automated test suite:
+   ```powershell
+   $env:PYTHONPATH = "python_app"
+   pytest python_app/tests -v
+   ```
+3. Verify browser zoom is set to **100%** (or **90%** if on a 1080p display) so Plotly charts, sidebar controls, and data tables are fully visible without horizontal scrolling.
+4. Keep the local `Downloads` directory accessible to verify CSV and JSON configuration downloads.
 
 ---
 
 ## Timed Demonstration Walkthrough
 
 ```
-+-----------------------------------------------------------------------------------------------+
-|  PHASE / TIME   |  DASHBOARD SECTION         |  EXACT MOUSE ACTION & SPOKEN HIGHLIGHT         |
-+-----------------+----------------------------+------------------------------------------------+
-| 0:00 - 0:45     | Navigation & Overview      | Open index.html -> Show academic badges        |
-| 0:45 - 1:45     | Playground: Blobs          | Set K=3, 300 pts -> Run Both Algorithms        |
-| 1:45 - 2:45     | Playground: Two Moons      | Set Two Moons, K=2 -> Contrast Voronoi vs MST  |
-| 2:45 - 3:30     | Playground: Outlier Stress | Add 5% outliers -> Demonstrate Pendant Collapse|
-| 3:30 - 4:15     | Robustness Suite           | Switch tab -> Click Run Sweep -> Show charts   |
-| 4:15 - 5:00     | Performance Benchmarks     | Switch tab -> Run N=[100..600] -> Show scaling |
-| 5:00 - 5:45     | Algorithm Explorer         | Switch tab -> Step through Prim's tree growth  |
-| 5:45 - 6:30     | Data Exports & Test Suite  | Click CSV export -> Switch to test_runner.html |
-+-----------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------+
+|  PHASE / TIME   |  STREAMLIT VIEW             |  EXACT USER ACTION & SPOKEN HIGHLIGHT             |
++-----------------+-----------------------------+---------------------------------------------------+
+| 0:00 - 0:45     | 1. Overview                 | Show academic cards, research abstract & badges   |
+| 0:45 - 1:45     | 2. Clustering Playground    | Blobs (K=3, 300 pts) -> Both achieve ARI = 1.0000 |
+| 1:45 - 2:45     | 2. Clustering Playground    | Two Moons (K=2) -> Linear K-Means cuts vs MST 1.0 |
+| 2:45 - 3:30     | 2. Clustering Playground    | Add 5% outliers -> Demonstrate Pendant Collapse   |
+| 3:30 - 4:15     | 5. Robustness Analysis      | Run paired noise & outlier sweep -> Show bands    |
+| 4:15 - 5:00     | 3. Performance Benchmarks   | Run N in [100..600] -> Show O(N^2) vs O(N*K*I)    |
+| 5:00 - 5:45     | 4. Algorithm Explorer       | Step through Prim's edge relaxations & tree cuts  |
+| 5:45 - 6:30     | 6-7. CSV / Config & Pytest  | Export config JSON -> Run 169 automated tests     |
++---------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
 ### Step 1: Opening & Overview (0:00 – 0:45)
-* **Mouse Action**:
-  * Open `index.html` in Chrome or Edge.
-  * Start on the default **Overview** tab.
+* **User Action**:
+  * Navigate to **1. Overview** in the Streamlit sidebar.
+  * Highlight the research abstract, inductive bias cards, and institutional credentials.
 * **Demonstrator Dialogue (Himanshu Gupta)**:
-  > *"Respected examiners, welcome to our live demonstration. As you can see, our entire research system is 100% browser-native, written in pure vanilla JavaScript and HTML5 Canvas with zero backend dependencies.  
-  > In the header, you will notice our official allocation details: Allocation Number 19, Pattern Matching Lab (`BCS-DS-777`), MRIIRS.  
-  > The navigation bar gives us immediate access to five functional modules: the Clustering Playground, Robustness Analysis, Performance Benchmarks, the Algorithm Explorer, and the Test Suite. Let us begin in the Playground."*
+  > *"Respected examiners, welcome to our live demonstration. Our research platform is built natively in Python using Streamlit and pure NumPy algorithm implementations from first principles, with zero external clustering library delegation.
+  > In the sidebar and header, you will observe our academic accreditation: Allocation Number 19, Pattern Matching Lab (`BCS-DS-777`), MRIIRS, under the guidance of Mr. Aman Kumar.
+  > The platform comprises eight specialized research modules: the Clustering Playground, Performance Benchmarks, the Algorithm Explorer, Robustness Analysis, Dataset & CSV Import, Reproducibility & Configuration, and Methodology. Let us begin in the Playground."*
 
 ---
 
 ### Step 2: Playground — Gaussian Blobs ($K=3$) (0:45 – 1:45)
-* **Mouse Action**:
-  * Click the **Playground** tab in the navigation bar.
-  * In the left configuration panel:
-    * **Dataset**: Select `Gaussian Blobs`.
-    * **Sample Size**: Select `300`.
-    * **Clusters (K)**: Select `3`.
-    * **Noise ($\sigma$)**: Keep at `0.00`.
-    * **Outlier %**: Keep at `0%`.
-  * Click the green **Run Both Algorithms** button.
+* **User Action**:
+  * In the sidebar navigation, select **2. Clustering Playground**.
+  * In the parameter controls:
+    * **Dataset Topology**: Select `Gaussian Blobs`.
+    * **Sample Size ($N$)**: Set to `300`.
+    * **Number of Clusters ($K$)**: Set to `3`.
+    * **Gaussian Noise ($\sigma$)**: Keep at `0.00`.
+    * **Outlier Rate**: Keep at `0%`.
+  * Click the **Generate & Cluster Data** button.
 * **Demonstrator Dialogue (Parth Yadav)**:
-  > *"Here we generate 300 clean observations from three Gaussian Blobs.  
-  > Notice the two canvas viewports: on the left is Lloyd's K-Means with K-Means++ initialization; on the right is Prim's Euclidean Minimum Spanning Tree.  
-  > Look at the Metrics Comparison table below: both algorithms achieve an Adjusted Rand Index of exactly 1.0000.  
-  > Because these clusters are compact and convex, K-Means easily draws linear Voronoi boundaries, while MST builds dense subtrees and severs the two longest inter-cluster edges. Both succeed completely."*
+  > *"Here we generate 300 clean observations from three well-separated Gaussian Blobs.
+  > Notice the two synchronized 1:1 isotropic Plotly viewports: on the left is Lloyd's K-Means with K-Means++ initialization; on the right is dense Prim's Euclidean Minimum Spanning Tree.
+  > Look at the quantitative metrics table below: both algorithms achieve an Adjusted Rand Index of exactly 1.0000.
+  > Because Gaussian Blobs satisfy the compactness and convexity assumptions of both models, K-Means easily draws linear Voronoi hyperplanes, while Prim's MST constructs the spanning tree and cuts the two longest inter-cluster edges with zero misclassification."*
 
 ---
 
 ### Step 3: Playground — Two Moons Topological Contrast (1:45 – 2:45)
-* **Mouse Action**:
-  * In the left panel, change **Dataset** to `Two Moons`.
-  * Set **Clusters (K)** to `2`.
-  * Keep **Noise** at `0.00` and **Outliers** at `0%`.
-  * Click **Run Both Algorithms**.
+* **User Action**:
+  * In the Playground controls, change **Dataset Topology** to `Two Moons`.
+  * Set **Number of Clusters ($K$)** to `2`.
+  * Keep **Noise ($\sigma$)** at `0.00` and **Outliers** at `0%`.
+  * Click **Generate & Cluster Data**.
 * **Demonstrator Dialogue (Himanshu Gupta)**:
-  > *"Now watch what happens when we switch to non-convex geometry: Two Moons.  
-  > Notice the stark visual contrast: K-Means cuts across both crescents with a straight line, achieving an ARI of only approximately 0.19. Its linear hyperplane is mathematically blind to the curvature.  
-  > On the right, MST achieves a perfect ARI of 1.0000. Because MST operates on single-linkage proximity, it traces the continuous path along each crescent and severs the single bridge across the tips."*
+  > *"Now watch what happens when we switch to a non-convex, manifold-based geometry: Two Moons.
+  > Notice the stark theoretical contrast: K-Means cuts directly across both interlocking crescents with a linear boundary, achieving an Inlier ARI of only approximately 0.19 to 0.25. Its objective function mathematically minimizes squared Euclidean distance to centroids, forcing linear Voronoi partitions that can never conform to curved manifolds regardless of iteration budget.
+  > In contrast, Prim's MST achieves a perfect Inlier ARI of 1.0000. Operating on single-linkage geometric proximity, MST traces the manifold structure along each crescent and cuts the single bridge connecting the tips."*
 
 ---
 
 ### Step 4: Playground — The 5% Outlier Stress Test (2:45 – 3:30)
-* **Mouse Action**:
-  * Keep dataset as `Two Moons`.
-  * Slide **Outlier %** to `5%` (adding 15 ambient points).
-  * Click **Run Both Algorithms**.
+* **User Action**:
+  * Keep topology as `Two Moons`.
+  * Slide **Outlier Rate** to `5%` (injecting uniform ambient noise across the bounding box).
+  * Click **Generate & Cluster Data**.
 * **Demonstrator Dialogue (Parth Yadav)**:
-  > *"Now watch our primary empirical discovery: we add just 5% uniform outliers—only 15 points.  
-  > Instantly, MST collapses! Look at the MST canvas: the algorithm isolates a single outlier point in the corner as its own cluster, while leaving both interlocking moons trapped together in one giant cluster.  
-  > In the metrics table, Inlier ARI drops from 1.0000 straight to 0.0000.  
-  > This visually proves what we call 'Pendant Edge Cut Misallocation'—outliers create long peripheral branches that steal the algorithm's cut budget."*
+  > *"Here is our core empirical discovery: we inject just 5% uniform ambient outliers.
+  > Instantly, graph-theoretic MST clustering suffers catastrophic collapse!
+  > Notice the right Plotly viewport: a distant outlier in the bounding-box corner creates a long 'pendant' branch. When MST cuts the $K-1 = 1$ longest edge, that single cut is consumed isolating the lone outlier into its own singleton cluster, leaving both interlocking crescent moons trapped together in the remaining cluster.
+  > In the metrics table, Inlier ARI plummets from 1.0000 straight to 0.0000.
+  > This visually proves Pendant Edge Cut Misallocation—the primary failure mode of single-linkage graph clustering."*
 
 ---
 
 ### Step 5: Robustness Analysis Suite (3:30 – 4:15)
-* **Mouse Action**:
-  * Click the **Robustness Analysis** tab in the top navigation bar.
-  * Point out the Parameter Sweep configuration (Noise $\sigma \in [0.00, 0.20]$, Outliers $\eta \in [0\%, 20\%]$, Seeds $11, 22, 33$).
-  * Click the blue **Run Robustness Experiment** button.
-  * Allow the progress bar to complete (runs in under 1 second).
+* **User Action**:
+  * Select **5. Robustness Analysis** from the sidebar navigation.
+  * Show the sweep regime controls: Noise sweep ($\sigma \in [0.00, 0.20]$) and Outlier sweep ($\epsilon \in [0.00, 0.20]$).
+  * Select `Quick Mode (3 Seeds: 11, 22, 33)` and click **Run Robustness Experiment**.
+  * Allow the progress bar to complete.
 * **Demonstrator Dialogue (Himanshu Gupta)**:
-  > *"In the Robustness Analysis module, the system automates this across all 144 paired trials in real time.  
-  > Notice the generated multi-series line charts:  
-  > In the ARI vs. Noise chart, MST holds up to moderate noise, but collapses at $\sigma = 0.20$ as coordinates blur.  
-  > In the ARI vs. Outlier chart, MST exhibits a steep drop at 5% and 10% contamination.  
-  > The Degradation bar chart below quantitatively confirms that K-Means suffers virtually zero degradation on Blobs, while MST suffers severe degradation on curved shapes when outliers are introduced."*
+  > *"In the Robustness Analysis module, the system runs paired Monte Carlo sweeps across deterministic seeds where both algorithms receive exact bitwise-identical feature coordinates.
+  > The interactive Plotly charts with $\pm 1\sigma$ sample standard deviation error bands clearly illustrate the divergence:
+  > Under Gaussian coordinate jitter, MST is resilient up to moderate noise but degrades as coordinates overlap.
+  > Under uniform outlier contamination, MST experiences an immediate cliff at just 5% outliers, while K-Means degrades gracefully.
+  > The degradation cards confirm that K-Means suffers negligible degradation on Blobs, while MST suffers severe degradation on non-convex manifolds once ambient noise is present."*
 
 ---
 
 ### Step 6: Performance Benchmarks & Runtime Scaling (4:15 – 5:00)
-* **Mouse Action**:
-  * Click the **Performance Benchmarks** tab in the navigation bar.
-  * Select sample sizes: `100, 200, 400, 600`.
+* **User Action**:
+  * Select **3. Performance Benchmarks** from the sidebar navigation.
+  * Sample sizes: `100, 200, 400, 600`.
   * Repetitions: `5`.
-  * Click **Run Benchmark**.
+  * Click **Run Benchmarks**.
 * **Demonstrator Dialogue (Parth Yadav)**:
-  > *"In the Performance Benchmarks section, we profile clustering runtimes using the browser's monotonic `performance.now()` timer.  
-  > Notice the resulting scaling curves: at $N = 100$, both algorithms execute in a fraction of a millisecond.  
-  > But as $N$ reaches 600, dense Prim's MST curves upward quadratically, taking approximately 1.7 milliseconds, while K-Means remains flat at approximately 0.14 milliseconds.  
-  > This confirms the theoretical $\Theta(N^2)$ distance bottleneck of dense Prim versus the linear scalability of K-Means."*
+  > *"In the Performance Benchmarks section, we profile clustering wall-clock execution time using Python's high-resolution monotonic timer (`time.perf_counter`) with pre-benchmark warm-up exclusion.
+  > Look at the empirical scaling curves: at $N = 100$, both algorithms execute in fractions of a millisecond.
+  > But as $N$ scales to 600, dense Prim's MST scales quadratically according to its theoretical $\Theta(N^2)$ all-pairs distance complexity, whereas K-Means scales linearly $\mathcal{O}(I \cdot N \cdot K \cdot D)$.
+  > The ratio-of-means table quantitatively confirms that K-Means is substantially faster on larger sample sizes."*
 
 ---
 
 ### Step 7: Algorithm Explorer — Step-by-Step Mechanics (5:00 – 5:45)
-* **Mouse Action**:
-  * Click the **Algorithm Explorer** tab in the navigation bar.
-  * Select **MST Prim Animation** (or K-Means Centroid Migration).
-  * Click **Play** (or click **Step Forward** 3–4 times).
+* **User Action**:
+  * Select **4. Algorithm Explorer** from the sidebar navigation.
+  * Select **Prim's MST Explorer** (or K-Means Centroid Explorer).
+  * Step forward 3–4 times using the **Next Step** button or move the iteration slider.
 * **Demonstrator Dialogue (Himanshu Gupta)**:
-  > *"To provide deep pedagogical insight, we built a step-by-step Algorithm Explorer.  
-  > As we step forward in Prim's algorithm, you can see the visited vertex set growing, the active cut edges being evaluated, and the minimum-weight edge being highlighted in bright cyan as it is permanently committed to the tree.  
-  > This transparently illustrates how graph connectivity is assembled one edge at a time."*
+  > *"For pedagogical clarity and lab evaluation, we built an educational Algorithm Explorer.
+  > As we step forward through Prim's algorithm on a micro-dataset, the visualization tracks the visited vertex set growing, candidate frontier edges being evaluated, and the minimum-weight edge committed to the tree.
+  > In the cut phase, the longest edges are severed, partitioning the Disjoint Set Union into colored components.
+  > Every step is accompanied by mathematical commentary and LaTeX formulas."*
 
 ---
 
-### Step 8: Scientific Exports & Test Runner Verification (5:45 – 6:30)
-* **Mouse Action**:
-  * Scroll to the export panel or return to the Robustness tab.
-  * Click **Export Raw Data (CSV)** (shows instant browser download of `robustness_trials.csv`).
-  * Switch to the second browser tab: `tests/test_runner.html`.
-  * Show the test results container displaying **64 Passed / 0 Failed**.
+### Step 8: CSV / Config Provenance & Automated Test Suite (5:45 – 6:30)
+* **User Action**:
+  * Navigate to **7. Reproducibility & Configuration** to show JSON schema v1.0.0 export and restoration.
+  * Switch to the terminal window and run:
+    ```powershell
+    $env:PYTHONPATH = "python_app"
+    pytest python_app/tests -v
+    ```
 * **Demonstrator Dialogue (Parth Yadav & Himanshu Gupta)**:
-  > *"Finally, every piece of experimental evidence is exportable with one click into standard CSV and high-DPI PNG formats.  
-  > And to guarantee software engineering integrity, here is our automated browser test runner: all 64 unit tests covering our PRNG, datasets, K-Means++, Prim MST, and Adjusted Rand Index pass in under 50 milliseconds.  
+  > *"Finally, every experimental result supports strict scientific provenance with one-click JSON reproducibility configuration and CSV dataset export.
+  > To verify total software engineering rigor, here is our complete automated test suite: 169 automated tests covering algorithm convergence, graph invariants, synthetic generation, noise decoupling, CSV validation, and Streamlit AppTest UI integrity pass with a 100% success rate.
   > This concludes our live demonstration. We are ready for your questions."*
 
 ---
 
 ## Contingency & Backup Demonstration Strategies
 
-1. **If the Benchmark takes longer than 2 seconds due to browser background throttling**:
-   * *Action*: Do not wait. Immediately explain: *"The benchmark engine executes multiple warm-up iterations and 5 timed repetitions per size using microsecond timers. While it completes, we can review the pre-computed verified benchmark summary table in `results/summaries/benchmark_summary.csv`."*
-2. **If a canvas appears un-rendered due to an unexpected browser window resize**:
-   * *Action*: Click the **Run Both Algorithms** button again or hit `F5` to reload. The deterministic PRNG guarantees that the exact same dataset will render immediately.
-3. **If examiners ask to see a specific seed**:
-   * *Action*: In the code or settings, point out seeds `11`, `22`, and `33`. Entering seed `11` on Two Moons will reproduce the exact coordinates analyzed in Table 8.3 and Table 8.6 of our report.
+1. **If local Streamlit server encounters port collision or slow startup**:
+   * *Action*: Immediately switch to the live deployed Streamlit Cloud application: [https://mst-kmeans-robustness-analysis.streamlit.app/](https://mst-kmeans-robustness-analysis.streamlit.app/).
+2. **If an interactive figure shows a stale marker after modifying a slider**:
+   * *Action*: Click the **Generate & Cluster Data** button to re-execute clustering. The deterministic PRNG guarantees identical results for identical seeds.
+3. **If examiners ask to see a specific seed or verify paper data**:
+   * *Action*: Enter seed `11` on Two Moons ($N=300$). This generates the exact coordinates analyzed in Table 8.3 and Table 8.6 of the final academic project report.
+4. **If examiners request reference parity verification**:
+   * *Action*: Point to `test_reference_validation.py` which mathematically validates our custom Lloyd's K-Means and dense Prim's MST against `scikit-learn` and `scipy` reference implementations.

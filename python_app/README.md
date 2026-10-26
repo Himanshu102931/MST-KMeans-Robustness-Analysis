@@ -1,6 +1,6 @@
 # Python Clustering Laboratory (`python_app`)
-## MST vs K-Means Robustness Analysis — Stage 07: Academic Handoff
-### Status: Stage 07 — Release Candidate Under Verification (Draft)
+## MST vs K-Means Robustness Analysis — Authoritative Scientific Platform
+### Status: Production Ready (Verified Python-Only Platform; v1.0.0 Baseline Preserved)
 
 ### Academic Information
 - **Course:** Pattern Matching Lab (`BCS-DS-777`)
@@ -10,15 +10,15 @@
   - Himanshu Gupta
   - Parth Yadav
 - **Faculty Guide / Course Instructor:** Mr. Aman Kumar, Assistant Professor
-- **Repository Branch:** `feature/python-streamlit-migration`
-- **Preserved Main Checkpoint:** `0864323`
-- **Draft Release Notes:** [docs/RELEASE_NOTES.md](../docs/RELEASE_NOTES.md)
+- **Repository Branch:** `main`
+- **Release Checkpoint:** `d8c8cac817b89336390aa63cef0ce2b1da3e5192` (Tag `v1.0.0`)
+- **Release Documentation:** [docs/RELEASE_NOTES.md](../docs/RELEASE_NOTES.md)
 
 ---
 
 ## 1. Purpose of the Python Migration
 
-This subproject (`python_app/`) establishes the scientific Python implementation for the **MST vs K-Means Robustness Analysis** project. 
+This subproject (`python_app/`) establishes the scientific Python implementation for the **MST vs K-Means Robustness Analysis** project.
 
 The primary objectives of the Python migration are:
 1. **Industry-Standard Scientific Tooling:** Transition from a purely clientside JavaScript execution model to the Python data science and machine learning ecosystem (`numpy`, `scipy`, `scikit-learn`, `pandas`).
@@ -27,14 +27,12 @@ The primary objectives of the Python migration are:
 
 ---
 
-## 2. Preservation of the Existing JavaScript Application
+## 2. Authoritative Python-Only Research Platform
 
-The existing Vanilla JavaScript web application located at the repository root (`index.html`, `js/`, `css/`, `results/`, `tests/`) is **strictly preserved and remains fully functional**:
-- **Zero-Dependency Viva Fallback:** The JavaScript application requires zero installation, running directly in any modern web browser via file or static web server.
-- **Academic Independence:** All existing viva materials, presentation slides (`docs/presentation/`), and experimental artifacts remain anchored to the preserved main-branch checkpoint (`0864323`).
-- **Parallel Evolution:** The Python application evolves cleanly inside `python_app/` on the `feature/python-streamlit-migration` branch without modifying or overwriting any legacy JavaScript code or report files.
-
----
+Following the completion and verification of the Streamlit migration and full 169-test automated test suite, this Python application serves as the **sole, authoritative research and viva platform** for the repository:
+- **Unified Scientific Core:** All algorithm execution (Lloyd's K-Means and dense Prim's MST), data synthesis, noise/outlier perturbations, and evaluation metrics are implemented natively in Python using pure NumPy.
+- **Interactive Multi-Module Platform:** All research workflows, benchmarks, algorithm traces, and reproducibility tools are accessed through the Streamlit web dashboard (`python_app/app.py`).
+- **Historical Release Preservation:** The initial dual-implementation release remains permanently archived under the Git release tag `v1.0.0` (commit `d8c8cac817b89336390aa63cef0ce2b1da3e5192`).
 
 ## 3. Directory Structure
 
@@ -189,7 +187,7 @@ The dashboard is partitioned into 8 core navigation modules:
 ### Cloud Deployment Instructions
 To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
 1. Connect the GitHub repository `Himanshu102931/MST-KMeans-Robustness-Analysis`.
-2. Set the target branch to `feature/python-streamlit-migration` (or merged production branch).
+2. Set the target branch to `main`.
 3. Set the Main file path to `python_app/app.py`.
 4. The deployment environment automatically installs dependencies from `python_app/requirements.txt`.
 
@@ -246,7 +244,7 @@ To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
     - Dedicated "Performance Benchmarks" view with preflight workload estimate (enforcing safety bound of $\le 200$ executions), live progress bar, scaling curves with sample std error bars, and theoretical complexity discussion ($\mathcal{O}(I \cdot N \cdot k \cdot D)$ vs $\mathcal{O}(N^2)$).
     - Dedicated "Algorithm Explorer" view with topology controls ($N \le 60$), interactive step cockpit (First, Prev, Slider, Next, Last, Reset), step descriptions with LaTeX math, isotropic 1:1 Plotly figure, and production parity verification card.
   - Automated test suite:
-    - 168 passing automated tests across 12 Pytest modules verified on Python 3.12 (0 failures, 0 skips).
+    - 169 passing automated tests across 12 Pytest modules verified on Python 3.12 (0 failures, 0 skips).
     - Measured statement coverage: 86.0% overall application line coverage (2,711 statements) and ~90.92% scientific core library coverage (1,995 statements).
   - Formal documentation specifications:
     - Performance Benchmark Specification (`docs/PERFORMANCE_BENCHMARK_SPECIFICATION.md`).
@@ -254,7 +252,7 @@ To deploy the Streamlit dashboard on **Streamlit Community Cloud**:
 - **Completed in Stage 06:**
   - Comprehensive user-led manual acceptance testing campaign across all eight application modules.
   - Successfully verified in Brave browser on Windows 11; formally approved and accepted by project owner on October 15, 2026.
-- **Stage 07: Final Release & Academic Handoff (In Progress):**
-  - Read-only release readiness audit completed (Prompt 1).
-  - Documentation synchronization, privacy remediation, and draft release notes preparation under way (Prompt 2).
-  - Final QA validation and release packaging in progress (Prompt 3). Release tagging (`v1.0.0-final`) and GitHub push pending explicit owner authorization.
+- **Completed in Stage 07 & Final Release:**
+  - Automated test suite verified: 169 passing tests across 12 Pytest modules (100% pass rate).
+  - Initial sanitized release baseline permanently tagged as `v1.0.0` at commit `d8c8cac817b89336390aa63cef0ce2b1da3e5192`.
+  - Phase 1 local cleanup completed: retired legacy JavaScript prototype and established the authoritative Python-only repository on `main`.
